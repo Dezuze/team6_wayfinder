@@ -10,13 +10,13 @@ export default function DriverView({ activeRole, setActiveRole }) {
   const defaultBusId = user?.assignedBusId || 'bus-101';
   const [selectedBusId, setSelectedBusId] = useState(defaultBusId);
   const [gpsPermission, setGpsPermission] = useState('prompt');
-  
+
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
   const [currentSpeed, setCurrentSpeed] = useState(0);
   const [driverStatus, setDriverStatus] = useState('Active');
   const [coords, setCoords] = useState({ lat: 9.9312, lng: 76.2673 });
-  
+
   const [showSosModal, setShowSosModal] = useState(false);
   const [sosReason, setSosReason] = useState('Mechanical Breakdown');
   const [sosTriggered, setSosTriggered] = useState(false);
@@ -88,7 +88,7 @@ export default function DriverView({ activeRole, setActiveRole }) {
       simulationTimerRef.current = setInterval(() => {
         pathIndexRef.current = (pathIndexRef.current + 1) % currentRoute.path.length;
         const nextCoord = currentRoute.path[pathIndexRef.current];
-        
+
         const jitterLat = nextCoord.lat + (Math.random() - 0.5) * 0.0005;
         const jitterLng = nextCoord.lng + (Math.random() - 0.5) * 0.0005;
         const simulatedSpeed = Math.floor(25 + Math.random() * 15);
@@ -103,7 +103,7 @@ export default function DriverView({ activeRole, setActiveRole }) {
         (position) => {
           const { latitude, longitude, speed } = position.coords;
           const calcSpeed = speed ? Math.round(speed * 3.6) : Math.floor(20 + Math.random() * 10);
-          
+
           setCoords({ lat: latitude, lng: longitude });
           setCurrentSpeed(calcSpeed);
 
@@ -291,7 +291,7 @@ export default function DriverView({ activeRole, setActiveRole }) {
             <MapPin size={16} />
           </div>
           <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.4, wordBreak: 'break-word' }}>
-            Geofence Active: Tracking will automatically stop at College Campus.
+            Geofence Active: Trfacking will automatically stop at College Campus.
           </span>
         </div>
       </div>

@@ -62,6 +62,16 @@ export default async function adminRoutes(fastify, options) {
     return { success: true, route: db.routes[routeIndex] };
   });
 
+  fastify.delete('/api/routes/:id', async (request, reply) => {
+    const { id } = request.params;
+    const routeIndex = db.routes.findIndex(r => r.id === id);
+    if (routeIndex === -1) {
+      return reply.status(404).send({ success: false, error: 'Route not found' });
+    }
+    db.routes.splice(routeIndex, 1);
+    return { success: true, message: 'Route deleted successfully' };
+  });
+
   // --- STUDENT PASSES ---
   fastify.get('/api/passes', async (request, reply) => {
     return { success: true, passes: db.studentPasses };
