@@ -291,7 +291,7 @@ export default function DriverView({ activeRole, setActiveRole }) {
             <MapPin size={16} />
           </div>
           <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.4, wordBreak: 'break-word' }}>
-            Geofence Active: Trfacking will automatically stop at College Campus.
+            Geofence Active: Tracking will automatically stop at College Campus.
           </span>
         </div>
       </div>
