@@ -477,3 +477,122 @@ body {
     padding: 1rem 0.75rem 2.5rem;
   }
 }
+
+/* Responsive Map Height & Control Overrides */
+.leaflet-container {
+  font-family: 'Inter', system-ui, sans-serif !important;
+  width: 100%;
+  height: 100%;
+  min-height: 350px;
+}
+
+@media (max-width: 768px) {
+  .leaflet-container {
+    min-height: 280px;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   STUDENT RADAR STYLES
+   ══════════════════════════════════════════════════ */
+
+/* Radar Map Container */
+.student-radar-map-container {
+  height: 50vh;
+  min-height: 320px;
+  max-height: 480px;
+  width: 100%;
+  border-radius: var(--radius-lg, 12px);
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .student-radar-map-container {
+    height: 380px;
+    max-height: 420px;
+  }
+}
+
+/* Geolocation Status Bar */
+.student-geo-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm, 8px);
+  font-size: 0.78rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+/* Nearby Bus Card */
+.student-bus-card {
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.student-bus-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.student-bus-card-selected {
+  box-shadow: 0 4px 18px rgba(124, 58, 237, 0.18) !important;
+  outline: 2px solid var(--primary, #7c3aed);
+  outline-offset: -2px;
+}
+
+/* Alert Toggle Switch */
+.student-alert-switch {
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  background-color: var(--border-color, #cbd5e1);
+  position: relative;
+  transition: background-color 0.25s ease;
+  flex-shrink: 0;
+}
+
+.student-alert-switch-on {
+  background-color: var(--primary, #7c3aed);
+}
+
+.student-alert-switch-knob {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  transition: transform 0.25s ease;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.student-alert-switch-on .student-alert-switch-knob {
+  transform: translateX(18px);
+}
+
+/* Student location marker pulse (used in Leaflet DivIcon inline styles reference) */
+@keyframes studentPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.25), 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(59, 130, 246, 0.1), 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Spin animation for loading indicator */
+.spin-animation {
+  animation: spinRotate 1s linear infinite;
+}
+
+@keyframes spinRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Alert toggle row hover */
+.student-alert-toggle-row:hover {
+  filter: brightness(0.97);
+}

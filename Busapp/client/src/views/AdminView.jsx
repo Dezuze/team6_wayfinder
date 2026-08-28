@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import FleetMap from '../components/FleetMap';
 import {
   LayoutDashboard,
   Bus,
@@ -37,299 +38,7 @@ import {
   Trash2
 } from 'lucide-react';
 
-function FleetMapVisual({ selectedBusId, onSelectBus }) {
-  const [zoomLevel, setZoomLevel] = useState(1);
 
-  return (
-    <div
-      style={{
-        position: 'relative',
-        width: '100%',
-        height: '100%',
-        minHeight: '480px',
-        borderRadius: '16px',
-        overflow: 'hidden',
-        background: 'linear-gradient(135deg, var(--bg-subtle, #e0f2fe) 0%, var(--bg-card, #f0f9ff) 50%, var(--bg-primary, #e0e7ff) 100%)',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        border: '1px solid var(--border-color, #cbd5e1)'
-      }}
-    >
-      {/* Floating Map Zoom Controls (Top Left) */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '1.25rem',
-          left: '1.25rem',
-          backgroundColor: 'var(--bg-card, #ffffff)',
-          borderRadius: '12px',
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
-          border: '1px solid var(--border-color, #e2e8f0)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          overflow: 'hidden',
-          zIndex: 10
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => setZoomLevel(prev => Math.min(prev + 0.2, 1.8))}
-          style={{
-            background: 'none',
-            border: 'none',
-            padding: '0.6rem 0.75rem',
-            cursor: 'pointer',
-            color: 'var(--text-primary, #334155)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-          title="Zoom In"
-        >
-          <Plus size={18} />
-        </button>
-
-        <div style={{ width: '100%', height: '1px', backgroundColor: 'var(--border-color, #e2e8f0)' }} />
-
-        <button
-          type="button"
-          onClick={() => setZoomLevel(prev => Math.max(prev - 0.2, 0.8))}
-          style={{
-            background: 'none',
-            border: 'none',
-            padding: '0.6rem 0.75rem',
-            cursor: 'pointer',
-            color: 'var(--text-primary, #334155)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
-          }}
-          title="Zoom Out"
-        >
-          <Minus size={18} />
-        </button>
-      </div>
-
-      {/* Map Content Container (Scalable via zoomLevel) */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          transform: `scale(${zoomLevel})`,
-          transition: 'transform 0.3s ease',
-          pointerEvents: 'none'
-        }}
-      >
-        {/* Bus Pin: BUS-402 */}
-        <div
-          onClick={() => onSelectBus && onSelectBus('bus-402')}
-          style={{
-            position: 'absolute',
-            left: '42%',
-            top: '38%',
-            transform: 'translate(-50%, -50%)',
-            pointerEvents: 'auto',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            backgroundColor: selectedBusId === 'bus-402' ? '#5b21b6' : '#7c3aed',
-            color: '#ffffff',
-            padding: '0.4rem 0.75rem',
-            borderRadius: '10px',
-            fontSize: '0.8rem',
-            fontWeight: 800,
-            boxShadow: '0 4px 14px rgba(124, 58, 237, 0.35)',
-            letterSpacing: '0.02em',
-            transition: 'transform 0.15s ease'
-          }}
-        >
-          <Bus size={15} />
-          <span>BUS-402</span>
-        </div>
-
-        {/* Bus Pin: BUS-119 */}
-        <div
-          onClick={() => onSelectBus && onSelectBus('bus-119')}
-          style={{
-            position: 'absolute',
-            left: '58%',
-            top: '58%',
-            transform: 'translate(-50%, -50%)',
-            pointerEvents: 'auto',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            backgroundColor: selectedBusId === 'bus-119' ? '#065f46' : '#0f766e',
-            color: '#ffffff',
-            padding: '0.4rem 0.75rem',
-            borderRadius: '10px',
-            fontSize: '0.8rem',
-            fontWeight: 800,
-            boxShadow: '0 4px 14px rgba(15, 118, 110, 0.35)',
-            letterSpacing: '0.02em',
-            transition: 'transform 0.15s ease'
-          }}
-        >
-          <Bus size={15} />
-          <span>BUS-119</span>
-        </div>
-      </div>
-
-      {/* Bottom Floating 4 Stat Cards */}
-      <div
-        style={{
-          position: 'relative',
-          zIndex: 15,
-          padding: '1.25rem',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gap: '0.85rem',
-          marginTop: 'auto'
-        }}
-      >
-        {/* Card 1: Active Drivers */}
-        <div
-          style={{
-            backgroundColor: 'var(--bg-card, #ffffff)',
-            borderRadius: '16px',
-            padding: '0.85rem 1rem',
-            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.08)',
-            border: '1px solid var(--border-color, rgba(226, 232, 240, 0.8))',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.85rem'
-          }}
-        >
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '12px',
-              backgroundColor: '#f3e8ff',
-              color: '#7c3aed',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}
-          >
-            <Users size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary, #64748b)', fontWeight: 500 }}>Active Drivers</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary, #1e293b)', lineHeight: 1.2 }}>142</div>
-          </div>
-        </div>
-
-        {/* Card 2: Avg. Delay */}
-        <div
-          style={{
-            backgroundColor: 'var(--bg-card, #ffffff)',
-            borderRadius: '16px',
-            padding: '0.85rem 1rem',
-            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.08)',
-            border: '1px solid var(--border-color, rgba(226, 232, 240, 0.8))',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.85rem'
-          }}
-        >
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '12px',
-              backgroundColor: '#ccfbf1',
-              color: '#0d9488',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}
-          >
-            <Clock size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary, #64748b)', fontWeight: 500 }}>Avg. Delay</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary, #1e293b)', lineHeight: 1.2 }}>1.4m</div>
-          </div>
-        </div>
-
-        {/* Card 3: Alerts */}
-        <div
-          style={{
-            backgroundColor: 'var(--bg-card, #ffffff)',
-            borderRadius: '16px',
-            padding: '0.85rem 1rem',
-            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.08)',
-            border: '1px solid var(--border-color, rgba(226, 232, 240, 0.8))',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.85rem'
-          }}
-        >
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '12px',
-              backgroundColor: '#fee2e2',
-              color: '#ef4444',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}
-          >
-            <AlertTriangle size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary, #64748b)', fontWeight: 500 }}>Alerts</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary, #1e293b)', lineHeight: 1.2 }}>03</div>
-          </div>
-        </div>
-
-        {/* Card 4: Fleet Charge */}
-        <div
-          style={{
-            backgroundColor: 'var(--bg-card, #ffffff)',
-            borderRadius: '16px',
-            padding: '0.85rem 1rem',
-            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.08)',
-            border: '1px solid var(--border-color, rgba(226, 232, 240, 0.8))',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.85rem'
-          }}
-        >
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '12px',
-              backgroundColor: '#ede9fe',
-              color: '#7c3aed',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}
-          >
-            <Zap size={20} />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary, #64748b)', fontWeight: 500 }}>Fleet Charge</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary, #1e293b)', lineHeight: 1.2 }}>88%</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function AdminView({ activeRole, setActiveRole }) {
   const { buses, routes, passes, refreshData } = useWebSocket();
@@ -344,6 +53,8 @@ export default function AdminView({ activeRole, setActiveRole }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [selectedBusId, setSelectedBusId] = useState(null);
+  const [isPickingStops, setIsPickingStops] = useState(false);
+  const [pickedStops, setPickedStops] = useState([]);
 
   // Update Bus Status
   const handleUpdateBusStatus = async (busId, newStatus) => {
@@ -356,6 +67,20 @@ export default function AdminView({ activeRole, setActiveRole }) {
       await refreshData();
     } catch (err) {
       console.error('Error updating bus status:', err);
+    }
+  };
+
+  // Update Bus Route Assignment
+  const handleUpdateBusRoute = async (busId, newRouteId) => {
+    try {
+      await fetch(`/api/buses/${busId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ routeId: newRouteId || null })
+      });
+      await refreshData();
+    } catch (err) {
+      console.error('Error updating bus route:', err);
     }
   };
 
@@ -373,25 +98,56 @@ export default function AdminView({ activeRole, setActiveRole }) {
     }
   };
 
-  // Create New Route
+  // Create New Route with deduplicated stops
   const handleCreateRoute = async (e) => {
     e.preventDefault();
     if (!newRouteName) return;
     setIsSubmitting(true);
     try {
-      const stopsArray = newRouteStops ? newRouteStops.split(',').map(s => s.trim()) : ['Campus Gate', 'Central Hub'];
+      const rawStops = newRouteStops ? newRouteStops.split(',').map(s => s.trim()).filter(Boolean) : ['Campus Gate', 'Central Hub'];
+      const cleanStops = Array.from(new Set(rawStops));
       await fetch('/api/routes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newRouteName, stops: stopsArray, color: newRouteColor })
+        body: JSON.stringify({ name: newRouteName.trim(), stops: cleanStops, color: newRouteColor })
       });
       setNewRouteName('');
       setNewRouteStops('');
+      setPickedStops([]);
+      setIsPickingStops(false);
       await refreshData();
     } catch (err) {
       console.error('Error creating route:', err);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Map Click Handler for Route Stop Picking with deduplication
+  const handleMapStopClick = (latlng, nameOverride = null) => {
+    const stopName = nameOverride || window.prompt("Name this stop:");
+    if (stopName && stopName.trim()) {
+      const trimmed = stopName.trim();
+      setPickedStops(prev => {
+        if (prev.some(s => s.name.toLowerCase() === trimmed.toLowerCase())) return prev;
+        return [
+          ...prev,
+          {
+            id: `picked-${Date.now()}-${prev.length}`,
+            name: trimmed,
+            lat: latlng.lat,
+            lng: latlng.lng,
+            number: prev.length + 1
+          }
+        ];
+      });
+      setNewRouteStops(prev => {
+        const currentList = prev ? prev.split(',').map(s => s.trim()).filter(Boolean) : [];
+        if (!currentList.some(s => s.toLowerCase() === trimmed.toLowerCase())) {
+          currentList.push(trimmed);
+        }
+        return currentList.join(', ');
+      });
     }
   };
 
@@ -407,68 +163,35 @@ export default function AdminView({ activeRole, setActiveRole }) {
     }
   };
 
-  // Complete Fleet Dataset matching reference and live data
-  const referenceFleetCards = [
-    {
-      id: 'bus-402',
-      number: '402',
-      routeName: 'Route 22X',
-      driverName: 'Sarah J. Miller',
-      avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&auto=format&fit=crop&q=80',
-      status: 'ON TIME',
-      category: 'Active',
-      battery: '68%',
-      speed: '34mph',
-      progressPercent: 70,
-      isDelayed: false,
-      isIdle: false
-    },
-    {
-      id: 'bus-119',
-      number: '119',
-      routeName: 'Route 5',
-      driverName: 'Marcus Chen',
-      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80',
-      status: 'DELAYED 4M',
-      category: 'Delayed',
-      battery: '22%',
-      speed: '28mph',
-      progressPercent: 20,
-      isDelayed: true,
-      isIdle: false
-    },
-    {
-      id: 'bus-088',
-      number: '088',
-      routeName: 'Express 1',
-      driverName: 'Elena Rodriguez',
-      avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=120&auto=format&fit=crop&q=80',
-      status: 'ON TIME',
-      category: 'Active',
-      battery: '94%',
-      speed: '45mph',
-      progressPercent: 95,
-      isDelayed: false,
-      isIdle: false
-    },
-    {
-      id: 'bus-042',
-      number: '042',
-      routeName: 'Campus Depot',
-      driverName: 'David Kim',
-      avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80',
-      status: 'STANDBY / IDLE',
-      category: 'Idle',
-      battery: '100%',
-      speed: '0mph',
-      progressPercent: 0,
-      isDelayed: false,
-      isIdle: true
-    }
-  ];
+  // Dynamic Fleet Cards mapping real live WebSocket buses
+  const fleetCards = (buses || []).map(bus => {
+    const assignedRoute = routes.find(r => r.id === bus.routeId);
+    const isDelayed = (bus.status || '').toUpperCase().includes('DELAY');
+    const isIdle = bus.status === 'Off Duty' || bus.status === 'Maintenance' || (bus.status || '').toUpperCase().includes('STANDBY') || (bus.status || '').toUpperCase().includes('IDLE');
+    const isSos = (bus.status || '').toUpperCase().includes('SOS') || (bus.status || '').toUpperCase().includes('EMERGENCY');
+
+    return {
+      id: bus.id,
+      rawBus: bus,
+      number: bus.number?.replace(/^BUS\s*#\d+\s*\((.*)\)$/i, '$1') || bus.number || bus.id,
+      displayTitle: bus.number || `BUS #${bus.id}`,
+      routeName: assignedRoute ? assignedRoute.name : 'Unassigned Route',
+      routeId: bus.routeId,
+      driverName: bus.driverName || 'Unassigned Driver',
+      avatarUrl: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80`,
+      status: isSos ? '🚨 SOS ALERT' : isDelayed ? 'DELAYED' : isIdle ? 'OFF DUTY' : (bus.status || 'ON TIME'),
+      category: isSos || isDelayed ? 'Delayed' : isIdle ? 'Idle' : 'Active',
+      battery: '88%',
+      speed: `${bus.speed || 0} km/h`,
+      progressPercent: bus.speed ? Math.min(100, Math.max(15, bus.speed * 2)) : 0,
+      isDelayed,
+      isIdle,
+      isSos
+    };
+  });
 
   // Dynamic Filtering Logic
-  const filteredFleetCards = referenceFleetCards.filter(card => {
+  const filteredFleetCards = fleetCards.filter(card => {
     // Category match
     if (fleetFilter === 'Active' && card.category !== 'Active') return false;
     if (fleetFilter === 'Delayed' && card.category !== 'Delayed') return false;
@@ -477,7 +200,7 @@ export default function AdminView({ activeRole, setActiveRole }) {
     // Search query match
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchNumber = card.number.toLowerCase().includes(q);
+      const matchNumber = card.displayTitle.toLowerCase().includes(q);
       const matchDriver = card.driverName.toLowerCase().includes(q);
       const matchRoute = card.routeName.toLowerCase().includes(q);
       if (!matchNumber && !matchDriver && !matchRoute) return false;
@@ -890,7 +613,12 @@ export default function AdminView({ activeRole, setActiveRole }) {
         {activeSection === 'buses' && (
           <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 390px', overflow: 'hidden' }}>
             {/* Map Area */}
-            <FleetMapVisual selectedBusId={selectedBusId} onSelectBus={setSelectedBusId} />
+            <FleetMap
+              buses={buses}
+              routes={routes}
+              selectedMarkerId={selectedBusId}
+              onMarkerClick={setSelectedBusId}
+            />
 
             {/* Right Live Status Sidebar */}
             <aside
@@ -997,8 +725,8 @@ export default function AdminView({ activeRole, setActiveRole }) {
                             <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                               {bus.driverName}
                             </div>
-                            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                              BUS-{bus.number} • {bus.routeName}
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.1rem' }}>
+                              <span>{bus.displayTitle}</span>
                             </div>
                           </div>
                         </div>
@@ -1024,6 +752,44 @@ export default function AdminView({ activeRole, setActiveRole }) {
                         >
                           {bus.status}
                         </span>
+                      </div>
+
+                      {/* Route Assignment Select Control */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '0.5rem',
+                          backgroundColor: 'var(--bg-subtle, #f8fafc)',
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '8px',
+                          border: '1px solid var(--border-color, #e2e8f0)'
+                        }}
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #64748b)' }}>
+                          Route:
+                        </span>
+                        <select
+                          value={bus.routeId || ''}
+                          onChange={(e) => handleUpdateBusRoute(bus.id, e.target.value)}
+                          className="form-select"
+                          style={{
+                            padding: '0.2rem 0.5rem',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            width: 'auto',
+                            maxWidth: '180px',
+                            borderRadius: '6px',
+                            border: '1px solid var(--border-color, #cbd5e1)'
+                          }}
+                        >
+                          <option value="">-- Unassigned --</option>
+                          {routes.map(r => (
+                            <option key={r.id} value={r.id}>{r.name}</option>
+                          ))}
+                        </select>
                       </div>
 
                       {/* Metrics Row: Battery & Speed */}
@@ -1117,46 +883,101 @@ export default function AdminView({ activeRole, setActiveRole }) {
         {/* SECTION: ROUTES */}
         {activeSection === 'routes' && (
           <div style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '1.5rem', alignItems: 'start' }}>
-              <div className="clean-card" style={{ padding: '1.5rem' }}>
-                <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '1.25rem', color: 'var(--text-primary, #1e293b)' }}>Active Transit Routes</h2>
-                <div className="flex-col gap-1">
-                  {routes.map(route => (
-                    <div key={route.id} style={{ padding: '1.15rem', borderRadius: '12px', border: '1px solid var(--border-color, #e2e8f0)', borderLeft: `4px solid ${route.color || '#7c3aed'}`, marginBottom: '0.75rem' }}>
-                      <div className="flex-between" style={{ marginBottom: '0.5rem' }}>
-                        <strong style={{ fontSize: '1rem', color: 'var(--text-primary, #1e293b)' }}>{route.name}</strong>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span className="badge" style={{ backgroundColor: 'var(--bg-subtle, #f1f5f9)', color: 'var(--text-secondary, #64748b)' }}>
-                            {route.stops.length} Stops
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteRoute(route.id)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: 'var(--danger, #ef4444)',
-                              cursor: 'pointer',
-                              padding: '0.25rem',
-                              borderRadius: '6px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              transition: 'opacity 0.15s ease'
-                            }}
-                            title="Delete Route"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #64748b)' }}>
-                        <strong>Stops: </strong> {route.stops.join(' → ')}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '1.5rem', alignItems: 'start' }}>
+              {isPickingStops ? (
+                <div className="clean-card" style={{ padding: '1.25rem', height: '580px', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+                    <div>
+                      <h2 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: 'var(--text-primary, #1e293b)' }}>
+                        📍 Interactive Route Stop Picker
+                      </h2>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #64748b)', marginTop: '0.2rem' }}>
+                        Click anywhere on the map in order to name and add stops to your new route.
                       </div>
                     </div>
-                  ))}
+                    {pickedStops.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPickedStops([]);
+                          setNewRouteStops('');
+                        }}
+                        style={{
+                          background: 'none',
+                          border: '1px solid var(--border-color, #cbd5e1)',
+                          borderRadius: '8px',
+                          padding: '0.35rem 0.65rem',
+                          fontSize: '0.78rem',
+                          color: '#ef4444',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Clear Stops ({pickedStops.length})
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ flex: 1, position: 'relative', borderRadius: '12px', overflow: 'hidden' }}>
+                    <FleetMap
+                      buses={buses}
+                      routes={routes}
+                      isPickingStops={true}
+                      onMapClick={handleMapStopClick}
+                      pickedStops={pickedStops}
+                      center={[9.5916, 76.5222]}
+                      zoom={12}
+                      hideStatCards={true}
+                    />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="clean-card" style={{ padding: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0, color: 'var(--text-primary, #1e293b)' }}>
+                      Active Transit Routes
+                    </h2>
+                    <span className="badge" style={{ backgroundColor: 'var(--bg-subtle, #f1f5f9)', color: 'var(--text-secondary, #64748b)' }}>
+                      {routes.length} Registered
+                    </span>
+                  </div>
+                  <div className="flex-col gap-1">
+                    {routes.map(route => (
+                      <div key={route.id} style={{ padding: '1.15rem', borderRadius: '12px', border: '1px solid var(--border-color, #e2e8f0)', borderLeft: `4px solid ${route.color || '#7c3aed'}`, marginBottom: '0.75rem' }}>
+                        <div className="flex-between" style={{ marginBottom: '0.5rem' }}>
+                          <strong style={{ fontSize: '1rem', color: 'var(--text-primary, #1e293b)' }}>{route.name}</strong>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span className="badge" style={{ backgroundColor: 'var(--bg-subtle, #f1f5f9)', color: 'var(--text-secondary, #64748b)' }}>
+                              {route.stops.length} Stops
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteRoute(route.id)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: 'var(--danger, #ef4444)',
+                                cursor: 'pointer',
+                                padding: '0.25rem',
+                                borderRadius: '6px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'opacity 0.15s ease'
+                              }}
+                              title="Delete Route"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #64748b)' }}>
+                          <strong>Stops: </strong> {route.stops.join(' → ')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="clean-card" style={{ padding: '1.5rem' }}>
                 <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary, #1e293b)' }}>
@@ -1176,15 +997,50 @@ export default function AdminView({ activeRole, setActiveRole }) {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Stops (comma separated)</label>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                      <label className="form-label" style={{ marginBottom: 0 }}>Stops (comma separated)</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isPickingStops) {
+                            setIsPickingStops(false);
+                            setPickedStops([]);
+                          } else {
+                            setIsPickingStops(true);
+                          }
+                        }}
+                        style={{
+                          background: isPickingStops ? '#ede9fe' : 'var(--bg-subtle, #f1f5f9)',
+                          color: isPickingStops ? '#7c3aed' : 'var(--text-secondary, #475569)',
+                          border: isPickingStops ? '1px solid #7c3aed' : '1px solid var(--border-color, #cbd5e1)',
+                          borderRadius: '8px',
+                          padding: '0.25rem 0.6rem',
+                          fontSize: '0.78rem',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <MapPin size={13} />
+                        <span>{isPickingStops ? 'Done Picking' : 'Pick on Map'}</span>
+                      </button>
+                    </div>
                     <input
                       type="text"
                       value={newRouteStops}
                       onChange={(e) => setNewRouteStops(e.target.value)}
-                      placeholder="Library, Student Union, Gate 3"
+                      placeholder={isPickingStops ? "Click on map to add stops..." : "Library, Student Union, Gate 3"}
                       className="form-input"
                       required
                     />
+                    {isPickingStops && (
+                      <div style={{ fontSize: '0.75rem', color: '#7c3aed', marginTop: '0.3rem', fontWeight: 500 }}>
+                        📍 Map picking active: Click on map to add next stop in sequence
+                      </div>
+                    )}
                   </div>
 
                   <div className="form-group">
@@ -1222,6 +1078,7 @@ export default function AdminView({ activeRole, setActiveRole }) {
             </div>
           </div>
         )}
+
 
         {/* SECTION: PASSES */}
         {activeSection === 'passes' && (
