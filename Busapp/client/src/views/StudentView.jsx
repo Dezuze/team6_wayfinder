@@ -87,6 +87,21 @@ function routePathDistance(routePath, fromIdx, toIdx) {
   return dist;
 }
 
+/** Find proportional path index for a given stop index in route.stops */
+function getStopPathIndex(route, stopIdx) {
+  if (!route || !route.path || route.path.length === 0) return 0;
+  const cleanStops = (route.stops || []).map(s => String(s).trim()).filter(Boolean);
+  if (cleanStops.length <= 1) return route.path.length - 1;
+
+  if (Array.isArray(route.stopCoordinates) && route.stopCoordinates[stopIdx]) {
+    const coord = route.stopCoordinates[stopIdx];
+    return findNearestPathPointIndex(coord.lat, coord.lng, route.path).index;
+  }
+
+  const ratio = stopIdx / (cleanStops.length - 1);
+  return Math.min(Math.round(ratio * (route.path.length - 1)), route.path.length - 1);
+}
+
 /** Calculate ETA in minutes for a bus to reach a stop point index along route */
 function calculateETA(bus, route, stopPointIndex) {
   if (!route || !route.path || route.path.length < 2) return null;
@@ -165,8 +180,8 @@ export default function StudentView() {
 
   const currentPass = passes.find(p => p.id === selectedPassId) || passes[0] || {};
 
-  // ── Geolocation effect ──
-  useEffect(() => {
+  // ── Geolocation request callback ──
+  const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
       setGeoStatus('unavailable');
       return;
@@ -174,31 +189,50 @@ export default function StudentView() {
 
     setGeoStatus('requesting');
 
-    const onSuccess = (pos) => {
-      setStudentLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-      setGeoStatus('granted');
-    };
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+    }
 
-    const onError = (err) => {
-      if (err.code === err.PERMISSION_DENIED) {
-        setGeoStatus('denied');
-      } else {
-        setGeoStatus('unavailable');
-      }
-    };
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setStudentLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGeoStatus('granted');
 
-    watchIdRef.current = navigator.geolocation.watchPosition(onSuccess, onError, {
-      enableHighAccuracy: true,
-      timeout: 15000,
-      maximumAge: 5000
-    });
+        // Keep updating position live
+        watchIdRef.current = navigator.geolocation.watchPosition(
+          (watchPos) => {
+            setStudentLocation({ lat: watchPos.coords.latitude, lng: watchPos.coords.longitude });
+            setGeoStatus('granted');
+          },
+          (err) => {
+            if (err.code === err.PERMISSION_DENIED) {
+              setGeoStatus('denied');
+            }
+          },
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+        );
+      },
+      (err) => {
+        if (err.code === err.PERMISSION_DENIED) {
+          setGeoStatus('denied');
+        } else {
+          setGeoStatus('unavailable');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+    );
+  }, []);
+
+  // ── Geolocation initialization effect ──
+  useEffect(() => {
+    requestLocation();
 
     return () => {
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
       }
     };
-  }, []);
+  }, [requestLocation]);
 
   // ── Active live buses (not off duty / maintenance) ──
   const activeBuses = useMemo(() => {
@@ -372,47 +406,6 @@ export default function StudentView() {
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [alerts]);
 
-  // ── Determine map center ──
-  const mapCenter = useMemo(() => {
-    if (studentLocation) return [studentLocation.lat, studentLocation.lng];
-    return null; // let FleetMap choose default
-  }, [studentLocation]);
-
-  // ── Geolocation status UI ──
-  const renderGeoStatus = () => {
-    if (geoStatus === 'requesting') {
-      return (
-        <div className="student-geo-status" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6' }}>
-          <Loader size={14} className="spin-animation" />
-          <span>Requesting location access...</span>
-        </div>
-      );
-    }
-    if (geoStatus === 'denied') {
-      return (
-        <div className="student-geo-status" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
-          <AlertTriangle size={14} />
-          <span>Location access denied. Enable location in browser settings for nearby bus tracking.</span>
-        </div>
-      );
-    }
-    if (geoStatus === 'unavailable') {
-      return (
-        <div className="student-geo-status" style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}>
-          <AlertTriangle size={14} />
-          <span>Geolocation unavailable on this device/browser.</span>
-        </div>
-      );
-    }
-    // granted
-    return (
-      <div className="student-geo-status" style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)', color: '#10b981' }}>
-        <Locate size={14} />
-        <span>Location active — showing shuttles within {NEARBY_RADIUS_KM} km</span>
-      </div>
-    );
-  };
-
   return (
     <div className="mobile-view-wrapper">
       {/* Page Header */}
@@ -453,51 +446,128 @@ export default function StudentView() {
       {/* TAB 1: RADAR */}
       {activeTab === 'tracker' && (
         <div className="flex-col gap-1">
-          {/* Nearby Shuttles Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <MapPin size={18} color="var(--primary, #7c3aed)" />
-              Nearby Shuttles
-            </h2>
-            {nearbyBuses.length > 0 && (
-              <span className="badge" style={{ backgroundColor: 'var(--primary-light, #ede9fe)', color: 'var(--primary, #7c3aed)' }}>
-                {nearbyBuses.length} nearby
-              </span>
-            )}
-          </div>
-
-          {/* Geolocation Status */}
-          {renderGeoStatus()}
-
-          {/* Always Visible Radar Map */}
-          <div className="student-radar-map-container">
-            <FleetMap
-              buses={nearbyBuses.length > 0 ? nearbyBuses : activeBuses}
-              routes={routes}
-              selectedBusId={selectedBusId}
-              onSelectBus={handleSelectBus}
-              hideStatCards={true}
-              showSearch={false}
-              studentLocation={studentLocation}
-              center={mapCenter}
-              initialZoom={studentLocation ? 15 : 13}
-            />
-          </div>
-
-          {/* Empty State */}
-          {geoStatus === 'granted' && nearbyBuses.length === 0 && (
-            <div className="clean-card" style={{ textAlign: 'center', padding: '1.5rem 1rem' }}>
-              <Bus size={28} color="var(--text-muted)" style={{ margin: '0 auto 0.5rem' }} />
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.25rem' }}>No Active Shuttles Nearby</h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', margin: 0 }}>
-                Live college buses will appear here when they start broadcasting within {NEARBY_RADIUS_KM} km of your location.
-                {activeBuses.length > 0 && ` (${activeBuses.length} active bus${activeBuses.length > 1 ? 'es' : ''} outside your radius)`}
-              </p>
+          {/* Initial GPS Location Loading State */}
+          {geoStatus === 'requesting' && (
+            <div className="clean-card" style={{ textAlign: 'center', padding: '3.5rem 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', borderRadius: '16px' }}>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <MapPin size={28} color="#7c3aed" className="spin-animation" />
+              </div>
+              <div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.4rem', color: 'var(--text-primary)' }}>
+                  Getting your location...
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', margin: 0, maxWidth: '320px' }}>
+                  We're finding your current location to show nearby buses.
+                </p>
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Loader size={14} className="spin-animation" />
+                <span>Loading...</span>
+              </div>
             </div>
           )}
 
-          {/* Nearby Bus Cards */}
-          {nearbyBuses.map(bus => {
+          {/* Location Access Error State (Permission Denied or Unavailable) */}
+          {(geoStatus === 'denied' || geoStatus === 'unavailable') && (
+            <div className="clean-card" style={{ textAlign: 'center', padding: '3rem 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', borderRadius: '16px' }}>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <AlertTriangle size={28} color="#ef4444" />
+              </div>
+              <div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.4rem', color: 'var(--text-primary)' }}>
+                  Location Required
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', margin: 0, maxWidth: '340px', lineHeight: '1.4' }}>
+                  We need your current location to show nearby buses and calculate pickup ETAs. Please allow location access.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={requestLocation}
+                style={{
+                  padding: '0.75rem 1.75rem',
+                  backgroundColor: '#7c3aed',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(124, 58, 237, 0.35)'
+                }}
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+
+          {/* Granted GPS Location: Render Real Map Centered on Student */}
+          {geoStatus === 'granted' && studentLocation && (
+            <>
+              {/* Nearby Shuttles Header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <MapPin size={18} color="var(--primary, #7c3aed)" />
+                  Nearby Shuttles
+                </h2>
+                {nearbyBuses.length > 0 && (
+                  <span className="badge" style={{ backgroundColor: 'var(--primary-light, #ede9fe)', color: 'var(--primary, #7c3aed)' }}>
+                    {nearbyBuses.length} nearby
+                  </span>
+                )}
+              </div>
+
+              {/* Location Active Status Pill */}
+              <div className="student-geo-status" style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)', color: '#10b981' }}>
+                <Locate size={14} />
+                <span>Location active — showing shuttles within {NEARBY_RADIUS_KM} km</span>
+              </div>
+
+              {/* Always Visible Radar Map */}
+              <div className="student-radar-map-container">
+                <FleetMap
+                  buses={nearbyBuses.length > 0 ? nearbyBuses : activeBuses}
+                  routes={routes}
+                  selectedBusId={selectedBusId}
+                  onSelectBus={handleSelectBus}
+                  hideStatCards={true}
+                  showSearch={false}
+                  studentLocation={studentLocation}
+                  center={[studentLocation.lat, studentLocation.lng]}
+                  initialZoom={15}
+                />
+              </div>
+
+              {/* Empty State */}
+              {nearbyBuses.length === 0 && (
+                <div className="clean-card" style={{ textAlign: 'center', padding: '1.5rem 1rem' }}>
+                  <Bus size={28} color="var(--text-muted)" style={{ margin: '0 auto 0.5rem' }} />
+                  <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.25rem' }}>No Active Shuttles Nearby</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', margin: 0 }}>
+                    Live college buses will appear here when they start broadcasting within {NEARBY_RADIUS_KM} km of your location.
+                    {activeBuses.length > 0 && ` (${activeBuses.length} active bus${activeBuses.length > 1 ? 'es' : ''} outside your radius)`}
+                  </p>
+                </div>
+              )}
+
+              {/* Nearby Bus Cards */}
+              {nearbyBuses.map(bus => {
             const route = bus.route;
             const isSos = bus.status === '🚨 EMERGENCY / SOS' || (bus.status || '').includes('SOS') || (bus.status || '').includes('EMERGENCY');
             const isSelected = bus.id === selectedBusId;
@@ -506,13 +576,14 @@ export default function StudentView() {
             const isAlertOn = alertState && alertState.enabled;
             const isAlertTriggered = alertState && alertState.triggered;
 
-            // If this bus is selected and student picked a different stop, recalculate
+            // If this bus is selected and student picked a specific stop, calculate ETA towards that stop
             let displayStopName = bus.nearestStopName;
             let displayEta = bus.etaMinutes;
-            if (isSelected && selectedStopIndex !== null && selectedStopIndex !== bus.nearestStopIndex && route) {
+            if (isSelected && selectedStopIndex !== null && route) {
               const cleanStops = (route.stops || []).map(s => String(s).trim()).filter(Boolean);
               displayStopName = cleanStops[selectedStopIndex] || `Stop ${selectedStopIndex + 1}`;
-              displayEta = calculateETA(bus, route, selectedStopIndex);
+              const targetPathIdx = getStopPathIndex(route, selectedStopIndex);
+              displayEta = calculateETA(bus, route, targetPathIdx);
             }
 
             return (
@@ -585,10 +656,10 @@ export default function StudentView() {
                 </div>
 
                 {/* Stop selector (when selected) */}
-                {isSelected && route && route.path && route.path.length >= 2 && (
+                {isSelected && route && (
                   <div style={{ marginBottom: '0.6rem' }}>
                     <label style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                      Select Stop
+                      Select Pickup Stop for ETA
                     </label>
                     <select
                       className="form-select"
@@ -600,15 +671,14 @@ export default function StudentView() {
                       onClick={e => e.stopPropagation()}
                       style={{ fontSize: '0.82rem', padding: '0.4rem 0.5rem' }}
                     >
-                      <option value="">— Nearest stop —</option>
+                      <option value="">— Nearest stop ({bus.nearestStopName || 'Auto'}) —</option>
                       {(() => {
                         const cleanStops = (route.stops || []).map(s => String(s).trim()).filter(Boolean);
-                        return route.path.map((_, idx) => {
-                          const name = cleanStops[idx] || `Stop ${idx + 1}`;
-                          return (
-                            <option key={idx} value={idx}>{name}</option>
-                          );
-                        });
+                        return cleanStops.map((stopName, idx) => (
+                          <option key={idx} value={idx}>
+                            {idx + 1}. {stopName}
+                          </option>
+                        ));
                       })()}
                     </select>
                   </div>
@@ -667,6 +737,8 @@ export default function StudentView() {
             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textAlign: 'center', padding: '0.5rem', marginTop: '0.25rem' }}>
               ℹ Alerts work while this page is active. Background/locked-screen delivery requires browser notification support.
             </div>
+          )}
+            </>
           )}
         </div>
       )}

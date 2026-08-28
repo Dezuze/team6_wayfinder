@@ -1,6 +1,49 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 
 const WebSocketContext = createContext();
+const ROUTE_CACHE_KEY = 'wayfinder_custom_route_geometry';
+
+function getRouteGeometryCache() {
+  try {
+    const raw = localStorage.getItem(ROUTE_CACHE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveRouteGeometryCache(cache) {
+  try {
+    localStorage.setItem(ROUTE_CACHE_KEY, JSON.stringify(cache));
+  } catch {
+    // ignore
+  }
+}
+
+function enrichRoute(route) {
+  if (!route) return route;
+  const cache = getRouteGeometryCache();
+  const cachedData = cache[route.id] || cache[route.name];
+
+  let path = route.path;
+  let stopCoordinates = [];
+
+  if (cachedData && Array.isArray(cachedData.path) && cachedData.path.length >= 2) {
+    path = cachedData.path;
+    stopCoordinates = cachedData.stopCoordinates || [];
+  }
+
+  return {
+    ...route,
+    path: Array.isArray(path) && path.length >= 2 ? path : [
+      { lat: 9.6709, lng: 76.8273 },
+      { lat: 9.7123, lng: 76.6834 }
+    ],
+    stopCoordinates,
+    distanceKm: cachedData?.distanceKm,
+    durationMin: cachedData?.durationMin
+  };
+}
 
 export function WebSocketProvider({ children }) {
   const [isConnected, setIsConnected] = useState(false);
@@ -12,8 +55,6 @@ export function WebSocketProvider({ children }) {
 
   const connect = useCallback(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // When running with Vite dev server on port 5173, proxy forwards /ws to 3001
-    // If not proxied or running directly, default to localhost:3001
     const host = window.location.port === '5173' ? window.location.host : 'localhost:3001';
     const wsUrl = `${protocol}//${host}/ws`;
 
@@ -23,7 +64,6 @@ export function WebSocketProvider({ children }) {
     ws.onopen = () => {
       console.log('WebSocket Connected');
       setIsConnected(true);
-      // Request initial snapshot just in case
       ws.send(JSON.stringify({ type: 'REQUEST_INIT' }));
     };
 
@@ -32,7 +72,10 @@ export function WebSocketProvider({ children }) {
         const data = JSON.parse(event.data);
         if (data.type === 'INIT_DATA') {
           if (data.buses) setBuses(data.buses);
-          if (data.routes) setRoutes(data.routes);
+          if (data.routes) {
+            const enriched = data.routes.map(enrichRoute);
+            setRoutes(enriched);
+          }
           if (data.passes) setPasses(data.passes);
         } else if (data.type === 'BUS_LOCATION_UPDATE') {
           if (data.buses) setBuses(data.buses);
@@ -98,12 +141,74 @@ export function WebSocketProvider({ children }) {
         fetch('/api/passes').then(r => r.json())
       ]);
       if (resBuses.success) setBuses(resBuses.buses);
-      if (resRoutes.success) setRoutes(resRoutes.routes);
+      if (resRoutes.success && Array.isArray(resRoutes.routes)) {
+        const enriched = resRoutes.routes.map(enrichRoute);
+        setRoutes(enriched);
+      }
       if (resPasses.success) setPasses(resPasses.passes);
     } catch (err) {
       console.error('Error refreshing REST data:', err);
     }
   }, []);
+
+  // Explicit route creation that links backend route with rich frontend road geometry
+  const createRoute = useCallback(async (payload, customPath = [], stopCoords = [], metrics = {}) => {
+    try {
+      const response = await fetch('/api/routes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server returned status ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success && data.route) {
+        const newRoute = data.route;
+
+        // Cache custom road geometry and stop coordinates for this route
+        const cache = getRouteGeometryCache();
+        const path = Array.isArray(customPath) && customPath.length >= 2
+          ? customPath
+          : newRoute.path;
+
+        cache[newRoute.id] = {
+          path,
+          stopCoordinates: stopCoords,
+          distanceKm: metrics.distanceKm,
+          durationMin: metrics.durationMin
+        };
+        cache[newRoute.name] = cache[newRoute.id];
+        saveRouteGeometryCache(cache);
+
+        const enrichedNewRoute = {
+          ...newRoute,
+          path,
+          stopCoordinates: stopCoords,
+          distanceKm: metrics.distanceKm,
+          durationMin: metrics.durationMin
+        };
+
+        // Immediately update routes in state so it appears everywhere synchronously
+        setRoutes(prev => {
+          const existing = prev.filter(r => r.id !== newRoute.id && r.name !== newRoute.name);
+          return [...existing, enrichedNewRoute];
+        });
+
+        // Also refresh data to ensure backend sync
+        await refreshData();
+
+        return { success: true, route: enrichedNewRoute };
+      } else {
+        throw new Error(data.error || 'Failed to create route');
+      }
+    } catch (err) {
+      console.error('Error creating route in WebSocketContext:', err);
+      throw err;
+    }
+  }, [refreshData]);
 
   return (
     <WebSocketContext.Provider value={{
@@ -113,7 +218,8 @@ export function WebSocketProvider({ children }) {
       passes,
       streamDriverLocation,
       streamDriverSOS,
-      refreshData
+      refreshData,
+      createRoute
     }}>
       {children}
     </WebSocketContext.Provider>
