@@ -18,18 +18,20 @@ function AppContent() {
     }
   }, [user]);
 
+  const showNavbar = activeRole !== 'admin' && activeRole !== 'driver';
+
   return (
     <div className="app-container">
-      <Navbar activeRole={activeRole} setActiveRole={setActiveRole} />
+      {showNavbar && <Navbar activeRole={activeRole} setActiveRole={setActiveRole} />}
       
-      <main className="main-content">
+      <main className={activeRole === 'admin' ? "main-content admin-layout-main" : "main-content"}>
         {!user ? (
           <LoginView />
         ) : (
           <>
-            {activeRole === 'student' && <StudentView />}
-            {activeRole === 'driver' && <DriverView />}
-            {activeRole === 'admin' && <AdminView />}
+            {activeRole === 'student' && <StudentView activeRole={activeRole} setActiveRole={setActiveRole} />}
+            {activeRole === 'driver' && <DriverView activeRole={activeRole} setActiveRole={setActiveRole} />}
+            {activeRole === 'admin' && <AdminView activeRole={activeRole} setActiveRole={setActiveRole} />}
           </>
         )}
       </main>
