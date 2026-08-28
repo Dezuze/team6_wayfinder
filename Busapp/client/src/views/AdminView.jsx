@@ -1,63 +1,119 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import FleetMap from '../components/FleetMap';
+import { COLLEGE_DESTINATION } from '../constants/college';
+import { fetchRoadRoute } from '../utils/routing';
 import {
-  LayoutDashboard,
   Bus,
   GitFork,
-  BarChart2,
   Cloud,
   Search,
   SlidersHorizontal,
   MoreVertical,
-  Plus,
-  Minus,
-  Crosshair,
-  Users,
-  Clock,
-  AlertTriangle,
-  Zap,
-  Battery,
   Gauge,
   MapPin,
-  Sparkles,
-  HelpCircle,
   Shield,
-  Map,
-  XCircle,
-  CheckCircle,
-  Edit3,
   LogOut,
-  User,
-  ArrowRightLeft,
-  ChevronDown,
   Sun,
   Moon,
-  Trash2
+  Trash2,
+  ArrowDown,
+  Loader
 } from 'lucide-react';
 
-
-
-export default function AdminView({ activeRole, setActiveRole }) {
-  const { buses, routes, passes, refreshData } = useWebSocket();
+export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
+  const { buses, routes, passes, refreshData, createRoute } = useWebSocket();
   const { user, logout } = useAuth();
   const { themeMode, cycleTheme, effectiveTheme } = useTheme();
   const [activeSection, setActiveSection] = useState('buses'); // buses, routes, passes
   const [newRouteName, setNewRouteName] = useState('');
-  const [newRouteStops, setNewRouteStops] = useState('');
   const [newRouteColor, setNewRouteColor] = useState('#7c3aed');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fleetFilter, setFleetFilter] = useState('Active'); // All, Active, Delayed, Idle
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [selectedBusId, setSelectedBusId] = useState(null);
-  const [isPickingStops, setIsPickingStops] = useState(false);
   const [pickedStops, setPickedStops] = useState([]);
+  const [candidatePlace, setCandidatePlace] = useState(null);
+  const [driversDirectory, setDriversDirectory] = useState([]);
+
+  // ── Professional Add Pickup Stop Modal State ──
+  const [isAddStopModalOpen, setIsAddStopModalOpen] = useState(false);
+  const [modalStopData, setModalStopData] = useState({
+    name: '',
+    address: '',
+    lat: 0,
+    lng: 0,
+    isSearch: false
+  });
+  const [stopNameInput, setStopNameInput] = useState('');
+
+  // ── Real Road Routing Geometry & Metrics ──
+  const [roadGeometry, setRoadGeometry] = useState([]);
+  const [routeMetrics, setRouteMetrics] = useState({ distanceKm: 0, durationMin: 0 });
+  const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
+  const [routeCalcError, setRouteCalcError] = useState(null);
+  const [routeSuccessMsg, setRouteSuccessMsg] = useState(null);
+
+  // Fetch Drivers Directory from server on mount
+  useEffect(() => {
+    fetch('/api/drivers')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.drivers) {
+          setDriversDirectory(data.drivers);
+        }
+      })
+      .catch(err => console.error('Error loading drivers directory:', err));
+  }, []);
+
+  // Recalculate real road-following route whenever pickedStops change
+  useEffect(() => {
+    if (!pickedStops || pickedStops.length === 0) {
+      setRoadGeometry([]);
+      setRouteMetrics({ distanceKm: 0, durationMin: 0 });
+      setRouteCalcError(null);
+      return;
+    }
+
+    // Preserve exact authoritative waypoint order: [Pickup 1, Pickup 2, ..., Pickup N, College]
+    const waypoints = [
+      ...pickedStops.map(s => ({ lat: s.lat, lng: s.lng })),
+      { lat: COLLEGE_DESTINATION.lat, lng: COLLEGE_DESTINATION.lng }
+    ];
+
+    let isMounted = true;
+    setIsCalculatingRoute(true);
+    setRouteCalcError(null);
+
+    fetchRoadRoute(waypoints)
+      .then(result => {
+        if (isMounted) {
+          setRoadGeometry(result.path);
+          setRouteMetrics({ distanceKm: result.distanceKm, durationMin: result.durationMin });
+          setRouteCalcError(null);
+        }
+      })
+      .catch(err => {
+        if (isMounted) {
+          console.warn('Road routing failed:', err);
+          setRoadGeometry([]);
+          setRouteCalcError('Route preview unavailable (routing service error or offline)');
+        }
+      })
+      .finally(() => {
+        if (isMounted) setIsCalculatingRoute(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [pickedStops]);
 
   // Update Bus Status
-  const handleUpdateBusStatus = async (busId, newStatus) => {
+  const _handleUpdateBusStatus = async (busId, newStatus) => {
     try {
       await fetch(`/api/buses/${busId}`, {
         method: 'PUT',
@@ -98,56 +154,138 @@ export default function AdminView({ activeRole, setActiveRole }) {
     }
   };
 
-  // Create New Route with deduplicated stops
-  const handleCreateRoute = async (e) => {
-    e.preventDefault();
-    if (!newRouteName) return;
-    setIsSubmitting(true);
-    try {
-      const rawStops = newRouteStops ? newRouteStops.split(',').map(s => s.trim()).filter(Boolean) : ['Campus Gate', 'Central Hub'];
-      const cleanStops = Array.from(new Set(rawStops));
-      await fetch('/api/routes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newRouteName.trim(), stops: cleanStops, color: newRouteColor })
-      });
-      setNewRouteName('');
-      setNewRouteStops('');
-      setPickedStops([]);
-      setIsPickingStops(false);
-      await refreshData();
-    } catch (err) {
-      console.error('Error creating route:', err);
-    } finally {
-      setIsSubmitting(false);
+  // Trigger professional modal when a search suggestion is selected
+  const handleCandidateSelectFromSearch = (place) => {
+    if (!place) return;
+    const isCollege = place.isCollege || (place.shortName || '').toLowerCase().includes('college of engineering poonjar');
+    setCandidatePlace(place);
+
+    if (isCollege) {
+      // College is the fixed destination and cannot be added as an intermediate pickup stop
+      return;
     }
+
+    setModalStopData({
+      name: place.shortName || place.name || '',
+      address: place.displayName || '',
+      lat: place.lat,
+      lng: place.lng,
+      isSearch: true
+    });
+    setStopNameInput(place.shortName || place.name || '');
+    setIsAddStopModalOpen(true);
   };
 
-  // Map Click Handler for Route Stop Picking with deduplication
-  const handleMapStopClick = (latlng, nameOverride = null) => {
-    const stopName = nameOverride || window.prompt("Name this stop:");
-    if (stopName && stopName.trim()) {
-      const trimmed = stopName.trim();
-      setPickedStops(prev => {
-        if (prev.some(s => s.name.toLowerCase() === trimmed.toLowerCase())) return prev;
-        return [
-          ...prev,
-          {
-            id: `picked-${Date.now()}-${prev.length}`,
-            name: trimmed,
-            lat: latlng.lat,
-            lng: latlng.lng,
-            number: prev.length + 1
-          }
-        ];
-      });
-      setNewRouteStops(prev => {
-        const currentList = prev ? prev.split(',').map(s => s.trim()).filter(Boolean) : [];
-        if (!currentList.some(s => s.toLowerCase() === trimmed.toLowerCase())) {
-          currentList.push(trimmed);
+  // Trigger professional modal when map is clicked directly
+  const handleMapClick = (latlng) => {
+    setModalStopData({
+      name: '',
+      address: `${latlng.lat.toFixed(5)}°, ${latlng.lng.toFixed(5)}°`,
+      lat: latlng.lat,
+      lng: latlng.lng,
+      isSearch: false
+    });
+    setStopNameInput('');
+    setIsAddStopModalOpen(true);
+  };
+
+  // Confirm Stop Modal - adds stop to sequence in authoritative order
+  const handleConfirmAddStop = (e) => {
+    if (e) e.preventDefault();
+    const trimmed = stopNameInput.trim();
+    if (!trimmed) {
+      alert('Please enter a stop name.');
+      return;
+    }
+    if (trimmed.toLowerCase().includes('college of engineering poonjar')) {
+      alert(`${COLLEGE_DESTINATION.name} is the fixed final destination of every route and is automatically appended.`);
+      setIsAddStopModalOpen(false);
+      return;
+    }
+
+    setPickedStops(prev => {
+      if (prev.some(s => s.name.toLowerCase() === trimmed.toLowerCase())) {
+        return prev;
+      }
+      return [
+        ...prev,
+        {
+          id: `stop-${Date.now()}-${prev.length}`,
+          name: trimmed,
+          lat: modalStopData.lat,
+          lng: modalStopData.lng,
+          number: prev.length + 1
         }
-        return currentList.join(', ');
-      });
+      ];
+    });
+
+    setIsAddStopModalOpen(false);
+    setCandidatePlace(null);
+  };
+
+  // Remove a stop by index and automatically renumber remaining stops
+  const handleRemoveStop = (index) => {
+    setPickedStops(prev => {
+      const next = prev.filter((_, idx) => idx !== index);
+      return next.map((stop, idx) => ({ ...stop, number: idx + 1 }));
+    });
+  };
+
+  // Create New Route with verified ordered pickup stops ending at College of Engineering Poonjar
+  const handleCreateRoute = async (e) => {
+    if (e) e.preventDefault();
+    if (!newRouteName.trim()) {
+      alert('Please enter a route name.');
+      return;
+    }
+    if (pickedStops.length === 0) {
+      alert('Please add at least one pickup stop before creating the route.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setRouteSuccessMsg(null);
+    try {
+      const cleanStops = pickedStops.map(s => s.name.trim()).filter(Boolean);
+      const routeStopsWithCollege = [...cleanStops, COLLEGE_DESTINATION.name];
+
+      // Format road geometry and stop coordinates for rich frontend persistence
+      const customPath = roadGeometry.length >= 2
+        ? roadGeometry.map(([lat, lng]) => ({ lat, lng }))
+        : [
+            ...pickedStops.map(s => ({ lat: s.lat, lng: s.lng })),
+            { lat: COLLEGE_DESTINATION.lat, lng: COLLEGE_DESTINATION.lng }
+          ];
+
+      const stopCoords = [
+        ...pickedStops.map((s, idx) => ({ name: s.name, lat: s.lat, lng: s.lng, number: idx + 1 })),
+        { name: COLLEGE_DESTINATION.name, lat: COLLEGE_DESTINATION.lat, lng: COLLEGE_DESTINATION.lng, number: pickedStops.length + 1 }
+      ];
+
+      const payload = {
+        name: newRouteName.trim(),
+        stops: routeStopsWithCollege,
+        color: newRouteColor
+      };
+
+      const result = await createRoute(payload, customPath, stopCoords, routeMetrics);
+
+      if (result && result.success) {
+        setRouteSuccessMsg(`✓ Route "${newRouteName.trim()}" created successfully with ${pickedStops.length} pickup stop(s) ending at ${COLLEGE_DESTINATION.shortName}!`);
+        setNewRouteName('');
+        setPickedStops([]);
+        setCandidatePlace(null);
+        setRoadGeometry([]);
+        setRouteMetrics({ distanceKm: 0, durationMin: 0 });
+
+        // Clear success message after 6 seconds
+        setTimeout(() => setRouteSuccessMsg(null), 6000);
+      }
+    } catch (err) {
+      console.error('Error creating route:', err);
+      alert('Error creating route: ' + (err.message || 'Please check server connection.'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -529,7 +667,7 @@ export default function AdminView({ activeRole, setActiveRole }) {
                   <button
                     type="button"
                     onClick={() => {
-                      setActiveRole && setActiveRole('student');
+                      if (setActiveRole) setActiveRole('student');
                       setShowProfileDropdown(false);
                     }}
                     style={{
@@ -554,7 +692,7 @@ export default function AdminView({ activeRole, setActiveRole }) {
                   <button
                     type="button"
                     onClick={() => {
-                      setActiveRole && setActiveRole('driver');
+                      if (setActiveRole) setActiveRole('driver');
                       setShowProfileDropdown(false);
                     }}
                     style={{
@@ -611,7 +749,7 @@ export default function AdminView({ activeRole, setActiveRole }) {
 
         {/* 3. CENTER VIEWPORT + RIGHT LIVE STATUS */}
         {activeSection === 'buses' && (
-          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 390px', overflow: 'hidden' }}>
+          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 400px', overflow: 'hidden' }}>
             {/* Map Area */}
             <FleetMap
               buses={buses}
@@ -635,7 +773,7 @@ export default function AdminView({ activeRole, setActiveRole }) {
               {/* Header */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
                 <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-                  Live Status ({filteredFleetCards.length})
+                  Live Fleet ({filteredFleetCards.length})
                 </h2>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text-secondary)' }}>
                   <SlidersHorizontal size={17} style={{ cursor: 'pointer' }} />
@@ -643,20 +781,102 @@ export default function AdminView({ activeRole, setActiveRole }) {
                 </div>
               </div>
 
+              {/* Selected Driver / Vehicle Detail Panel (when a driver/bus is clicked) */}
+              {(() => {
+                const selectedCard = fleetCards.find(c => c.id === selectedBusId);
+                if (!selectedCard) return null;
+                const matchedDriver = driversDirectory.find(d => d.assignedBusId === selectedCard.id || d.name === selectedCard.driverName);
+
+                return (
+                  <div
+                    style={{
+                      backgroundColor: 'var(--bg-card)',
+                      border: '1px solid var(--primary)',
+                      borderRadius: '14px',
+                      padding: '1rem',
+                      marginBottom: '1rem',
+                      boxShadow: '0 4px 14px rgba(124, 58, 237, 0.12)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--primary)', letterSpacing: '0.04em' }}>
+                        SELECTED DRIVER DETAILS
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedBusId(null)}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.75rem' }}
+                      >
+                        ✕ Close
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                      <img
+                        src={selectedCard.avatarUrl}
+                        alt={selectedCard.driverName}
+                        style={{ width: '42px', height: '42px', borderRadius: '10px', objectFit: 'cover' }}
+                      />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                          {selectedCard.driverName}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                          ID: {matchedDriver?.id || matchedDriver?.username || 'N/A'} · Bus: {selectedCard.displayTitle}
+                        </div>
+                      </div>
+                      <span
+                        style={{
+                          fontSize: '0.68rem',
+                          fontWeight: 700,
+                          padding: '0.2rem 0.5rem',
+                          borderRadius: '6px',
+                          backgroundColor: selectedCard.isSos ? '#fee2e2' : selectedCard.isDelayed ? '#fef3c7' : '#dcfce7',
+                          color: selectedCard.isSos ? '#b91c1c' : selectedCard.isDelayed ? '#b45309' : '#15803d'
+                        }}
+                      >
+                        {selectedCard.status}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.78rem', backgroundColor: 'var(--bg-subtle)', padding: '0.65rem 0.75rem', borderRadius: '10px' }}>
+                      <div>
+                        <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem' }}>Contact Phone</span>
+                        <strong style={{ color: 'var(--text-primary)' }}>{matchedDriver?.phone || 'Not configured'}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem' }}>Assigned Route</span>
+                        <strong style={{ color: 'var(--text-primary)' }}>{selectedCard.routeName}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem' }}>Live GPS Location</span>
+                        <strong style={{ color: 'var(--text-primary)', fontFamily: 'monospace' }}>
+                          {selectedCard.rawBus?.location ? `${selectedCard.rawBus.location.lat.toFixed(4)}°, ${selectedCard.rawBus.location.lng.toFixed(4)}°` : 'No GPS'}
+                        </strong>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem' }}>Live Speed</span>
+                        <strong style={{ color: 'var(--text-primary)' }}>{selectedCard.speed}</strong>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Filter Pills with Working Filters */}
-              <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
                 {['All', 'Active', 'Delayed', 'Idle'].map(filter => (
                   <button
                     key={filter}
                     type="button"
                     onClick={() => setFleetFilter(filter)}
                     style={{
-                      padding: '0.4rem 0.95rem',
+                      padding: '0.35rem 0.85rem',
                       borderRadius: '9999px',
                       border: 'none',
                       backgroundColor: fleetFilter === filter ? '#7c3aed' : 'var(--bg-subtle)',
                       color: fleetFilter === filter ? '#ffffff' : 'var(--text-secondary)',
-                      fontSize: '0.82rem',
+                      fontSize: '0.8rem',
                       fontWeight: 600,
                       cursor: 'pointer',
                       transition: 'all 0.15s ease'
@@ -674,7 +894,7 @@ export default function AdminView({ activeRole, setActiveRole }) {
                   overflowY: 'auto',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '0.9rem',
+                  gap: '0.85rem',
                   paddingRight: '0.2rem'
                 }}
               >
@@ -698,10 +918,10 @@ export default function AdminView({ activeRole, setActiveRole }) {
                             ? '4px solid #94a3b8'
                             : '4px solid #10b981',
                         borderRadius: '14px',
-                        padding: '1rem',
+                        padding: '0.9rem',
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '0.75rem',
+                        gap: '0.65rem',
                         boxShadow: selectedBusId === bus.id ? '0 4px 12px rgba(124, 58, 237, 0.15)' : '0 1px 3px rgba(0,0,0,0.03)',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease'
@@ -714,18 +934,18 @@ export default function AdminView({ activeRole, setActiveRole }) {
                             src={bus.avatarUrl}
                             alt={bus.driverName}
                             style={{
-                              width: '40px',
-                              height: '40px',
+                              width: '38px',
+                              height: '38px',
                               borderRadius: '10px',
                               objectFit: 'cover',
                               backgroundColor: 'var(--bg-subtle)'
                             }}
                           />
                           <div>
-                            <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                            <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                               {bus.driverName}
                             </div>
-                            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.1rem' }}>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.35rem', marginTop: '0.1rem' }}>
                               <span>{bus.displayTitle}</span>
                             </div>
                           </div>
@@ -743,9 +963,9 @@ export default function AdminView({ activeRole, setActiveRole }) {
                               : bus.isIdle
                                 ? '#475569'
                                 : '#15803d',
-                            padding: '0.25rem 0.55rem',
+                            padding: '0.2rem 0.5rem',
                             borderRadius: '6px',
-                            fontSize: '0.7rem',
+                            fontSize: '0.68rem',
                             fontWeight: 800,
                             letterSpacing: '0.03em'
                           }}
@@ -769,7 +989,7 @@ export default function AdminView({ activeRole, setActiveRole }) {
                         onClick={e => e.stopPropagation()}
                       >
                         <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary, #64748b)' }}>
-                          Route:
+                          Assigned Route:
                         </span>
                         <select
                           value={bus.routeId || ''}
@@ -792,163 +1012,394 @@ export default function AdminView({ activeRole, setActiveRole }) {
                         </select>
                       </div>
 
-                      {/* Metrics Row: Battery & Speed */}
-                      <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(2, 1fr)',
-                          gap: '0.5rem',
-                          paddingTop: '0.2rem'
-                        }}
-                      >
-                        {/* BATTERY */}
-                        <div>
-                          <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted, #64748b)', letterSpacing: '0.04em' }}>
-                            BATTERY
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary, #1e293b)', marginTop: '0.15rem' }}>
-                            <Battery size={13} color="#10b981" />
-                            <span>{bus.battery}</span>
-                          </div>
+                      {/* Metrics: Speed and Live Status */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <Gauge size={13} color="#7c3aed" />
+                          <span>Speed: <strong>{bus.speed || '0 km/h'}</strong></span>
                         </div>
-
-                        {/* SPEED */}
-                        <div>
-                          <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted, #64748b)', letterSpacing: '0.04em' }}>
-                            SPEED
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary, #1e293b)', marginTop: '0.15rem' }}>
-                            <Gauge size={13} color="var(--text-secondary, #64748b)" />
-                            <span>{bus.speed || '0mph'}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Progress Bar */}
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '5px',
-                          backgroundColor: '#f1f5f9',
-                          borderRadius: '999px',
-                          overflow: 'hidden',
-                          marginTop: '0.2rem'
-                        }}
-                      >
-                        <div
-                          style={{
-                            height: '100%',
-                            width: `${bus.progressPercent}%`,
-                            backgroundColor: bus.isDelayed ? '#ef4444' : bus.isIdle ? '#94a3b8' : '#7c3aed',
-                            borderRadius: '999px'
-                          }}
-                        />
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                          Click card for details
+                        </span>
                       </div>
                     </div>
                   ))
                 )}
               </div>
-
-              {/* Bottom Action Button */}
-              <div style={{ paddingTop: '1rem' }}>
-                <button
-                  type="button"
-                  onClick={() => console.log('Dispatch Backup Vehicle')}
-                  style={{
-                    width: '100%',
-                    backgroundColor: '#7c3aed',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '14px',
-                    padding: '0.85rem 1rem',
-                    fontSize: '0.92rem',
-                    fontWeight: 700,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.6rem',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 14px rgba(124, 58, 237, 0.35)',
-                    transition: 'opacity 0.15s ease'
-                  }}
-                >
-                  <Sparkles size={17} />
-                  <span>Dispatch Backup Vehicle</span>
-                </button>
-              </div>
             </aside>
           </div>
         )}
 
-        {/* SECTION: ROUTES */}
+        {/* SECTION: ROUTES (STUDIO & ACTIVE TRANSIT ROUTES) */}
         {activeSection === 'routes' && (
-          <div style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '1.5rem', alignItems: 'start' }}>
-              {isPickingStops ? (
-                <div className="clean-card" style={{ padding: '1.25rem', height: '580px', display: 'flex', flexDirection: 'column' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
-                    <div>
-                      <h2 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, color: 'var(--text-primary, #1e293b)' }}>
-                        📍 Interactive Route Stop Picker
-                      </h2>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary, #64748b)', marginTop: '0.2rem' }}>
-                        Click anywhere on the map in order to name and add stops to your new route.
-                      </div>
-                    </div>
-                    {pickedStops.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPickedStops([]);
-                          setNewRouteStops('');
-                        }}
+          <div style={{ flex: 1, padding: '1.75rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+            
+            {/* 1. ROUTE CREATION STUDIO WITH EMBEDDED MAP */}
+            <div className="clean-card" style={{ padding: '1.5rem', borderRadius: '16px' }}>
+              <div style={{ marginBottom: '1.25rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  <GitFork size={20} color="#7c3aed" />
+                  <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                    Transit Route Creator
+                  </h2>
+                </div>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem', margin: 0 }}>
+                  Build ordered pickup routes terminating at <strong>{COLLEGE_DESTINATION.name}</strong>. Search Kottayam/Poonjar locations or click on the map to add stops in sequence.
+                </p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 380px', gap: '1.5rem', alignItems: 'stretch' }}>
+                {/* Left: Embedded Kottayam/Poonjar Map for Route Construction */}
+                <div style={{ height: '560px', minHeight: '560px', position: 'relative', borderRadius: '14px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                  <FleetMap
+                    buses={buses}
+                    routes={routes}
+                    isPickingStops={true}
+                    searchRegion="kottayam"
+                    center={[COLLEGE_DESTINATION.lat, COLLEGE_DESTINATION.lng]}
+                    zoom={12}
+                    pickedStops={pickedStops}
+                    roadGeometry={roadGeometry}
+                    previewColor={newRouteColor}
+                    routeCalcError={routeCalcError}
+                    isCalculatingRoute={isCalculatingRoute}
+                    onAddCandidateStop={handleCandidateSelectFromSearch}
+                    onCandidateSelect={handleCandidateSelectFromSearch}
+                    onMapClick={handleMapClick}
+                    hideStatCards={true}
+                  />
+                </div>
+
+                {/* Right: Route Configuration and Ordered Stops Form */}
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '1rem', backgroundColor: 'var(--bg-subtle)', padding: '1.25rem', borderRadius: '14px', border: '1px solid var(--border-color)' }}>
+                  <form onSubmit={handleCreateRoute} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1 }}>
+                    {/* Route Creation Success Feedback Banner */}
+                    {routeSuccessMsg && (
+                      <div
                         style={{
-                          background: 'none',
-                          border: '1px solid var(--border-color, #cbd5e1)',
+                          backgroundColor: '#f0fdf4',
+                          border: '1px solid #86efac',
+                          color: '#15803d',
+                          padding: '0.65rem 0.85rem',
                           borderRadius: '8px',
-                          padding: '0.35rem 0.65rem',
-                          fontSize: '0.78rem',
-                          color: '#ef4444',
-                          fontWeight: 600,
-                          cursor: 'pointer'
+                          fontSize: '0.8rem',
+                          fontWeight: 700,
+                          lineHeight: '1.4'
                         }}
                       >
-                        Clear Stops ({pickedStops.length})
-                      </button>
+                        {routeSuccessMsg}
+                      </div>
                     )}
-                  </div>
-                  <div style={{ flex: 1, position: 'relative', borderRadius: '12px', overflow: 'hidden' }}>
-                    <FleetMap
-                      buses={buses}
-                      routes={routes}
-                      isPickingStops={true}
-                      onMapClick={handleMapStopClick}
-                      pickedStops={pickedStops}
-                      center={[9.5916, 76.5222]}
-                      zoom={12}
-                      hideStatCards={true}
-                    />
+
+                    {/* Route Name Input */}
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem' }}>Route Name</label>
+                      <input
+                        type="text"
+                        value={newRouteName}
+                        onChange={(e) => setNewRouteName(e.target.value)}
+                        placeholder="e.g. Pala - Poonjar Campus Route"
+                        className="form-input"
+                        required
+                      />
+                    </div>
+
+                    {/* Road Routing Live Status / Metrics */}
+                    {isCalculatingRoute && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: '#7c3aed', padding: '0.2rem 0' }}>
+                        <Loader size={13} className="spin-animation" />
+                        <span>Calculating real road geometry...</span>
+                      </div>
+                    )}
+
+                    {routeMetrics.distanceKm > 0 && !isCalculatingRoute && (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem', color: '#15803d', backgroundColor: '#f0fdf4', padding: '0.45rem 0.75rem', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                        <span>🛣️ Road Route: <strong>{routeMetrics.distanceKm} km</strong></span>
+                        <span>⏱️ ~<strong>{routeMetrics.durationMin} min</strong> to Campus</span>
+                      </div>
+                    )}
+
+                    {routeCalcError && (
+                      <div style={{ fontSize: '0.75rem', color: '#b91c1c', backgroundColor: '#fee2e2', padding: '0.4rem 0.6rem', borderRadius: '6px' }}>
+                        ⚠️ {routeCalcError}
+                      </div>
+                    )}
+
+                    {/* Candidate Searched Location Banner (if selected from map search) */}
+                    {candidatePlace && (
+                      <div
+                        style={{
+                          padding: '0.75rem',
+                          backgroundColor: candidatePlace.isCollege || (candidatePlace.shortName || '').toLowerCase().includes('college of engineering poonjar') ? '#f0fdf4' : '#f5f3ff',
+                          borderRadius: '10px',
+                          border: candidatePlace.isCollege || (candidatePlace.shortName || '').toLowerCase().includes('college of engineering poonjar') ? '1px solid #16a34a' : '1px solid #7c3aed',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.4rem'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: candidatePlace.isCollege || (candidatePlace.shortName || '').toLowerCase().includes('college of engineering poonjar') ? '#15803d' : '#7c3aed', letterSpacing: '0.04em' }}>
+                            {candidatePlace.isCollege || (candidatePlace.shortName || '').toLowerCase().includes('college of engineering poonjar') ? 'COLLEGE DESTINATION' : 'SELECTED LOCATION'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setCandidatePlace(null)}
+                            style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '0.75rem' }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#1e293b' }}>
+                          📍 {candidatePlace.shortName || candidatePlace.name}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {candidatePlace.displayName}
+                        </div>
+
+                        {candidatePlace.isCollege || (candidatePlace.shortName || '').toLowerCase().includes('college of engineering poonjar') ? (
+                          <div style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: 600, marginTop: '0.2rem' }}>
+                            🏫 Fixed final destination of all routes. It will automatically be appended as the destination.
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleCandidateSelectFromSearch(candidatePlace)}
+                            style={{
+                              marginTop: '0.2rem',
+                              padding: '0.45rem 0.75rem',
+                              backgroundColor: '#7c3aed',
+                              color: '#ffffff',
+                              border: 'none',
+                              borderRadius: '8px',
+                              fontSize: '0.8rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              boxShadow: '0 2px 8px rgba(124, 58, 237, 0.35)'
+                            }}
+                          >
+                            + Add as Pickup Stop #{pickedStops.length + 1}
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Ordered Pickup Stops Sequence Container */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.4rem' }}>
+                        <label className="form-label" style={{ fontWeight: 700, fontSize: '0.82rem', marginBottom: 0 }}>
+                          Ordered Route Sequence ({pickedStops.length} pickup{pickedStops.length === 1 ? '' : 's'})
+                        </label>
+                        {pickedStops.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setPickedStops([])}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'var(--danger, #ef4444)',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Clear All
+                          </button>
+                        )}
+                      </div>
+
+                      <div
+                        style={{
+                          backgroundColor: 'var(--bg-card)',
+                          borderRadius: '10px',
+                          border: '1px solid var(--border-color)',
+                          padding: '0.75rem',
+                          maxHeight: '210px',
+                          overflowY: 'auto',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.4rem'
+                        }}
+                      >
+                        {pickedStops.length === 0 ? (
+                          <div style={{ textAlign: 'center', padding: '1rem 0.5rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                            <MapPin size={20} color="#94a3b8" style={{ margin: '0 auto 0.35rem' }} />
+                            <div>No pickup stops added yet.</div>
+                            <div style={{ fontSize: '0.72rem', marginTop: '0.2rem' }}>
+                              Search Kottayam/Poonjar places above or click on the map to add pickup stops in order.
+                            </div>
+                          </div>
+                        ) : (
+                          pickedStops.map((stop, idx) => (
+                            <React.Fragment key={stop.id || `stop-${idx}`}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  padding: '0.45rem 0.65rem',
+                                  backgroundColor: 'var(--bg-subtle)',
+                                  borderRadius: '8px',
+                                  border: '1px solid var(--border-color)'
+                                }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+                                  <span
+                                    style={{
+                                      width: '20px',
+                                      height: '20px',
+                                      borderRadius: '50%',
+                                      backgroundColor: '#7c3aed',
+                                      color: '#ffffff',
+                                      fontSize: '0.72rem',
+                                      fontWeight: 800,
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      flexShrink: 0
+                                    }}
+                                  >
+                                    {idx + 1}
+                                  </span>
+                                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {stop.name}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveStop(idx)}
+                                  style={{
+                                    background: 'none',
+                                    border: 'none',
+                                    color: 'var(--danger, #ef4444)',
+                                    cursor: 'pointer',
+                                    padding: '0 2px',
+                                    display: 'flex',
+                                    alignItems: 'center'
+                                  }}
+                                  title="Remove Stop"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
+
+                              {/* Down arrow indicator between stops */}
+                              <div style={{ display: 'flex', justifyContent: 'center', padding: '0.05rem 0' }}>
+                                <ArrowDown size={12} color="#94a3b8" />
+                              </div>
+                            </React.Fragment>
+                          ))
+                        )}
+
+                        {/* Fixed Final Destination: College of Engineering Poonjar */}
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            padding: '0.5rem 0.65rem',
+                            backgroundColor: 'var(--success-light, #f0fdf4)',
+                            borderRadius: '8px',
+                            border: '1px dashed var(--success, #16a34a)'
+                          }}
+                        >
+                          <span style={{ fontSize: '1rem' }}>🏫</span>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--success, #15803d)' }}>
+                              {COLLEGE_DESTINATION.name}
+                            </div>
+                            <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                              Fixed Final Destination
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Route Accent Color */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem', marginBottom: 0 }}>Route Accent Color</label>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <input
+                          type="color"
+                          value={newRouteColor}
+                          onChange={(e) => setNewRouteColor(e.target.value)}
+                          style={{ width: '32px', height: '30px', padding: '2px', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', backgroundColor: 'transparent' }}
+                        />
+                        <span style={{ fontSize: '0.78rem', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>{newRouteColor}</span>
+                      </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={isSubmitting || pickedStops.length === 0}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        backgroundColor: pickedStops.length === 0 ? 'var(--border-color, #cbd5e1)' : '#7c3aed',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '10px',
+                        fontWeight: 700,
+                        fontSize: '0.9rem',
+                        cursor: pickedStops.length === 0 ? 'not-allowed' : 'pointer',
+                        boxShadow: pickedStops.length === 0 ? 'none' : '0 4px 14px rgba(124, 58, 237, 0.35)',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {isSubmitting ? 'Creating Route...' : `Create Route (${pickedStops.length} Pickup${pickedStops.length === 1 ? '' : 's'} → ${COLLEGE_DESTINATION.shortName})`}
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. REGISTERED ACTIVE TRANSIT ROUTES */}
+            <div className="clean-card" style={{ padding: '1.5rem', borderRadius: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                    Registered Active Routes ({routes.length})
+                  </h2>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                    All routes terminate at <strong>{COLLEGE_DESTINATION.name}</strong> and are live on the Student Radar & Driver Navigation
                   </div>
                 </div>
+              </div>
+
+              {routes.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
+                  <GitFork size={36} style={{ margin: '0 auto 0.75rem', opacity: 0.5 }} />
+                  <div style={{ fontWeight: 600, fontSize: '0.95rem' }}>No routes registered</div>
+                  <div style={{ fontSize: '0.8rem', marginTop: '0.25rem' }}>Use the Route Creator above to create your first pickup route.</div>
+                </div>
               ) : (
-                <div className="clean-card" style={{ padding: '1.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0, color: 'var(--text-primary, #1e293b)' }}>
-                      Active Transit Routes
-                    </h2>
-                    <span className="badge" style={{ backgroundColor: 'var(--bg-subtle, #f1f5f9)', color: 'var(--text-secondary, #64748b)' }}>
-                      {routes.length} Registered
-                    </span>
-                  </div>
-                  <div className="flex-col gap-1">
-                    {routes.map(route => (
-                      <div key={route.id} style={{ padding: '1.15rem', borderRadius: '12px', border: '1px solid var(--border-color, #e2e8f0)', borderLeft: `4px solid ${route.color || '#7c3aed'}`, marginBottom: '0.75rem' }}>
-                        <div className="flex-between" style={{ marginBottom: '0.5rem' }}>
-                          <strong style={{ fontSize: '1rem', color: 'var(--text-primary, #1e293b)' }}>{route.name}</strong>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span className="badge" style={{ backgroundColor: 'var(--bg-subtle, #f1f5f9)', color: 'var(--text-secondary, #64748b)' }}>
-                              {route.stops.length} Stops
-                            </span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1rem' }}>
+                  {routes.map(route => {
+                    const rawStops = (route.stops || []).map(s => String(s).trim()).filter(Boolean);
+                    const isCollegeLast = rawStops.length > 0 && rawStops[rawStops.length - 1].toLowerCase().includes('college of engineering poonjar');
+                    const pickupStops = isCollegeLast ? rawStops.slice(0, -1) : rawStops;
+                    const assignedBuses = buses.filter(b => b.routeId === route.id);
+
+                    return (
+                      <div
+                        key={route.id}
+                        style={{
+                          padding: '1.15rem',
+                          borderRadius: '12px',
+                          border: '1px solid var(--border-color)',
+                          borderLeft: `4px solid ${route.color || '#7c3aed'}`,
+                          backgroundColor: 'var(--bg-card)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          gap: '0.85rem'
+                        }}
+                      >
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+                            <strong style={{ fontSize: '0.98rem', color: 'var(--text-primary)' }}>{route.name}</strong>
                             <button
                               type="button"
                               onClick={() => handleDeleteRoute(route.id)}
@@ -957,128 +1408,58 @@ export default function AdminView({ activeRole, setActiveRole }) {
                                 border: 'none',
                                 color: 'var(--danger, #ef4444)',
                                 cursor: 'pointer',
-                                padding: '0.25rem',
+                                padding: '0.2rem',
                                 borderRadius: '6px',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center',
-                                transition: 'opacity 0.15s ease'
+                                justifyContent: 'center'
                               }}
                               title="Delete Route"
                             >
                               <Trash2 size={16} />
                             </button>
                           </div>
+
+                          {/* Ordered Stops Flow */}
+                          <div style={{ backgroundColor: 'var(--bg-subtle)', padding: '0.65rem 0.75rem', borderRadius: '8px', fontSize: '0.8rem' }}>
+                            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '0.35rem', letterSpacing: '0.04em' }}>
+                              ORDERED PICKUP SEQUENCE
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                              {pickupStops.map((stop, sIdx) => (
+                                <div key={sIdx} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-primary)' }}>
+                                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: route.color || '#7c3aed' }}>{sIdx + 1}.</span>
+                                  <span>{stop}</span>
+                                </div>
+                              ))}
+                              {/* Destination Indicator */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--success, #16a34a)', fontWeight: 700, marginTop: '0.15rem' }}>
+                                <span>🏁</span>
+                                <span>{COLLEGE_DESTINATION.name}</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #64748b)' }}>
-                          <strong>Stops: </strong> {route.stops.join(' → ')}
+
+                        {/* Route Footer: Assigned Bus Info */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)', borderTop: '1px solid var(--border-color)', paddingTop: '0.6rem' }}>
+                          <span>
+                            {assignedBuses.length > 0
+                              ? `Assigned to: ${assignedBuses.map(b => b.number || b.id).join(', ')}`
+                              : 'No buses assigned'}
+                          </span>
+                          <span className="badge" style={{ backgroundColor: 'var(--bg-subtle)', color: 'var(--text-secondary)', fontSize: '0.7rem' }}>
+                            {pickupStops.length} Pickups
+                          </span>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
               )}
-
-              <div className="clean-card" style={{ padding: '1.5rem' }}>
-                <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary, #1e293b)' }}>
-                  <Plus size={18} /> Add New Route
-                </h2>
-                <form onSubmit={handleCreateRoute} className="flex-col gap-1">
-                  <div className="form-group">
-                    <label className="form-label">Route Name</label>
-                    <input
-                      type="text"
-                      value={newRouteName}
-                      onChange={(e) => setNewRouteName(e.target.value)}
-                      placeholder="e.g. Campus Loop C"
-                      className="form-input"
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                      <label className="form-label" style={{ marginBottom: 0 }}>Stops (comma separated)</label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (isPickingStops) {
-                            setIsPickingStops(false);
-                            setPickedStops([]);
-                          } else {
-                            setIsPickingStops(true);
-                          }
-                        }}
-                        style={{
-                          background: isPickingStops ? '#ede9fe' : 'var(--bg-subtle, #f1f5f9)',
-                          color: isPickingStops ? '#7c3aed' : 'var(--text-secondary, #475569)',
-                          border: isPickingStops ? '1px solid #7c3aed' : '1px solid var(--border-color, #cbd5e1)',
-                          borderRadius: '8px',
-                          padding: '0.25rem 0.6rem',
-                          fontSize: '0.78rem',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.3rem',
-                          transition: 'all 0.15s ease'
-                        }}
-                      >
-                        <MapPin size={13} />
-                        <span>{isPickingStops ? 'Done Picking' : 'Pick on Map'}</span>
-                      </button>
-                    </div>
-                    <input
-                      type="text"
-                      value={newRouteStops}
-                      onChange={(e) => setNewRouteStops(e.target.value)}
-                      placeholder={isPickingStops ? "Click on map to add stops..." : "Library, Student Union, Gate 3"}
-                      className="form-input"
-                      required
-                    />
-                    {isPickingStops && (
-                      <div style={{ fontSize: '0.75rem', color: '#7c3aed', marginTop: '0.3rem', fontWeight: 500 }}>
-                        📍 Map picking active: Click on map to add next stop in sequence
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Route Accent Color</label>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      <input
-                        type="color"
-                        value={newRouteColor}
-                        onChange={(e) => setNewRouteColor(e.target.value)}
-                        style={{ width: '40px', height: '36px', padding: '2px', border: '1px solid var(--border-color, #cbd5e1)', borderRadius: '8px', cursor: 'pointer', backgroundColor: 'transparent' }}
-                      />
-                      <span style={{ fontSize: '0.85rem', fontFamily: 'monospace', color: 'var(--text-secondary, #64748b)' }}>{newRouteColor}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    style={{
-                      width: '100%',
-                      marginTop: '0.75rem',
-                      padding: '0.75rem',
-                      backgroundColor: '#7c3aed',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '10px',
-                      fontWeight: 700,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {isSubmitting ? 'Creating...' : 'Create Transit Route'}
-                  </button>
-                </form>
-              </div>
             </div>
           </div>
         )}
-
 
         {/* SECTION: PASSES */}
         {activeSection === 'passes' && (
@@ -1152,6 +1533,140 @@ export default function AdminView({ activeRole, setActiveRole }) {
           </div>
         )}
       </div>
+
+      {/* ── PROFESSIONAL ADD PICKUP STOP IN-APP MODAL (NO WINDOW.PROMPT) ── */}
+      {isAddStopModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem'
+          }}
+          onClick={() => setIsAddStopModalOpen(false)}
+        >
+          <div
+            style={{
+              backgroundColor: 'var(--bg-card, #ffffff)',
+              borderRadius: '16px',
+              padding: '1.5rem',
+              width: '100%',
+              maxWidth: '440px',
+              boxShadow: '0 20px 35px -10px rgba(0, 0, 0, 0.3)',
+              border: '1px solid var(--border-color, #e2e8f0)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1.25rem'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <MapPin size={20} color="#7c3aed" />
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-primary, #1e293b)' }}>
+                  Add Pickup Stop
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddStopModalOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted, #64748b)',
+                  cursor: 'pointer',
+                  fontSize: '1.1rem',
+                  padding: '0.2rem'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Selected Location / Coordinates Details */}
+            <div style={{ backgroundColor: 'var(--bg-subtle, #f8fafc)', padding: '0.85rem 1rem', borderRadius: '10px', border: '1px solid var(--border-color, #e2e8f0)' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted, #64748b)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                {modalStopData.isSearch ? 'Selected Location' : 'Selected Coordinates'}
+              </span>
+              <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary, #1e293b)', marginTop: '0.2rem' }}>
+                📍 {modalStopData.name || modalStopData.address}
+              </div>
+              {modalStopData.isSearch && modalStopData.address && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #64748b)', marginTop: '0.2rem', lineHeight: '1.3' }}>
+                  {modalStopData.address}
+                </div>
+              )}
+            </div>
+
+            {/* Stop Name Form */}
+            <form onSubmit={handleConfirmAddStop} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontWeight: 700, fontSize: '0.82rem', marginBottom: '0.35rem', color: 'var(--text-primary, #1e293b)' }}>
+                  Stop Name
+                </label>
+                <input
+                  type="text"
+                  autoFocus
+                  value={stopNameInput}
+                  onChange={e => setStopNameInput(e.target.value)}
+                  placeholder="Enter pickup location name"
+                  className="form-input"
+                  style={{ width: '100%', fontSize: '0.9rem', padding: '0.65rem 0.85rem' }}
+                  required
+                />
+                <div style={{ fontSize: '0.78rem', color: '#7c3aed', fontWeight: 600, marginTop: '0.4rem' }}>
+                  ✓ This will become <strong>Pickup Stop #{pickedStops.length + 1}</strong> in the route sequence
+                </div>
+              </div>
+
+              {/* Modal Actions */}
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsAddStopModalOpen(false)}
+                  style={{
+                    padding: '0.6rem 1.1rem',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-color, #cbd5e1)',
+                    backgroundColor: 'transparent',
+                    color: 'var(--text-secondary, #64748b)',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    padding: '0.6rem 1.25rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    backgroundColor: '#7c3aed',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 3px 10px rgba(124, 58, 237, 0.35)'
+                  }}
+                >
+                  Add Pickup Stop
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
