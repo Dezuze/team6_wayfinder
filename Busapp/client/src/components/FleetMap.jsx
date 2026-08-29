@@ -4,8 +4,11 @@ import L from 'leaflet';
 <<<<<<< HEAD
 import { Users, Clock, AlertTriangle, Zap, MapPin, Search, X, Bus, Locate } from 'lucide-react';
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
 import { Users, AlertTriangle, MapPin, Search, X, Bus } from 'lucide-react';
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 import { COLLEGE_DESTINATION, KOTTAYAM_POONJAR_BOUNDS } from '../constants/college';
@@ -67,7 +70,11 @@ export function createCollegeMarkerIcon() {
   });
 }
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 >>>>>>> 8bbe12cc86e45a1b5fe042172545025e65392d1c
+=======
+
+>>>>>>> Stashed changes
 =======
 
 >>>>>>> Stashed changes
@@ -1012,6 +1019,7 @@ export default function FleetMap({
 
               {/* Render Stop Dots on Route Points for Assigned or Focused Route */}
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <<<<<<< HEAD
               {(isAssigned || !assignedRoute) && (route.waypoints || route.path).map((pt, ptIdx) => {
                 const stopLabel = cleanStops[ptIdx] || `Point ${ptIdx + 1}`;
@@ -1033,6 +1041,9 @@ export default function FleetMap({
                 );
               })}
 =======
+=======
+
+>>>>>>> Stashed changes
 =======
 
 >>>>>>> Stashed changes
@@ -1083,7 +1094,11 @@ export default function FleetMap({
                 )
               )}
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 >>>>>>> 8bbe12cc86e45a1b5fe042172545025e65392d1c
+=======
+
+>>>>>>> Stashed changes
 =======
 
 >>>>>>> Stashed changes
