@@ -3,8 +3,11 @@ import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents 
 import L from 'leaflet';
 <<<<<<< HEAD
 import { Users, Clock, AlertTriangle, Zap, MapPin, Search, X, Bus, Locate } from 'lucide-react';
+<<<<<<< Updated upstream
 =======
 import { Users, AlertTriangle, MapPin, Search, X, Bus } from 'lucide-react';
+=======
+>>>>>>> Stashed changes
 import { COLLEGE_DESTINATION, KOTTAYAM_POONJAR_BOUNDS } from '../constants/college';
 
 /**
@@ -63,7 +66,11 @@ export function createCollegeMarkerIcon() {
     iconAnchor: [0, 0]
   });
 }
+<<<<<<< Updated upstream
 >>>>>>> 8bbe12cc86e45a1b5fe042172545025e65392d1c
+=======
+
+>>>>>>> Stashed changes
 
 /**
  * Default color classifier for vehicle/bus status
@@ -1004,6 +1011,7 @@ export default function FleetMap({
               </Polyline>
 
               {/* Render Stop Dots on Route Points for Assigned or Focused Route */}
+<<<<<<< Updated upstream
 <<<<<<< HEAD
               {(isAssigned || !assignedRoute) && (route.waypoints || route.path).map((pt, ptIdx) => {
                 const stopLabel = cleanStops[ptIdx] || `Point ${ptIdx + 1}`;
@@ -1025,6 +1033,9 @@ export default function FleetMap({
                 );
               })}
 =======
+=======
+
+>>>>>>> Stashed changes
               {(isAssigned || !assignedRoute) && (
                 Array.isArray(route.stopCoordinates) && route.stopCoordinates.length > 0 ? (
                   route.stopCoordinates.map((stop, sIdx) => {
@@ -1071,7 +1082,11 @@ export default function FleetMap({
                   ) : null
                 )
               )}
+<<<<<<< Updated upstream
 >>>>>>> 8bbe12cc86e45a1b5fe042172545025e65392d1c
+=======
+
+>>>>>>> Stashed changes
             </React.Fragment>
           );
         })}
