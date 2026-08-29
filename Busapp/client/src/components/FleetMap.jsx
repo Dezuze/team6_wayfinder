@@ -1,12 +1,74 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
+<<<<<<< HEAD
 import { Users, Clock, AlertTriangle, Zap, MapPin, Search, X, Bus, Locate } from 'lucide-react';
+=======
+import { Users, AlertTriangle, MapPin, Search, X, Bus } from 'lucide-react';
+import { COLLEGE_DESTINATION, KOTTAYAM_POONJAR_BOUNDS } from '../constants/college';
+
+/**
+ * Custom Leaflet DivIcon for the verified College Destination (College of Engineering Poonjar)
+ */
+export function createCollegeMarkerIcon() {
+  const html = `
+    <div style="
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: translate(-50%, -100%);
+      cursor: pointer;
+      z-index: 1000;
+    ">
+      <div style="
+        background-color: #15803d;
+        color: #ffffff;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 4px 9px;
+        border-radius: 8px;
+        white-space: nowrap;
+        box-shadow: 0 4px 14px rgba(21, 128, 61, 0.45);
+        margin-bottom: 4px;
+        border: 2px solid #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      ">
+        🏫 ${COLLEGE_DESTINATION.shortName}
+      </div>
+      <div style="
+        width: 28px;
+        height: 28px;
+        background-color: #16a34a;
+        border: 3px solid #ffffff;
+        border-radius: 50%;
+        color: #ffffff;
+        font-weight: 800;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.5);
+      ">
+        🎓
+      </div>
+    </div>
+  `;
+  return L.divIcon({
+    html: html,
+    className: 'custom-college-marker',
+    iconSize: [0, 0],
+    iconAnchor: [0, 0]
+  });
+}
+>>>>>>> 8bbe12cc86e45a1b5fe042172545025e65392d1c
 
 /**
  * Default color classifier for vehicle/bus status
  */
-export function defaultGetMarkerColor(status, isSelected) {
+export function defaultGetMarkerColor(status, _isSelected) {
   if (!status) return '#10b981';
   const s = String(status).toUpperCase();
   if (s.includes('DELAY') || s.includes('LATE')) return '#f59e0b';
@@ -340,10 +402,17 @@ export default function FleetMap({
   renderMarkerPopup = null,
   isPickingStops = false,
   onMapClick = null,
+  onAddCandidateStop = null,
+  onCandidateSelect = null,
   pickedStops = [],
+  roadGeometry = null,
+  previewColor = '#7c3aed',
+  routeCalcError = null,
+  _isCalculatingRoute = false,
   hideStatCards = false,
   renderOverlay = null,
   showSearch = true,
+  searchRegion = null, // e.g. 'kottayam'
   studentLocation = null
 }) {
   // Resolve backward-compatible prop aliases
@@ -386,31 +455,69 @@ export default function FleetMap({
 
     const timer = setTimeout(() => {
       setIsSearchingPlaces(true);
-      // If VITE_GOOGLE_MAPS_API_KEY exists, developers can swap or fallback. Here we query standard OpenStreetMap Nominatim API
-      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5`)
+      const lowerQ = q.toLowerCase();
+      const isCollegeQuery =
+        lowerQ.includes('college') ||
+        lowerQ.includes('poonjar') ||
+        lowerQ.includes('cep') ||
+        lowerQ.includes('engineering') ||
+        lowerQ.includes('campus');
+
+      let searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5`;
+      if (searchRegion === 'kottayam') {
+        // Restrict Nominatim search strictly to Kottayam/Poonjar region bounding box
+        searchUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&viewbox=${KOTTAYAM_POONJAR_BOUNDS.viewbox}&bounded=1&limit=5`;
+      }
+
+      fetch(searchUrl)
         .then(res => res.json())
         .then(data => {
+          let results = [];
+          if (isCollegeQuery) {
+            results.push({
+              id: 'college-destination-cep',
+              displayName: `${COLLEGE_DESTINATION.name}, ${COLLEGE_DESTINATION.address}`,
+              shortName: COLLEGE_DESTINATION.name,
+              lat: COLLEGE_DESTINATION.lat,
+              lng: COLLEGE_DESTINATION.lng,
+              isCollege: true
+            });
+          }
+
           if (Array.isArray(data)) {
-            setPlaceSuggestions(data.map(item => ({
+            const mapped = data.map(item => ({
               id: item.place_id,
               displayName: item.display_name,
               shortName: item.display_name.split(',')[0],
               lat: parseFloat(item.lat),
-              lng: parseFloat(item.lon)
-            })));
-          } else {
-            setPlaceSuggestions([]);
+              lng: parseFloat(item.lon),
+              isCollege: item.display_name.toLowerCase().includes('college of engineering poonjar')
+            }));
+            results = [...results, ...mapped];
           }
+
+          setPlaceSuggestions(results);
         })
         .catch(err => {
           console.warn('Geocoding search warning:', err);
-          setPlaceSuggestions([]);
+          if (isCollegeQuery) {
+            setPlaceSuggestions([{
+              id: 'college-destination-cep',
+              displayName: `${COLLEGE_DESTINATION.name}, ${COLLEGE_DESTINATION.address}`,
+              shortName: COLLEGE_DESTINATION.name,
+              lat: COLLEGE_DESTINATION.lat,
+              lng: COLLEGE_DESTINATION.lng,
+              isCollege: true
+            }]);
+          } else {
+            setPlaceSuggestions([]);
+          }
         })
         .finally(() => setIsSearchingPlaces(false));
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, searchRegion]);
 
   // Default fallback center: Kottayam, Kerala
   const defaultCenter = useMemo(() => [9.5916, 76.5222], []);
@@ -497,7 +604,7 @@ export default function FleetMap({
     setSearchQuery(bus.number || `BUS #${bus.id}`);
   };
 
-  // Handle selecting a place result from search dropdown
+  // Handle selecting a place result from search dropdown (moves map and places candidate marker WITHOUT auto-adding stop)
   const handleSelectPlaceFromSearch = (place) => {
     setSearchedPlaceMarker({
       lat: place.lat,
@@ -514,8 +621,8 @@ export default function FleetMap({
     setIsSearchOpen(false);
     setSearchQuery(place.shortName);
 
-    if (isPickingStops && onMapClick) {
-      onMapClick({ lat: place.lat, lng: place.lng });
+    if (onCandidateSelect) {
+      onCandidateSelect(place);
     }
   };
 
@@ -767,7 +874,32 @@ export default function FleetMap({
           }}
         >
           <MapPin size={15} color="#a855f7" />
-          <span>Click anywhere on the map to add & name route stops</span>
+          <span>Click anywhere on map or search locations to add pickup stops</span>
+        </div>
+      )}
+
+      {/* Routing Service Error Notification Banner */}
+      {isPickingStops && routeCalcError && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '1rem',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+            backgroundColor: '#fee2e2',
+            color: '#b91c1c',
+            padding: '0.4rem 1rem',
+            borderRadius: '9999px',
+            boxShadow: '0 4px 14px rgba(0, 0, 0, 0.15)',
+            fontSize: '0.78rem',
+            fontWeight: 700,
+            border: '1px solid #f87171',
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          ⚠️ Route preview unavailable
         </div>
       )}
 
@@ -872,6 +1004,7 @@ export default function FleetMap({
               </Polyline>
 
               {/* Render Stop Dots on Route Points for Assigned or Focused Route */}
+<<<<<<< HEAD
               {(isAssigned || !assignedRoute) && (route.waypoints || route.path).map((pt, ptIdx) => {
                 const stopLabel = cleanStops[ptIdx] || `Point ${ptIdx + 1}`;
                 return (
@@ -891,19 +1024,89 @@ export default function FleetMap({
                   </Marker>
                 );
               })}
+=======
+              {(isAssigned || !assignedRoute) && (
+                Array.isArray(route.stopCoordinates) && route.stopCoordinates.length > 0 ? (
+                  route.stopCoordinates.map((stop, sIdx) => {
+                    const isCollege = sIdx === route.stopCoordinates.length - 1;
+                    if (isCollege) return null; // College has dedicated permanent marker
+                    return (
+                      <Marker
+                        key={`route-stop-${route.id}-${sIdx}`}
+                        position={[stop.lat, stop.lng]}
+                        icon={createRouteStopIcon(stop.name || `Stop ${sIdx + 1}`, routeColor, isAssigned)}
+                      >
+                        <Popup>
+                          <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.2rem' }}>
+                            <strong style={{ color: routeColor }}>{route.name}</strong>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1e293b', marginTop: '0.15rem' }}>
+                              Stop #{sIdx + 1}: {stop.name || `Stop ${sIdx + 1}`}
+                            </div>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    );
+                  })
+                ) : (
+                  route.path.length <= 8 ? (
+                    route.path.map((pt, ptIdx) => {
+                      const stopLabel = cleanStops[ptIdx] || `Point ${ptIdx + 1}`;
+                      return (
+                        <Marker
+                          key={`route-pt-${route.id}-${ptIdx}`}
+                          position={[pt.lat, pt.lng]}
+                          icon={createRouteStopIcon(stopLabel, routeColor, isAssigned)}
+                        >
+                          <Popup>
+                            <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.2rem' }}>
+                              <strong style={{ color: routeColor }}>{route.name}</strong>
+                              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1e293b', marginTop: '0.15rem' }}>
+                                Stop: {stopLabel}
+                              </div>
+                            </div>
+                          </Popup>
+                        </Marker>
+                      );
+                    })
+                  ) : null
+                )
+              )}
+>>>>>>> 8bbe12cc86e45a1b5fe042172545025e65392d1c
             </React.Fragment>
           );
         })}
 
-        {/* 2. Render Temporary Picked Stops Path & Numbered Markers */}
-        {pickedStops && pickedStops.length >= 2 && (
+        {/* 2. Permanent College Destination Marker (College of Engineering Poonjar) */}
+        <Marker
+          position={[COLLEGE_DESTINATION.lat, COLLEGE_DESTINATION.lng]}
+          icon={createCollegeMarkerIcon()}
+          zIndexOffset={950}
+        >
+          <Popup>
+            <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.25rem', textAlign: 'center', minWidth: '190px' }}>
+              <div style={{ color: '#15803d', fontWeight: 800, fontSize: '0.92rem' }}>
+                🏫 {COLLEGE_DESTINATION.name}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 700, marginTop: '0.2rem' }}>
+                Fixed Final Destination
+              </div>
+              <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '0.15rem' }}>
+                {COLLEGE_DESTINATION.address}
+              </div>
+            </div>
+          </Popup>
+        </Marker>
+
+        {/* 3. Render Real Road-Following Geometry to College of Engineering Poonjar */}
+        {roadGeometry && roadGeometry.length >= 2 && (
           <Polyline
-            positions={pickedStops.map(s => [s.lat, s.lng])}
+            positions={roadGeometry}
             pathOptions={{
-              color: '#7c3aed',
-              weight: 3,
-              dashArray: '6, 8',
-              opacity: 0.9
+              color: previewColor || '#7c3aed',
+              weight: 5,
+              opacity: 0.95,
+              lineCap: 'round',
+              lineJoin: 'round'
             }}
           />
         )}
@@ -925,37 +1128,77 @@ export default function FleetMap({
           </Marker>
         ))}
 
-        {/* 3. Render Searched Location Place Marker */}
+        {/* 4. Render Searched Location Place Marker */}
         {searchedPlaceMarker && (
           <Marker
             position={[searchedPlaceMarker.lat, searchedPlaceMarker.lng]}
-            icon={createSearchedPlaceIcon(searchedPlaceMarker.shortName)}
+            icon={searchedPlaceMarker.isCollege ? createCollegeMarkerIcon() : createSearchedPlaceIcon(searchedPlaceMarker.shortName)}
           >
             <Popup>
-              <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.2rem', maxWidth: '200px' }}>
-                <strong style={{ color: '#0284c7' }}>📍 {searchedPlaceMarker.shortName}</strong>
-                <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.2rem', lineHeight: '1.3' }}>
-                  {searchedPlaceMarker.displayName}
-                </div>
-                {onMapClick && (
-                  <button
-                    type="button"
-                    onClick={() => onMapClick({ lat: searchedPlaceMarker.lat, lng: searchedPlaceMarker.lng })}
-                    style={{
-                      marginTop: '0.4rem',
-                      backgroundColor: '#7c3aed',
-                      color: '#ffffff',
-                      border: 'none',
-                      borderRadius: '6px',
-                      padding: '0.3rem 0.5rem',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      width: '100%'
-                    }}
-                  >
-                    Add as Route Stop
-                  </button>
+              <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.2rem', maxWidth: '230px' }}>
+                {searchedPlaceMarker.isCollege || (searchedPlaceMarker.shortName || '').toLowerCase().includes('college of engineering poonjar') ? (
+                  <div>
+                    <strong style={{ color: '#15803d' }}>🏫 {COLLEGE_DESTINATION.name}</strong>
+                    <div style={{ fontSize: '0.76rem', color: '#16a34a', fontWeight: 700, marginTop: '0.2rem' }}>
+                      Fixed Final Destination
+                    </div>
+                    <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '0.15rem' }}>
+                      This college is the fixed destination of every route and is automatically appended.
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <strong style={{ color: '#0284c7' }}>📍 {searchedPlaceMarker.shortName}</strong>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.2rem', lineHeight: '1.3' }}>
+                      {searchedPlaceMarker.displayName}
+                    </div>
+                    {onAddCandidateStop ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onAddCandidateStop(searchedPlaceMarker);
+                          setSearchedPlaceMarker(null);
+                        }}
+                        style={{
+                          marginTop: '0.5rem',
+                          backgroundColor: '#7c3aed',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '0.35rem 0.6rem',
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          width: '100%',
+                          boxShadow: '0 2px 6px rgba(124, 58, 237, 0.4)'
+                        }}
+                      >
+                        + Add as Pickup Stop
+                      </button>
+                    ) : onMapClick ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onMapClick({ lat: searchedPlaceMarker.lat, lng: searchedPlaceMarker.lng }, searchedPlaceMarker.shortName);
+                          setSearchedPlaceMarker(null);
+                        }}
+                        style={{
+                          marginTop: '0.5rem',
+                          backgroundColor: '#7c3aed',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '0.35rem 0.6rem',
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          width: '100%'
+                        }}
+                      >
+                        + Add as Pickup Stop
+                      </button>
+                    ) : null}
+                  </div>
                 )}
               </div>
             </Popup>
@@ -1022,12 +1265,12 @@ export default function FleetMap({
               position: 'absolute',
               bottom: '1rem',
               left: '1rem',
-              right: '1rem',
               zIndex: 10,
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
               gap: '0.75rem',
-              pointerEvents: 'none'
+              pointerEvents: 'none',
+              maxWidth: '360px'
             }}
           >
             {/* Card 1: Active Drivers */}
@@ -1067,42 +1310,7 @@ export default function FleetMap({
               </div>
             </div>
 
-            {/* Card 2: Avg Delay */}
-            <div
-              style={{
-                pointerEvents: 'auto',
-                backgroundColor: 'var(--bg-card, #ffffff)',
-                borderRadius: '14px',
-                padding: '0.75rem 0.9rem',
-                boxShadow: '0 6px 20px rgba(0, 0, 0, 0.12)',
-                border: '1px solid var(--border-color, rgba(226, 232, 240, 0.8))',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem'
-              }}
-            >
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  backgroundColor: '#ccfbf1',
-                  color: '#0d9488',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}
-              >
-                <Clock size={18} />
-              </div>
-              <div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary, #64748b)', fontWeight: 500 }}>Avg. Delay</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary, #1e293b)', lineHeight: 1.2 }}>1.4m</div>
-              </div>
-            </div>
-
-            {/* Card 3: Alerts */}
+            {/* Card 2: Alerts */}
             <div
               style={{
                 pointerEvents: 'auto',
@@ -1132,45 +1340,10 @@ export default function FleetMap({
                 <AlertTriangle size={18} />
               </div>
               <div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary, #64748b)', fontWeight: 500 }}>Alerts</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary, #64748b)', fontWeight: 500 }}>Alerts / SOS</div>
                 <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary, #1e293b)', lineHeight: 1.2 }}>
-                  {validBuses.filter(b => (b.status || '').toUpperCase().includes('SOS') || (b.status || '').toUpperCase().includes('EMERGENCY')).length || '03'}
+                  {validBuses.filter(b => (b.status || '').toUpperCase().includes('SOS') || (b.status || '').toUpperCase().includes('EMERGENCY')).length || '0'}
                 </div>
-              </div>
-            </div>
-
-            {/* Card 4: Fleet Charge */}
-            <div
-              style={{
-                pointerEvents: 'auto',
-                backgroundColor: 'var(--bg-card, #ffffff)',
-                borderRadius: '14px',
-                padding: '0.75rem 0.9rem',
-                boxShadow: '0 6px 20px rgba(0, 0, 0, 0.12)',
-                border: '1px solid var(--border-color, rgba(226, 232, 240, 0.8))',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem'
-              }}
-            >
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  backgroundColor: '#ede9fe',
-                  color: '#7c3aed',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}
-              >
-                <Zap size={18} />
-              </div>
-              <div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary, #64748b)', fontWeight: 500 }}>Fleet Charge</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary, #1e293b)', lineHeight: 1.2 }}>88%</div>
               </div>
             </div>
           </div>
