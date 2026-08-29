@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useWebSocket } from '../context/WebSocketContext';
+import { useAuth } from '../context/AuthContext';
 import FleetMap from '../components/FleetMap';
 import { Navigation, MapPin, AlertTriangle, QrCode, Bus, Bell, BellOff, Locate, Loader } from 'lucide-react';
 
@@ -141,7 +142,7 @@ function saveSelected(sel) {
 // ────────────────────────────────────────────────
 export default function StudentView() {
   const { buses, routes, passes } = useWebSocket();
-  const [selectedPassId, setSelectedPassId] = useState('S1001');
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('tracker'); // tracker, routes, pass
 
   // ── Geolocation state ──
@@ -163,7 +164,7 @@ export default function StudentView() {
     typeof Notification !== 'undefined' ? Notification.permission : 'denied'
   );
 
-  const currentPass = passes.find(p => p.id === selectedPassId) || passes[0] || {};
+  const currentPass = passes.find(p => p.id === user?.id) || passes[0] || {};
 
   // ── Geolocation effect ──
   useEffect(() => {
@@ -416,7 +417,7 @@ export default function StudentView() {
   return (
     <div className="mobile-view-wrapper">
       {/* Page Header */}
-      <div style={{ marginBottom: '1.25rem' }}>
+      <div style={{ marginBottom: '0.5rem', flexShrink: 0 }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 600, letterSpacing: '-0.02em', marginBottom: '0.25rem' }}>
           Live Bus Tracker
         </h1>
@@ -425,34 +426,9 @@ export default function StudentView() {
         </p>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="role-tabs" style={{ width: '100%', marginBottom: '1.25rem', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
-        <button
-          onClick={() => setActiveTab('tracker')}
-          className={`role-tab ${activeTab === 'tracker' ? 'active' : ''}`}
-          style={{ textAlign: 'center' }}
-        >
-          Radar
-        </button>
-        <button
-          onClick={() => setActiveTab('routes')}
-          className={`role-tab ${activeTab === 'routes' ? 'active' : ''}`}
-          style={{ textAlign: 'center' }}
-        >
-          Routes ({routes.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('pass')}
-          className={`role-tab ${activeTab === 'pass' ? 'active' : ''}`}
-          style={{ textAlign: 'center' }}
-        >
-          Bus Pass
-        </button>
-      </div>
-
       {/* TAB 1: RADAR */}
       {activeTab === 'tracker' && (
-        <div className="flex-col gap-1">
+        <div className="flex-col gap-1" style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
           {/* Nearby Shuttles Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
             <h2 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
@@ -469,10 +445,27 @@ export default function StudentView() {
           {/* Geolocation Status */}
           {renderGeoStatus()}
 
+          {/* Bus Dropdown */}
+          <div className="form-group" style={{ marginBottom: '0.5rem', flexShrink: 0 }}>
+            <select
+              className="form-select"
+              value={selectedBusId || ''}
+              onChange={(e) => handleSelectBus(e.target.value || null)}
+              style={{ fontSize: '0.85rem', padding: '0.5rem' }}
+            >
+              <option value="">— Select a Bus to Highlight Route —</option>
+              {activeBuses.map(b => (
+                <option key={b.id} value={b.id}>
+                  {b.number || `Bus ${b.id}`} {routes.find(r => r.id === b.routeId) ? `(${routes.find(r => r.id === b.routeId).name})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Always Visible Radar Map */}
-          <div className="student-radar-map-container">
+          <div className="student-radar-map-container" style={{ flex: 1, minHeight: 0, height: 'auto', marginBottom: 0 }}>
             <FleetMap
-              buses={nearbyBuses.length > 0 ? nearbyBuses : activeBuses}
+              buses={activeBuses}
               routes={routes}
               selectedBusId={selectedBusId}
               onSelectBus={handleSelectBus}
@@ -484,17 +477,9 @@ export default function StudentView() {
             />
           </div>
 
-          {/* Empty State */}
-          {geoStatus === 'granted' && nearbyBuses.length === 0 && (
-            <div className="clean-card" style={{ textAlign: 'center', padding: '1.5rem 1rem' }}>
-              <Bus size={28} color="var(--text-muted)" style={{ margin: '0 auto 0.5rem' }} />
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.25rem' }}>No Active Shuttles Nearby</h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', margin: 0 }}>
-                Live college buses will appear here when they start broadcasting within {NEARBY_RADIUS_KM} km of your location.
-                {activeBuses.length > 0 && ` (${activeBuses.length} active bus${activeBuses.length > 1 ? 'es' : ''} outside your radius)`}
-              </p>
-            </div>
-          )}
+          {/* Nearby Bus Cards */}
+          <div style={{ flexShrink: 0, overflowY: 'auto', maxHeight: '35vh', marginTop: '0.5rem' }}>
+          {/* Empty State Removed per user request */}
 
           {/* Nearby Bus Cards */}
           {nearbyBuses.map(bus => {
@@ -661,6 +646,7 @@ export default function StudentView() {
               </div>
             );
           })}
+          </div>
 
           {/* Note about background limitations */}
           {Object.values(alerts).some(a => a.enabled) && (
@@ -704,21 +690,7 @@ export default function StudentView() {
       {/* TAB 3: BUS PASS */}
       {activeTab === 'pass' && (
         <div>
-          <div className="form-group" style={{ marginBottom: '1rem' }}>
-            <label className="form-label">Select Student Profile</label>
-            <select
-              value={selectedPassId}
-              onChange={(e) => setSelectedPassId(e.target.value)}
-              className="form-select"
-            >
-              {passes.map(p => (
-                <option key={p.id} value={p.id}>
-                  {p.name} ({p.id})
-                </option>
-              ))}
-            </select>
-          </div>
-
+          {/* Pass details below */}
           <div className="clean-card" style={{ padding: '0', overflow: 'hidden' }}>
             <div style={{ backgroundColor: 'var(--bg-subtle)', padding: '1rem 1.25rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
@@ -758,6 +730,30 @@ export default function StudentView() {
           </div>
         </div>
       )}
+      {/* Bottom Navigation Bar */}
+      <div className="bottom-nav-bar">
+        <button
+          onClick={() => setActiveTab('tracker')}
+          className={`bottom-nav-item ${activeTab === 'tracker' ? 'active' : ''}`}
+        >
+          <Locate size={20} />
+          Radar
+        </button>
+        <button
+          onClick={() => setActiveTab('routes')}
+          className={`bottom-nav-item ${activeTab === 'routes' ? 'active' : ''}`}
+        >
+          <Navigation size={20} />
+          Routes
+        </button>
+        <button
+          onClick={() => setActiveTab('pass')}
+          className={`bottom-nav-item ${activeTab === 'pass' ? 'active' : ''}`}
+        >
+          <QrCode size={20} />
+          Pass
+        </button>
+      </div>
     </div>
   );
 }

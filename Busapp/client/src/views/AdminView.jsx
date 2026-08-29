@@ -48,6 +48,12 @@ export default function AdminView({ activeRole, setActiveRole }) {
   const [newRouteName, setNewRouteName] = useState('');
   const [newRouteStops, setNewRouteStops] = useState('');
   const [newRouteColor, setNewRouteColor] = useState('#7c3aed');
+  
+  // New Pass State
+  const [newStudentName, setNewStudentName] = useState('');
+  const [newStudentEmail, setNewStudentEmail] = useState('');
+  const [newStudentRoute, setNewStudentRoute] = useState('All Routes');
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fleetFilter, setFleetFilter] = useState('Active'); // All, Active, Delayed, Idle
   const [searchQuery, setSearchQuery] = useState('');
@@ -95,6 +101,32 @@ export default function AdminView({ activeRole, setActiveRole }) {
       await refreshData();
     } catch (err) {
       console.error('Error updating pass status:', err);
+    }
+  };
+
+  // Create New Student Pass
+  const handleCreatePass = async (e) => {
+    e.preventDefault();
+    if (!newStudentName || !newStudentEmail) return;
+    setIsSubmitting(true);
+    try {
+      await fetch('/api/passes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          name: newStudentName.trim(), 
+          email: newStudentEmail.trim(), 
+          routeEntitlement: newStudentRoute 
+        })
+      });
+      setNewStudentName('');
+      setNewStudentEmail('');
+      setNewStudentRoute('All Routes');
+      await refreshData();
+    } catch (err) {
+      console.error('Error creating pass:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1148,6 +1180,71 @@ export default function AdminView({ activeRole, setActiveRole }) {
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            {/* Create New Student Pass Form */}
+            <div className="clean-card" style={{ padding: '1.5rem', marginTop: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary, #1e293b)' }}>
+                <Users size={18} /> Register Student Pass
+              </h2>
+              <form onSubmit={handleCreatePass} className="flex-col gap-1">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">Student Name</label>
+                    <input
+                      type="text"
+                      value={newStudentName}
+                      onChange={(e) => setNewStudentName(e.target.value)}
+                      placeholder="e.g. John Doe"
+                      className="form-input"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Student Email / Username</label>
+                    <input
+                      type="text"
+                      value={newStudentEmail}
+                      onChange={(e) => setNewStudentEmail(e.target.value)}
+                      placeholder="john@student.edu"
+                      className="form-input"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group" style={{ marginTop: '0.5rem' }}>
+                  <label className="form-label">Route Entitlement</label>
+                  <select
+                    value={newStudentRoute}
+                    onChange={(e) => setNewStudentRoute(e.target.value)}
+                    className="form-select"
+                  >
+                    <option value="All Routes">All Routes</option>
+                    {routes.map(r => (
+                      <option key={r.id} value={r.name}>{r.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  style={{
+                    width: '100%',
+                    marginTop: '0.75rem',
+                    padding: '0.75rem',
+                    backgroundColor: '#10b981',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isSubmitting ? 'Registering...' : 'Issue Bus Pass'}
+                </button>
+              </form>
             </div>
           </div>
         )}

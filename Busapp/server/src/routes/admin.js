@@ -77,6 +77,22 @@ export default async function adminRoutes(fastify, options) {
     return { success: true, passes: db.studentPasses };
   });
 
+  fastify.post('/api/passes', async (request, reply) => {
+    const { name, email, routeEntitlement, validUntil } = request.body;
+    const newPass = {
+      id: `S${Math.floor(1000 + Math.random() * 9000)}`,
+      name: name || "New Student",
+      studentName: name || "New Student",
+      email: email || `student${Date.now()}@edu.com`,
+      routeEntitlement: routeEntitlement || "All Routes",
+      validUntil: validUntil || "2026-12-31",
+      passStatus: "Active",
+      qrCodeString: `PASS-${Date.now()}`
+    };
+    db.studentPasses.push(newPass);
+    return { success: true, pass: newPass };
+  });
+
   fastify.put('/api/passes/:id', async (request, reply) => {
     const { id } = request.params;
     const { passStatus, validUntil, routeEntitlement } = request.body;
@@ -110,10 +126,18 @@ export default async function adminRoutes(fastify, options) {
     }
 
     if (role === 'student' || !role) {
-      // Demo: allow any student username matching pass id or email
-      const student = db.studentPasses.find(s => s.id === username || s.email === username || username.startsWith('student'));
-      if (student || username === 'student') {
-        return { success: true, user: { id: student?.id || 'S1001', name: student?.name || 'Alex Mercer', role: 'student', email: student?.email || 'alex@student.edu' } };
+      // Find pass exactly matching username (by email, id, or exact name)
+      const exactStudent = db.studentPasses.find(s => s.id === username || s.email === username || s.name === username);
+      if (exactStudent) {
+        return { success: true, user: { id: exactStudent.id, name: exactStudent.name, role: 'student', email: exactStudent.email } };
+      }
+      
+      // Fallback for default 'student' test login: returns the first active pass
+      if (username === 'student' || username === 'student123') {
+        const fallbackStudent = db.studentPasses[0];
+        if (fallbackStudent) {
+          return { success: true, user: { id: fallbackStudent.id, name: fallbackStudent.name, role: 'student', email: fallbackStudent.email } };
+        }
       }
     }
 

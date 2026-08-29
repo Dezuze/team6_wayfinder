@@ -185,8 +185,8 @@ export default function DriverView({ activeRole, setActiveRole }) {
   }
 
   return (
-    <div className="mobile-view-wrapper" style={{ paddingTop: '0.5rem', maxWidth: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
-      <div className="clean-card" style={{ marginBottom: '1rem', padding: '1rem 1rem 0.9rem', maxWidth: '100%', boxSizing: 'border-box' }}>
+    <div className="mobile-view-wrapper" style={{ paddingTop: '0.5rem', maxWidth: '100%', boxSizing: 'border-box', overflowX: 'hidden', paddingBottom: '1rem' }}>
+      <div className="clean-card" style={{ marginBottom: '1rem', padding: '1rem 1rem 0.9rem', maxWidth: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
         <div className="flex-between" style={{ alignItems: 'flex-start', gap: '0.5rem', minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', minWidth: 0, flex: 1 }}>
             <div style={{
@@ -243,26 +243,7 @@ export default function DriverView({ activeRole, setActiveRole }) {
 
         <div style={{ height: '1px', backgroundColor: 'var(--border-color)', marginTop: '0.85rem', marginBottom: '0.75rem' }} />
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
-          <div style={{ display: 'flex', gap: '0.4rem' }}>
-            <button
-              type="button"
-              onClick={() => setActiveRole && setActiveRole('student')}
-              className="btn btn-secondary"
-              style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem', fontWeight: 600 }}
-            >
-              👨‍🎓 Student View
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveRole && setActiveRole('admin')}
-              className="btn btn-secondary"
-              style={{ padding: '0.35rem 0.65rem', fontSize: '0.75rem', fontWeight: 600 }}
-            >
-              🛡️ Admin Ops
-            </button>
-          </div>
-
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap', gap: '0.5rem' }}>
           <button
             type="button"
             onClick={logout}
@@ -285,7 +266,7 @@ export default function DriverView({ activeRole, setActiveRole }) {
         </div>
       </div>
 
-      <div className="clean-card" style={{ marginBottom: '1rem', padding: '0.9rem 1rem', backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)', maxWidth: '100%', boxSizing: 'border-box' }}>
+      <div className="clean-card" style={{ marginBottom: '1rem', padding: '0.9rem 1rem', backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)', maxWidth: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           <div style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
             <MapPin size={16} />
@@ -296,15 +277,15 @@ export default function DriverView({ activeRole, setActiveRole }) {
         </div>
       </div>
 
-      <div className="clean-card" style={{ marginBottom: '1rem', padding: '0', overflow: 'hidden', borderRadius: 'var(--radius-lg)', maxWidth: '100%', boxSizing: 'border-box' }}>
+      <div className="clean-card" style={{ flex: 1, marginBottom: '1rem', padding: '0', overflow: 'hidden', borderRadius: 'var(--radius-lg)', maxWidth: '100%', boxSizing: 'border-box', display: 'flex' }}>
         <button
           onClick={toggleBroadcast}
           className={`btn ${isBroadcasting ? 'btn-danger' : 'btn-primary'}`}
           style={{
+            flex: 1,
             width: '100%',
             maxWidth: '100%',
             boxSizing: 'border-box',
-            minHeight: '150px',
             padding: '1.5rem 1rem',
             borderRadius: 'var(--radius-lg)',
             border: 'none',
@@ -335,7 +316,7 @@ export default function DriverView({ activeRole, setActiveRole }) {
         </button>
       </div>
 
-      <div style={{ marginBottom: '1rem', width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+      <div style={{ marginBottom: '0', width: '100%', maxWidth: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
         <button
           onClick={() => setShowSosModal(true)}
           className="btn btn-danger"

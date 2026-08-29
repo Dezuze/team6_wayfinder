@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import { Users, Clock, AlertTriangle, Zap, MapPin, Search, X, Bus } from 'lucide-react';
+import { Users, Clock, AlertTriangle, Zap, MapPin, Search, X, Bus, Locate } from 'lucide-react';
 
 /**
  * Default color classifier for vehicle/bus status
@@ -41,15 +41,7 @@ export function defaultCreateMarkerIcon(color, isSelected, isSearchMatch) {
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       z-index: ${zIndex};
     ">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M8 6v6"/>
-        <path d="M16 6v6"/>
-        <path d="M4 12v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/>
-        <path d="M2 12h20"/>
-        <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6H4V6z"/>
-        <circle cx="7.5" cy="16.5" r="1.5"/>
-        <circle cx="16.5" cy="16.5" r="1.5"/>
-      </svg>
+      <span style="font-size: 20px; line-height: 1;">🚌</span>
     </div>
   `;
 
@@ -278,9 +270,10 @@ export function DefaultMarkerPopup({ bus }) {
 }
 
 // Controller component to manage initial center and smooth re-centering on selection without resetting manual pan/zoom
-function MapViewController({ initialCenter, initialZoom = 13, selectedLocation, onMapReady }) {
+function MapViewController({ initialCenter, initialZoom = 13, selectedLocation, studentLocation, onMapReady }) {
   const map = useMap();
   const initializedRef = useRef(false);
+  const prevStudentLocRef = useRef(null);
 
   useEffect(() => {
     if (onMapReady) {
@@ -300,6 +293,18 @@ function MapViewController({ initialCenter, initialZoom = 13, selectedLocation, 
       map.setView([selectedLocation.lat, selectedLocation.lng], Math.max(map.getZoom(), 14), { animate: true });
     }
   }, [selectedLocation, map]);
+
+  useEffect(() => {
+    // If student location is just acquired, pan to it if no bus is selected
+    if (studentLocation && (!prevStudentLocRef.current || 
+        prevStudentLocRef.current.lat !== studentLocation.lat || 
+        prevStudentLocRef.current.lng !== studentLocation.lng)) {
+      if (!selectedLocation) {
+        map.setView([studentLocation.lat, studentLocation.lng], Math.max(map.getZoom(), 14), { animate: true });
+      }
+      prevStudentLocRef.current = studentLocation;
+    }
+  }, [studentLocation, selectedLocation, map]);
 
   return null;
 }
@@ -766,6 +771,40 @@ export default function FleetMap({
         </div>
       )}
 
+      {/* Focus Button */}
+      <button
+        type="button"
+        onClick={() => {
+          if (mapInstance) {
+            if (selectedBus && selectedBus.location && selectedBus.location.lat) {
+              mapInstance.flyTo([selectedBus.location.lat, selectedBus.location.lng], 16, { animate: true, duration: 1.5 });
+            } else if (studentLocation && studentLocation.lat) {
+              mapInstance.flyTo([studentLocation.lat, studentLocation.lng], 16, { animate: true, duration: 1.5 });
+            }
+          }
+        }}
+        style={{
+          position: 'absolute',
+          top: '1rem',
+          right: '1rem',
+          zIndex: 1000,
+          backgroundColor: 'var(--bg-card, #ffffff)',
+          border: '1px solid var(--border-color)',
+          borderRadius: '8px',
+          width: '36px',
+          height: '36px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+          color: 'var(--text-primary)'
+        }}
+        title="Focus on Bus/Location"
+      >
+        <Locate size={18} />
+      </button>
+
       {/* Real Leaflet Map Container */}
       <MapContainer
         center={resolvedCenter}
@@ -788,6 +827,7 @@ export default function FleetMap({
           initialCenter={resolvedCenter}
           initialZoom={activeInitialZoom}
           selectedLocation={selectedLocation}
+          studentLocation={studentLocation}
           onMapReady={setMapInstance}
         />
         <MapClickHandler isPickingStops={isPickingStops} onMapClick={onMapClick} />
@@ -832,7 +872,7 @@ export default function FleetMap({
               </Polyline>
 
               {/* Render Stop Dots on Route Points for Assigned or Focused Route */}
-              {(isAssigned || !assignedRoute) && route.path.map((pt, ptIdx) => {
+              {(isAssigned || !assignedRoute) && (route.waypoints || route.path).map((pt, ptIdx) => {
                 const stopLabel = cleanStops[ptIdx] || `Point ${ptIdx + 1}`;
                 return (
                   <Marker

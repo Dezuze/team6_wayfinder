@@ -84,7 +84,7 @@ fastify.register(async function (fastifyInstance) {
       }
     });
 
-    connection.socket.on('close', () => {
+    socket.on('close', () => {
       fastify.log.info('WebSocket client disconnected');
     });
   });
