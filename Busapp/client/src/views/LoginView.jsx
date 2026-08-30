@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { Bus, Lock, User, ArrowRight } from 'lucide-react';
 
 export default function LoginView() {
   const { login, demoLogin, error, isLoading } = useAuth();
   const [roleTab, setRoleTab] = useState('driver'); // driver, student, admin
-  const [username, setUsername] = useState('john.driver');
-  const [password, setPassword] = useState('password123');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,16 +17,8 @@ export default function LoginView() {
 
   const handleRoleChange = (role) => {
     setRoleTab(role);
-    if (role === 'driver') {
-      setUsername('john.driver');
-      setPassword('password123');
-    } else if (role === 'student') {
-      setUsername('S1001');
-      setPassword('password');
-    } else if (role === 'admin') {
-      setUsername('admin');
-      setPassword('adminpassword');
-    }
+    setUsername('');
+    setPassword('');
   };
 
   return (
@@ -37,7 +30,11 @@ export default function LoginView() {
       padding: '1rem',
       width: '100%'
     }}>
-      <div className="clean-card" style={{
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.4, type: 'spring', damping: 25, stiffness: 200 }}
+        className="clean-card" style={{
         maxWidth: '400px',
         width: '100%',
         padding: '2.5rem 2rem',
@@ -46,18 +43,17 @@ export default function LoginView() {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{
-            width: '48px',
-            height: '48px',
-            borderRadius: '12px',
-            backgroundColor: 'var(--primary-light)',
-            color: 'var(--primary)',
+            width: '64px',
+            height: '64px',
+            borderRadius: '16px',
+            backgroundColor: 'var(--bg-subtle)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 1rem',
-            fontWeight: 700
+            overflow: 'hidden'
           }}>
-            <Bus size={24} />
+            <img src="/logo.png" alt="CampusBus Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           </div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 600, letterSpacing: '-0.02em', marginBottom: '0.35rem' }}>
             Sign in to CampusBus
@@ -144,7 +140,9 @@ export default function LoginView() {
             </div>
           </div>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.95 }}
             type="submit"
             disabled={isLoading}
             className="btn btn-primary btn-lg"
@@ -152,43 +150,10 @@ export default function LoginView() {
           >
             {isLoading ? 'Signing in...' : 'Sign in'}
             <ArrowRight size={16} />
-          </button>
+          </motion.button>
         </form>
 
-        {/* Quick Test Login Buttons */}
-        <div style={{ marginTop: '2rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)', textAlign: 'center' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.75rem' }}>
-            Quick Demo Access
-          </span>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
-            <button
-              type="button"
-              onClick={() => demoLogin('driver')}
-              className="btn btn-secondary"
-              style={{ padding: '0.45rem', fontSize: '0.75rem' }}
-            >
-              Driver Demo
-            </button>
-            <button
-              type="button"
-              onClick={() => demoLogin('student')}
-              className="btn btn-secondary"
-              style={{ padding: '0.45rem', fontSize: '0.75rem' }}
-            >
-              Student Demo
-            </button>
-            <button
-              type="button"
-              onClick={() => demoLogin('admin')}
-              className="btn btn-secondary"
-              style={{ padding: '0.45rem', fontSize: '0.75rem' }}
-            >
-              Admin Demo
-            </button>
-          </div>
-        </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

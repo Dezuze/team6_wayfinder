@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useAuth } from '../context/AuthContext';
 import FleetMap from '../components/FleetMap';
@@ -408,142 +409,112 @@ export default function StudentView() {
   }, [alerts]);
 
   return (
-    <div className="mobile-view-wrapper">
-      {/* Page Header */}
-      <div style={{ marginBottom: '0.5rem', flexShrink: 0 }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 600, letterSpacing: '-0.02em', marginBottom: '0.25rem' }}>
-          Live Bus Tracker
+    <div className="mobile-view-wrapper" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Page Header - Compact for Mobile */}
+      <div style={{ padding: '0.75rem 1rem', flexShrink: 0, borderBottom: '1px solid var(--border-color)' }}>
+        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '0.1rem', margin: 0 }}>
+          Bus Tracker
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-          Real-time shuttle location and schedule updates
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', margin: 0 }}>
+          Real-time updates
         </p>
       </div>
 
       {/* TAB 1: RADAR */}
+      <AnimatePresence mode="wait">
       {activeTab === 'tracker' && (
-<<<<<<< HEAD
-        <div className="flex-col gap-1" style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-          {/* Nearby Shuttles Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <MapPin size={18} color="var(--primary, #7c3aed)" />
-              Nearby Shuttles
+
+        <motion.div 
+          key="tracker"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 10 }}
+          transition={{ duration: 0.2 }}
+          className="flex-col gap-1" 
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '0.75rem 1rem' }}
+        >
+          {/* Nearby Shuttles Header - Compact */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', gap: '0.5rem' }}>
+            <h2 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.3rem', flexShrink: 0 }}>
+              <MapPin size={16} color="var(--primary, #7c3aed)" />
+              <span style={{ minWidth: 'auto' }}>Nearby</span>
             </h2>
             {nearbyBuses.length > 0 && (
-              <span className="badge" style={{ backgroundColor: 'var(--primary-light, #ede9fe)', color: 'var(--primary, #7c3aed)' }}>
-                {nearbyBuses.length} nearby
+              <span className="badge" style={{ backgroundColor: 'var(--primary-light, #ede9fe)', color: 'var(--primary, #7c3aed)', fontSize: '0.65rem', padding: '0.2rem 0.5rem' }}>
+                {nearbyBuses.length}
               </span>
             )}
           </div>
 
-          {/* Geolocation Status */}
-          {renderGeoStatus()}
-
-          {/* Bus Dropdown */}
-          <div className="form-group" style={{ marginBottom: '0.5rem', flexShrink: 0 }}>
-            <select
-              className="form-select"
-              value={selectedBusId || ''}
-              onChange={(e) => handleSelectBus(e.target.value || null)}
-              style={{ fontSize: '0.85rem', padding: '0.5rem' }}
-            >
-              <option value="">— Select a Bus to Highlight Route —</option>
-              {activeBuses.map(b => (
-                <option key={b.id} value={b.id}>
-                  {b.number || `Bus ${b.id}`} {routes.find(r => r.id === b.routeId) ? `(${routes.find(r => r.id === b.routeId).name})` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Always Visible Radar Map */}
-          <div className="student-radar-map-container" style={{ flex: 1, minHeight: 0, height: 'auto', marginBottom: 0 }}>
-            <FleetMap
-              buses={activeBuses}
-              routes={routes}
-              selectedBusId={selectedBusId}
-              onSelectBus={handleSelectBus}
-              hideStatCards={true}
-              showSearch={false}
-              studentLocation={studentLocation}
-              center={mapCenter}
-              initialZoom={studentLocation ? 15 : 13}
-            />
-          </div>
-
-          {/* Nearby Bus Cards */}
-          <div style={{ flexShrink: 0, overflowY: 'auto', maxHeight: '35vh', marginTop: '0.5rem' }}>
-          {/* Empty State Removed per user request */}
-=======
-        <div className="flex-col gap-1">
-          {/* Initial GPS Location Loading State */}
+          {/* Initial GPS Location Loading State - Compact */}
           {geoStatus === 'requesting' && (
-            <div className="clean-card" style={{ textAlign: 'center', padding: '3.5rem 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', borderRadius: '16px' }}>
+            <div className="clean-card" style={{ textAlign: 'center', padding: '2rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', borderRadius: '12px', flex: 1, justifyContent: 'center' }}>
               <div style={{
-                width: '56px',
-                height: '56px',
+                width: '48px',
+                height: '48px',
                 borderRadius: '50%',
                 backgroundColor: 'rgba(124, 58, 237, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <MapPin size={28} color="#7c3aed" className="spin-animation" />
+                <MapPin size={24} color="#7c3aed" className="spin-animation" />
               </div>
               <div>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.4rem', color: 'var(--text-primary)' }}>
-                  Getting your location...
+                <h2 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 0.2rem', color: 'var(--text-primary)' }}>
+                  Getting location...
                 </h2>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', margin: 0, maxWidth: '320px' }}>
-                  We're finding your current location to show nearby buses.
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', margin: 0 }}>
+                  Finding nearby buses
                 </p>
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Loader size={14} className="spin-animation" />
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <Loader size={12} className="spin-animation" />
                 <span>Loading...</span>
               </div>
             </div>
           )}
->>>>>>> 8bbe12cc86e45a1b5fe042172545025e65392d1c
 
-          {/* Location Access Error State (Permission Denied or Unavailable) */}
+
+          {/* Location Access Error State - Compact */}
           {(geoStatus === 'denied' || geoStatus === 'unavailable') && (
-            <div className="clean-card" style={{ textAlign: 'center', padding: '3rem 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', borderRadius: '16px' }}>
+            <div className="clean-card" style={{ textAlign: 'center', padding: '1.5rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', borderRadius: '12px', flex: 1, justifyContent: 'center' }}>
               <div style={{
-                width: '56px',
-                height: '56px',
+                width: '48px',
+                height: '48px',
                 borderRadius: '50%',
                 backgroundColor: 'rgba(239, 68, 68, 0.1)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <AlertTriangle size={28} color="#ef4444" />
+                <AlertTriangle size={24} color="#ef4444" />
               </div>
               <div>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.4rem', color: 'var(--text-primary)' }}>
+                <h2 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 0.2rem', color: 'var(--text-primary)' }}>
                   Location Required
                 </h2>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', margin: 0, maxWidth: '340px', lineHeight: '1.4' }}>
-                  We need your current location to show nearby buses and calculate pickup ETAs. Please allow location access.
+                <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', margin: 0, lineHeight: '1.3' }}>
+                  Allow location access to see nearby buses.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={requestLocation}
                 style={{
-                  padding: '0.75rem 1.75rem',
+                  padding: '0.6rem 1.25rem',
                   backgroundColor: '#7c3aed',
                   color: '#ffffff',
                   border: 'none',
-                  borderRadius: '10px',
-                  fontWeight: 700,
-                  fontSize: '0.9rem',
+                  borderRadius: '8px',
+                  fontWeight: 600,
+                  fontSize: '0.8rem',
                   cursor: 'pointer',
-                  boxShadow: '0 4px 14px rgba(124, 58, 237, 0.35)'
+                  boxShadow: '0 4px 14px rgba(124, 58, 237, 0.35)',
+                  marginTop: '0.25rem'
                 }}
               >
-                Try Again
+                Enable Location
               </button>
             </div>
           )}
@@ -551,27 +522,14 @@ export default function StudentView() {
           {/* Granted GPS Location: Render Real Map Centered on Student */}
           {geoStatus === 'granted' && studentLocation && (
             <>
-              {/* Nearby Shuttles Header */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <h2 style={{ fontSize: '1.1rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <MapPin size={18} color="var(--primary, #7c3aed)" />
-                  Nearby Shuttles
-                </h2>
-                {nearbyBuses.length > 0 && (
-                  <span className="badge" style={{ backgroundColor: 'var(--primary-light, #ede9fe)', color: 'var(--primary, #7c3aed)' }}>
-                    {nearbyBuses.length} nearby
-                  </span>
-                )}
+              {/* Compact Status Pill */}
+              <div className="student-geo-status" style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)', color: '#10b981', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', flexShrink: 0 }}>
+                <Locate size={12} />
+                <span>Location active</span>
               </div>
 
-              {/* Location Active Status Pill */}
-              <div className="student-geo-status" style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)', color: '#10b981' }}>
-                <Locate size={14} />
-                <span>Location active — showing shuttles within {NEARBY_RADIUS_KM} km</span>
-              </div>
-
-              {/* Always Visible Radar Map */}
-              <div className="student-radar-map-container">
+              {/* Always Visible Radar Map - Optimized Height */}
+              <div className="student-radar-map-container" style={{ minHeight: '280px', marginBottom: '0.5rem' }}>
                 <FleetMap
                   buses={nearbyBuses.length > 0 ? nearbyBuses : activeBuses}
                   routes={routes}
@@ -585,20 +543,20 @@ export default function StudentView() {
                 />
               </div>
 
-              {/* Empty State */}
+              {/* Empty State - Compact */}
               {nearbyBuses.length === 0 && (
-                <div className="clean-card" style={{ textAlign: 'center', padding: '1.5rem 1rem' }}>
-                  <Bus size={28} color="var(--text-muted)" style={{ margin: '0 auto 0.5rem' }} />
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '0.25rem' }}>No Active Shuttles Nearby</h3>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', margin: 0 }}>
-                    Live college buses will appear here when they start broadcasting within {NEARBY_RADIUS_KM} km of your location.
-                    {activeBuses.length > 0 && ` (${activeBuses.length} active bus${activeBuses.length > 1 ? 'es' : ''} outside your radius)`}
+                <div className="clean-card" style={{ textAlign: 'center', padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                  <Bus size={20} color="var(--text-muted)" style={{ marginBottom: '0.4rem' }} />
+                  <h3 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.1rem', margin: 0 }}>No Buses Nearby</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.7rem', margin: 0 }}>
+                    Buses within {NEARBY_RADIUS_KM} km will appear here
                   </p>
                 </div>
               )}
 
-              {/* Nearby Bus Cards */}
-              {nearbyBuses.map(bus => {
+              {/* Nearby Bus Cards - Mobile Optimized */}
+              <div style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {nearbyBuses.map(bus => {
             const route = bus.route;
             const isSos = bus.status === '🚨 EMERGENCY / SOS' || (bus.status || '').includes('SOS') || (bus.status || '').includes('EMERGENCY');
             const isSelected = bus.id === selectedBusId;
@@ -624,66 +582,63 @@ export default function StudentView() {
                 onClick={() => handleSelectBus(bus.id)}
                 style={{
                   borderLeft: `3px solid ${isSos ? 'var(--danger)' : route?.color || 'var(--primary)'}`,
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  padding: '0.75rem',
+                  minHeight: 'auto'
                 }}
               >
-                {/* SOS Banner */}
+                {/* SOS Banner - Compact */}
                 {isSos && (
-                  <div style={{ backgroundColor: 'var(--danger-light)', color: 'var(--danger)', padding: '0.6rem 0.75rem', borderRadius: 'var(--radius-sm)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem' }}>
-                    <AlertTriangle size={15} style={{ flexShrink: 0 }} />
-                    <strong>Emergency SOS Reported</strong>
+                  <div style={{ backgroundColor: 'var(--danger-light)', color: 'var(--danger)', padding: '0.4rem 0.5rem', borderRadius: '6px', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.7rem' }}>
+                    <AlertTriangle size={12} style={{ flexShrink: 0 }} />
+                    <strong>Emergency SOS</strong>
                   </div>
                 )}
 
-                {/* Bus Header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Bus size={16} color={route?.color || 'var(--primary)'} />
-                    <strong style={{ fontSize: '0.95rem' }}>{bus.number || `BUS #${bus.id}`}</strong>
-                    <span className="badge" style={{ backgroundColor: isSos ? 'var(--danger-light)' : 'var(--success-light)', color: isSos ? 'var(--danger)' : 'var(--success)', fontSize: '0.7rem' }}>
-                      <span className="pulse-indicator">●</span> {isSos ? 'SOS' : 'Live'}
+                {/* Bus Header - Compact */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.3rem', gap: '0.3rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', minWidth: 0, flex: 1 }}>
+                    <Bus size={14} color={route?.color || 'var(--primary)'} style={{ flexShrink: 0 }} />
+                    <strong style={{ fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{bus.number || `BUS #${bus.id}`}</strong>
+                    <span className="badge" style={{ backgroundColor: isSos ? 'var(--danger-light)' : 'var(--success-light)', color: isSos ? 'var(--danger)' : 'var(--success)', fontSize: '0.6rem', padding: '0.1rem 0.3rem', flexShrink: 0 }}>
+                      {isSos ? 'SOS' : 'Live'}
                     </span>
                   </div>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                    {bus.distanceKm.toFixed(1)} km
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500, flexShrink: 0 }}>
+                    {bus.distanceKm.toFixed(1)}km
                   </span>
                 </div>
 
-                {/* Route Name */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: 'var(--text-secondary)', fontSize: '0.83rem', marginBottom: '0.6rem' }}>
-                  <Navigation size={13} color={route?.color || 'var(--primary)'} />
-                  <span>{route?.name || 'Unassigned Route'}</span>
+                {/* Route Name - Compact */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: 'var(--text-secondary)', fontSize: '0.75rem', marginBottom: '0.4rem' }}>
+                  <Navigation size={11} color={route?.color || 'var(--primary)'} style={{ flexShrink: 0 }} />
+                  <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{route?.name || 'Unassigned'}</span>
                 </div>
 
-                {/* ETA + Nearest Stop */}
+                {/* ETA + Nearest Stop - Compact */}
                 <div style={{
                   backgroundColor: 'var(--bg-subtle)',
-                  padding: '0.7rem 0.75rem',
-                  borderRadius: 'var(--radius-sm)',
-                  marginBottom: '0.6rem'
+                  padding: '0.5rem',
+                  borderRadius: '6px',
+                  marginBottom: '0.4rem'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.82rem' }}>
-                      <MapPin size={13} color="var(--primary, #7c3aed)" />
-                      <span style={{ fontWeight: 500 }}>{displayStopName || 'No stop data'}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.3rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', minWidth: 0 }}>
+                      <MapPin size={11} color="var(--primary, #7c3aed)" style={{ flexShrink: 0 }} />
+                      <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayStopName || 'No stop'}</span>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       {displayEta !== null && displayEta !== undefined ? (
-                        <span style={{ fontSize: '1rem', fontWeight: 700, color: displayEta <= 5 ? 'var(--success, #10b981)' : 'var(--primary, #7c3aed)' }}>
-                          {displayEta} min
+                        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: displayEta <= 5 ? 'var(--success, #10b981)' : 'var(--primary, #7c3aed)' }}>
+                          {displayEta}m
                         </span>
                       ) : (
-                        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                          ETA unavailable
+                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                          N/A
                         </span>
                       )}
                     </div>
                   </div>
-                  {displayEta !== null && (
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-                      {bus.speed > 0 ? `${bus.speed} km/h` : 'Stationary'} · Updated {new Date(bus.lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  )}
                 </div>
 
                 {/* Stop selector (when selected) */}
@@ -715,55 +670,84 @@ export default function StudentView() {
                   </div>
                 )}
 
-                {/* Alert Toggle */}
-                <div
-                  className="student-alert-toggle-row"
-                  onClick={e => {
-                    e.stopPropagation();
-                    toggleAlert(bus.id, displayStopName);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.55rem 0.65rem',
-                    borderRadius: 'var(--radius-sm)',
-                    backgroundColor: isAlertTriggered
-                      ? 'rgba(245, 158, 11, 0.1)'
-                      : isAlertOn
-                        ? 'rgba(124, 58, 237, 0.08)'
-                        : 'var(--bg-subtle)',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s ease'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem' }}>
-                    {isAlertOn ? <Bell size={14} color="var(--primary, #7c3aed)" /> : <BellOff size={14} color="var(--text-muted)" />}
-                    <span style={{ fontWeight: 500, color: isAlertTriggered ? '#f59e0b' : isAlertOn ? 'var(--primary)' : 'var(--text-secondary)' }}>
-                      {isAlertTriggered
-                        ? '🔔 Alert triggered!'
-                        : `Alert me ${ALERT_THRESHOLD_MIN} min before`}
-                    </span>
-                  </div>
-                  {/* Toggle Switch */}
+                {/* Alert Toggle + Stop Selector - Compact for Mobile */}
+                <div style={{ display: 'grid', gridTemplateColumns: isSelected ? '1fr 1fr' : '1fr', gap: '0.3rem' }}>
+                  {/* Alert Toggle - Compact */}
                   <div
-                    className={`student-alert-switch ${isAlertOn ? 'student-alert-switch-on' : ''}`}
+                    className="student-alert-toggle-row"
+                    onClick={e => {
+                      e.stopPropagation();
+                      toggleAlert(bus.id, displayStopName);
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0.6rem',
+                      borderRadius: '6px',
+                      backgroundColor: isAlertTriggered
+                        ? 'rgba(245, 158, 11, 0.1)'
+                        : isAlertOn
+                          ? 'rgba(124, 58, 237, 0.08)'
+                          : 'var(--bg-subtle)',
+                      cursor: 'pointer',
+                      transition: 'background-color 0.2s ease',
+                      minHeight: '40px'
+                    }}
                   >
-                    <div className="student-alert-switch-knob" />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', flex: 1 }}>
+                      {isAlertOn ? <Bell size={12} color="var(--primary, #7c3aed)" /> : <BellOff size={12} color="var(--text-muted)" />}
+                      <span style={{ fontWeight: 500, color: isAlertTriggered ? '#f59e0b' : isAlertOn ? 'var(--primary)' : 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {isAlertTriggered ? 'Triggered!' : `Alert ${ALERT_THRESHOLD_MIN}m`}
+                      </span>
+                    </div>
+                    {/* Toggle Switch - Compact */}
+                    <div
+                      className={`student-alert-switch ${isAlertOn ? 'student-alert-switch-on' : ''}`}
+                      style={{ marginLeft: '0.3rem', flexShrink: 0 }}
+                    >
+                      <div className="student-alert-switch-knob" />
+                    </div>
                   </div>
+
+                  {/* Stop Selector - Compact */}
+                  {isSelected && (
+                    <select
+                      value={selectedStopIndex ?? -1}
+                      onChange={e => setSelectedStopIndex(e.target.value === '-1' ? null : parseInt(e.target.value))}
+                      onClick={e => e.stopPropagation()}
+                      style={{
+                        padding: '0.5rem 0.4rem',
+                        borderRadius: '6px',
+                        border: '1px solid var(--border-color)',
+                        backgroundColor: 'var(--bg-primary)',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.75rem',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        minHeight: '40px'
+                      }}
+                    >
+                      <option value={-1}>Track</option>
+                      {route?.stops && route.stops.map((stop, idx) => (
+                        <option key={idx} value={idx} style={{ fontSize: '0.75rem' }}>
+                          S{idx + 1}
+                        </option>
+                      ))}
+                    </select>
+                  )}
                 </div>
 
-                {/* Notification permission note */}
+                {/* Notification permission note - Compact */}
                 {isAlertOn && typeof Notification !== 'undefined' && Notification.permission === 'denied' && (
-                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.35rem', fontStyle: 'italic' }}>
-                    ⚠ Browser notifications blocked. In-app alert & sound will still work while the page is active.
+                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.3rem', fontStyle: 'italic' }}>
+                    ⚠ Notifications blocked
                   </div>
                 )}
               </div>
             );
           })}
-          </div>
-
+              </div>
           {/* Note about background limitations */}
           {Object.values(alerts).some(a => a.enabled) && (
             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textAlign: 'center', padding: '0.5rem', marginTop: '0.25rem' }}>
@@ -772,28 +756,36 @@ export default function StudentView() {
           )}
             </>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* TAB 2: ROUTES */}
       {activeTab === 'routes' && (
-        <div className="flex-col gap-1">
+        <motion.div 
+          key="routes"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 10 }}
+          transition={{ duration: 0.2 }}
+          className="flex-col gap-1" 
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', padding: '0.75rem 1rem' }}
+        >
           {routes.map(route => {
             const cleanStops = Array.from(new Set((route.stops || []).map(s => String(s).trim()).filter(Boolean)));
             return (
-              <div key={route.id} className="clean-card" style={{ borderLeft: `3px solid ${route.color || 'var(--primary)'}` }}>
-                <div className="flex-between" style={{ marginBottom: '0.5rem' }}>
-                  <h3 style={{ fontSize: '0.95rem', fontWeight: 600 }}>{route.name}</h3>
-                  <span className="badge" style={{ backgroundColor: 'var(--bg-subtle)', color: 'var(--text-secondary)' }}>
-                    {cleanStops.length} Stops
+              <div key={route.id} className="clean-card" style={{ borderLeft: `3px solid ${route.color || 'var(--primary)'}`, padding: '0.75rem', marginBottom: '0.5rem' }}>
+                <div className="flex-between" style={{ marginBottom: '0.4rem' }}>
+                  <h3 style={{ fontSize: '0.9rem', fontWeight: 600, margin: 0 }}>{route.name}</h3>
+                  <span className="badge" style={{ backgroundColor: 'var(--bg-subtle)', color: 'var(--text-secondary)', fontSize: '0.65rem', padding: '0.2rem 0.4rem' }}>
+                    {cleanStops.length} stops
                   </span>
                 </div>
 
-                <div style={{ marginTop: '0.75rem', paddingLeft: '0.5rem', borderLeft: '1px solid var(--border-color)' }}>
+                <div style={{ marginTop: '0.5rem', paddingLeft: '0.5rem', borderLeft: '1px solid var(--border-color)' }}>
                   {cleanStops.map((stop, i) => (
-                    <div key={`${route.id}-stop-${i}-${stop}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: i === cleanStops.length - 1 ? 0 : '0.5rem', fontSize: '0.85rem' }}>
-                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: route.color || 'var(--primary)' }} />
-                      <span style={{ color: i === 0 || i === cleanStops.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: i === 0 || i === cleanStops.length - 1 ? 500 : 400 }}>
+                    <div key={`${route.id}-stop-${i}-${stop}`} style={{ display: 'flex', alignItems: 'flex-start', gap: '0.4rem', marginBottom: i === cleanStops.length - 1 ? 0 : '0.35rem', fontSize: '0.75rem' }}>
+                      <div style={{ width: '5px', height: '5px', borderRadius: '50%', backgroundColor: route.color || 'var(--primary)', flexShrink: 0, marginTop: '0.2rem' }} />
+                      <span style={{ color: i === 0 || i === cleanStops.length - 1 ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: i === 0 || i === cleanStops.length - 1 ? 500 : 400, lineHeight: '1.3' }}>
                         {stop}
                       </span>
                     </div>
@@ -802,75 +794,89 @@ export default function StudentView() {
               </div>
             );
           })}
-        </div>
+        </motion.div>
       )}
 
       {/* TAB 3: BUS PASS */}
       {activeTab === 'pass' && (
-        <div>
-          {/* Pass details below */}
+        <motion.div 
+          key="pass"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 10 }}
+          transition={{ duration: 0.2 }}
+          style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', padding: '0.75rem 1rem' }}
+        >
+          {/* Pass details */}
           <div className="clean-card" style={{ padding: '0', overflow: 'hidden' }}>
-            <div style={{ backgroundColor: 'var(--bg-subtle)', padding: '1rem 1.25rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ backgroundColor: 'var(--bg-subtle)', padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Digital Transit Pass</span>
-                <strong style={{ fontSize: '0.95rem' }}>Campus Shuttle Pass</strong>
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Pass</span>
+                <strong style={{ fontSize: '0.85rem' }}>Campus Shuttle</strong>
               </div>
-              <span className="badge" style={{ backgroundColor: currentPass.passStatus === 'Active' ? 'var(--success-light)' : 'var(--danger-light)', color: currentPass.passStatus === 'Active' ? 'var(--success)' : 'var(--danger)' }}>
+              <span className="badge" style={{ backgroundColor: currentPass.passStatus === 'Active' ? 'var(--success-light)' : 'var(--danger-light)', color: currentPass.passStatus === 'Active' ? 'var(--success)' : 'var(--danger)', fontSize: '0.65rem', padding: '0.2rem 0.4rem' }}>
                 {currentPass.passStatus || 'Active'}
               </span>
             </div>
 
-            <div style={{ padding: '1.25rem' }}>
-              <div style={{ marginBottom: '1.25rem' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Student Name</span>
-                <h2 style={{ fontSize: '1.15rem', fontWeight: 600, marginTop: '0.1rem' }}>{currentPass.name || 'Alex Mercer'}</h2>
-                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{currentPass.email || 'alex.mercer@student.edu'}</span>
+            <div style={{ padding: '0.75rem 1rem' }}>
+              <div style={{ marginBottom: '0.75rem' }}>
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block' }}>Student</span>
+                <h2 style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '0.05rem', margin: 0 }}>{currentPass.name || 'Alex Mercer'}</h2>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{currentPass.email || 'alex.mercer@student.edu'}</span>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)', marginBottom: '0.75rem' }}>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Valid Until</span>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{currentPass.validUntil || '2026-12-31'}</span>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block' }}>Valid Until</span>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>{currentPass.validUntil || '2026-12-31'}</span>
                 </div>
                 <div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Entitlement</span>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 500 }}>{currentPass.routeEntitlement || 'All Routes'}</span>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block' }}>Access</span>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>{currentPass.routeEntitlement || 'All Routes'}</span>
                 </div>
               </div>
 
-              <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: 'var(--bg-subtle)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-                <QrCode size={96} color="var(--text-primary)" style={{ margin: '0 auto 0.5rem', opacity: currentPass.passStatus === 'Active' ? 1 : 0.3 }} />
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                  ID: {currentPass.id || 'S1001'}
+              <div style={{ textAlign: 'center', padding: '0.75rem', backgroundColor: 'var(--bg-subtle)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                <QrCode size={72} color="var(--text-primary)" style={{ margin: '0 auto 0.4rem', opacity: currentPass.passStatus === 'Active' ? 1 : 0.3 }} />
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                  {currentPass.id || 'S1001'}
                 </span>
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
       {/* Bottom Navigation Bar */}
       <div className="bottom-nav-bar">
-        <button
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => setActiveTab('tracker')}
           className={`bottom-nav-item ${activeTab === 'tracker' ? 'active' : ''}`}
         >
           <Locate size={20} />
           Radar
-        </button>
-        <button
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => setActiveTab('routes')}
           className={`bottom-nav-item ${activeTab === 'routes' ? 'active' : ''}`}
         >
           <Navigation size={20} />
           Routes
-        </button>
-        <button
+        </motion.button>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.9 }}
           onClick={() => setActiveTab('pass')}
           className={`bottom-nav-item ${activeTab === 'pass' ? 'active' : ''}`}
         >
           <QrCode size={20} />
           Pass
-        </button>
+        </motion.button>
       </div>
     </div>
   );

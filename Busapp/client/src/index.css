@@ -236,7 +236,11 @@ body {
   -webkit-backdrop-filter: blur(12px);
 }
 
-[data-theme="dark"] .navbar, @media (prefers-color-scheme: dark) {
+[data-theme="dark"] .navbar {
+  background-color: rgba(24, 24, 27, 0.75);
+}
+
+@media (prefers-color-scheme: dark) {
   .navbar {
     background-color: rgba(24, 24, 27, 0.75);
   }
@@ -312,7 +316,11 @@ body {
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.05);
 }
-[data-theme="dark"] .bottom-nav-bar, @media (prefers-color-scheme: dark) {
+[data-theme="dark"] .bottom-nav-bar {
+  background-color: rgba(24, 24, 27, 0.85);
+}
+
+@media (prefers-color-scheme: dark) {
   .bottom-nav-bar {
     background-color: rgba(24, 24, 27, 0.85);
   }
@@ -604,6 +612,8 @@ body {
 /* Radar Map Container */
 .student-radar-map-container {
   width: 100%;
+  height: 100%;
+  flex: 1;
   border-radius: var(--radius-lg, 12px);
   overflow: hidden;
   margin-bottom: 1rem;
@@ -611,6 +621,7 @@ body {
 
 @media (min-width: 768px) {
   .student-radar-map-container {
+    height: 100%;
   }
 }
 

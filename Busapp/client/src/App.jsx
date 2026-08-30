@@ -18,7 +18,7 @@ function AppContent() {
     }
   }, [user]);
 
-  const showNavbar = activeRole !== 'admin' && activeRole !== 'driver';
+  const showNavbar = activeRole !== 'admin';
 
   return (
     <div className="app-container">

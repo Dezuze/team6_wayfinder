@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Bus, Sun, Moon, Laptop, Wifi, WifiOff, LogOut, User } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useWebSocket } from '../context/WebSocketContext';
@@ -19,19 +20,7 @@ export default function Navbar({ activeRole, setActiveRole }) {
   return (
     <header className="navbar">
       <div className="navbar-brand">
-        <div style={{
-          width: '34px',
-          height: '34px',
-          borderRadius: '10px',
-          backgroundColor: 'var(--primary)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#ffffff',
-          boxShadow: '0 2px 8px rgba(37, 99, 235, 0.4)'
-        }}>
-          <Bus size={18} />
-        </div>
+        <img src="/logo.png" alt="CampusBus Logo" style={{ width: '34px', height: '34px', borderRadius: '50%' }} />
         <span style={{ fontSize: '1.25rem', letterSpacing: '-0.03em' }}>CampusBus</span>
       </div>
 
@@ -72,11 +61,17 @@ export default function Navbar({ activeRole, setActiveRole }) {
             {user ? <User size={18} /> : <div style={{fontWeight:600, fontSize:'0.8rem'}}>{activeRole[0].toUpperCase()}</div>}
           </button>
 
+          <AnimatePresence>
           {showMenu && (
-            <div style={{
+            <motion.div 
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={{ duration: 0.2, type: 'spring', stiffness: 300, damping: 20 }}
+              className="navbar-menu-dropdown" style={{
               position: 'absolute',
-              top: '110%',
-              right: 0,
+              top: 'calc(100% + 0.5rem)',
+              right: '0',
               backgroundColor: 'var(--bg-card)',
               border: '1px solid var(--border-color)',
               borderRadius: '12px',
@@ -89,31 +84,13 @@ export default function Navbar({ activeRole, setActiveRole }) {
               gap: '0.25rem'
             }}>
               <div style={{ padding: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Switch Role
+                Account Settings
               </div>
-              {['student', 'driver', 'admin'].map(role => (
-                <button
-                  key={role}
-                  onClick={() => { setActiveRole(role); setShowMenu(false); }}
-                  style={{
-                    textAlign: 'left',
-                    padding: '0.6rem 0.75rem',
-                    backgroundColor: activeRole === role ? 'var(--primary-light)' : 'transparent',
-                    color: activeRole === role ? 'var(--primary)' : 'var(--text-primary)',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: activeRole === role ? 600 : 500,
-                    textTransform: 'capitalize'
-                  }}
-                >
-                  {role}
-                </button>
-              ))}
-
               <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '0.25rem 0' }} />
               
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => { cycleTheme(); setShowMenu(false); }}
                 style={{
                   display: 'flex',
@@ -130,12 +107,14 @@ export default function Navbar({ activeRole, setActiveRole }) {
                 }}
               >
                 {getThemeIcon()} Toggle Theme
-              </button>
+              </motion.button>
 
               {user && (
                 <>
                   <div style={{ height: '1px', backgroundColor: 'var(--border-color)', margin: '0.25rem 0' }} />
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.02, backgroundColor: 'rgba(220, 38, 38, 0.1)' }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => { logout(); setShowMenu(false); }}
                     style={{
                       display: 'flex',
@@ -152,11 +131,12 @@ export default function Navbar({ activeRole, setActiveRole }) {
                     }}
                   >
                     <LogOut size={16} /> Sign Out
-                  </button>
+                  </motion.button>
                 </>
               )}
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
       </div>
     </header>

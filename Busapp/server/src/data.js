@@ -12802,6 +12802,14 @@ export const db = {
       passStatus: "Pending Approval",
       validUntil: "2026-12-31",
       routeEntitlement: "Route 2 Only"
+    },
+    {
+      id: "S9999",
+      name: "Test Student",
+      email: "teststudent",
+      passStatus: "Active",
+      validUntil: "2030-12-31",
+      routeEntitlement: "All Routes"
     }
   ],
   drivers: [
@@ -12840,6 +12848,15 @@ export const db = {
       phone: "+1-555-0104",
       assignedBusId: "bus-104",
       status: "Active"
+    },
+    {
+      id: "driver-99",
+      username: "testdriver",
+      password: "testpassword",
+      name: "Test Driver",
+      phone: "+1-555-9999",
+      assignedBusId: "bus-101",
+      status: "Active"
     }
   ],
   admins: [
@@ -12848,6 +12865,13 @@ export const db = {
       username: "admin",
       password: "adminpassword",
       name: "Head Campus Administrator",
+      role: "admin"
+    },
+    {
+      id: "admin-2",
+      username: "testadmin",
+      password: "testpassword",
+      name: "Test Administrator",
       role: "admin"
     }
   ]

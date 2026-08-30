@@ -22,7 +22,8 @@ export function AuthProvider({ children }) {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/login', {
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${baseUrl}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password, role })

@@ -55,8 +55,15 @@ export function WebSocketProvider({ children }) {
 
   const connect = useCallback(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.port === '5173' ? window.location.host : 'localhost:3001';
-    const wsUrl = `${protocol}//${host}/ws`;
+    
+    // Allow override via environment variable for Vercel deployment
+    let wsUrl = '';
+    if (import.meta.env.VITE_WS_URL) {
+      wsUrl = import.meta.env.VITE_WS_URL;
+    } else {
+      const host = window.location.port === '5173' ? 'localhost:3001' : window.location.host;
+      wsUrl = `${protocol}//${host}/ws`;
+    }
 
     console.log('Connecting to WebSocket:', wsUrl);
     const ws = new WebSocket(wsUrl);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useAuth } from '../context/AuthContext';
 import { Radio, Play, Square, Compass, Gauge, AlertTriangle, RefreshCw, MapPin, CheckCircle, LogOut, ArrowRightLeft } from 'lucide-react';
@@ -278,7 +279,9 @@ export default function DriverView({ activeRole, setActiveRole }) {
       </div>
 
       <div className="clean-card" style={{ flex: 1, marginBottom: '1rem', padding: '0', overflow: 'hidden', borderRadius: 'var(--radius-lg)', maxWidth: '100%', boxSizing: 'border-box', display: 'flex' }}>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.95 }}
           onClick={toggleBroadcast}
           className={`btn ${isBroadcasting ? 'btn-danger' : 'btn-primary'}`}
           style={{
@@ -302,22 +305,26 @@ export default function DriverView({ activeRole, setActiveRole }) {
             letterSpacing: '0.03em'
           }}
         >
+          <AnimatePresence mode="wait">
           {isBroadcasting ? (
-            <>
+            <motion.div key="stop" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.6rem' }}>
               <Square fill="#ffffff" size={28} />
               <span>STOP TRACKING</span>
-            </>
+            </motion.div>
           ) : (
-            <>
+            <motion.div key="start" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.6rem' }}>
               <Play fill="#ffffff" size={28} />
               <span>START TRACKING</span>
-            </>
+            </motion.div>
           )}
-        </button>
+          </AnimatePresence>
+        </motion.button>
       </div>
 
       <div style={{ marginBottom: '0', width: '100%', maxWidth: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
-        <button
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => setShowSosModal(true)}
           className="btn btn-danger"
           style={{
@@ -343,12 +350,17 @@ export default function DriverView({ activeRole, setActiveRole }) {
           <small style={{ fontSize: '0.72rem', fontWeight: 500, opacity: 0.9, textTransform: 'none', letterSpacing: '0' }}>
             Tap for immediate breakdown or accident alerts
           </small>
-        </button>
+        </motion.button>
       </div>
 
       {/* SOS Modal */}
+      <AnimatePresence>
       {showSosModal && (
-        <div style={{
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          style={{
           position: 'fixed',
           top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -358,7 +370,12 @@ export default function DriverView({ activeRole, setActiveRole }) {
           padding: '1.5rem',
           zIndex: 999
         }}>
-          <div className="clean-card" style={{
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="clean-card" style={{
             maxWidth: '400px',
             width: '100%',
             padding: '1.75rem',
@@ -410,9 +427,10 @@ export default function DriverView({ activeRole, setActiveRole }) {
                 Cancel
               </button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

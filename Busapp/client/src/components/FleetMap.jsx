@@ -1,16 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-<<<<<<< HEAD
 import { Users, Clock, AlertTriangle, Zap, MapPin, Search, X, Bus, Locate } from 'lucide-react';
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
-import { Users, AlertTriangle, MapPin, Search, X, Bus } from 'lucide-react';
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 import { COLLEGE_DESTINATION, KOTTAYAM_POONJAR_BOUNDS } from '../constants/college';
 
 /**
@@ -69,15 +60,6 @@ export function createCollegeMarkerIcon() {
     iconAnchor: [0, 0]
   });
 }
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> 8bbe12cc86e45a1b5fe042172545025e65392d1c
-=======
-
->>>>>>> Stashed changes
-=======
-
->>>>>>> Stashed changes
 
 /**
  * Default color classifier for vehicle/bus status
@@ -1018,35 +1000,6 @@ export default function FleetMap({
               </Polyline>
 
               {/* Render Stop Dots on Route Points for Assigned or Focused Route */}
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< HEAD
-              {(isAssigned || !assignedRoute) && (route.waypoints || route.path).map((pt, ptIdx) => {
-                const stopLabel = cleanStops[ptIdx] || `Point ${ptIdx + 1}`;
-                return (
-                  <Marker
-                    key={`route-pt-${route.id}-${ptIdx}`}
-                    position={[pt.lat, pt.lng]}
-                    icon={createRouteStopIcon(stopLabel, routeColor, isAssigned)}
-                  >
-                    <Popup>
-                      <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.2rem' }}>
-                        <strong style={{ color: routeColor }}>{route.name}</strong>
-                        <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1e293b', marginTop: '0.15rem' }}>
-                          Stop: {stopLabel}
-                        </div>
-                      </div>
-                    </Popup>
-                  </Marker>
-                );
-              })}
-=======
-=======
-
->>>>>>> Stashed changes
-=======
-
->>>>>>> Stashed changes
               {(isAssigned || !assignedRoute) && (
                 Array.isArray(route.stopCoordinates) && route.stopCoordinates.length > 0 ? (
                   route.stopCoordinates.map((stop, sIdx) => {
@@ -1093,15 +1046,6 @@ export default function FleetMap({
                   ) : null
                 )
               )}
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> 8bbe12cc86e45a1b5fe042172545025e65392d1c
-=======
-
->>>>>>> Stashed changes
-=======
-
->>>>>>> Stashed changes
             </React.Fragment>
           );
         })}

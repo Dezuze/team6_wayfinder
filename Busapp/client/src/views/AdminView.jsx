@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -20,7 +21,8 @@ import {
   Moon,
   Trash2,
   ArrowDown,
-  Loader
+  Loader,
+  Users
 } from 'lucide-react';
 
 export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
@@ -160,7 +162,6 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     }
   };
 
-<<<<<<< HEAD
   // Create New Student Pass
   const handleCreatePass = async (e) => {
     e.preventDefault();
@@ -187,29 +188,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     }
   };
 
-  // Create New Route with deduplicated stops
-  const handleCreateRoute = async (e) => {
-    e.preventDefault();
-    if (!newRouteName) return;
-    setIsSubmitting(true);
-    try {
-      const rawStops = newRouteStops ? newRouteStops.split(',').map(s => s.trim()).filter(Boolean) : ['Campus Gate', 'Central Hub'];
-      const cleanStops = Array.from(new Set(rawStops));
-      await fetch('/api/routes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newRouteName.trim(), stops: cleanStops, color: newRouteColor })
-      });
-      setNewRouteName('');
-      setNewRouteStops('');
-      setPickedStops([]);
-      setIsPickingStops(false);
-      await refreshData();
-    } catch (err) {
-      console.error('Error creating route:', err);
-    } finally {
-      setIsSubmitting(false);
-=======
+
   // Trigger professional modal when a search suggestion is selected
   const handleCandidateSelectFromSearch = (place) => {
     if (!place) return;
@@ -219,7 +198,6 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     if (isCollege) {
       // College is the fixed destination and cannot be added as an intermediate pickup stop
       return;
->>>>>>> 8bbe12cc86e45a1b5fe042172545025e65392d1c
     }
 
     setModalStopData({
@@ -408,8 +386,9 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     <div
       style={{
         display: 'flex',
-        width: '100vw',
-        height: '100vh',
+        width: '100%',
+        height: '100%',
+        minHeight: '100dvh',
         overflow: 'hidden',
         backgroundColor: 'var(--bg-primary)',
         color: 'var(--text-primary)',
@@ -419,7 +398,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
         if (showProfileDropdown) setShowProfileDropdown(false);
       }}
     >
-      {/* 1. LEFT SIDEBAR */}
+      {/* 1. LEFT SIDEBAR - Hidden on Mobile */}
       <aside
         style={{
           width: '235px',
@@ -430,28 +409,34 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
           justifyContent: 'space-between',
           padding: '1.5rem 1.15rem',
           flexShrink: 0,
-          zIndex: 20
+          zIndex: 20,
+          '@media (max-width: 768px)': {
+            display: 'none'
+          }
         }}
       >
         <div>
           {/* Brand Logo */}
-          <div style={{ marginBottom: '2rem', paddingLeft: '0.4rem' }}>
+          <div style={{ marginBottom: '2rem', paddingLeft: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <img src="/logo.png" alt="CampusBus Logo" style={{ width: '36px', height: '36px', borderRadius: '50%' }} />
             <span
               style={{
                 color: '#7c3aed',
-                fontSize: '1.15rem',
+                fontSize: '1.25rem',
                 fontWeight: 900,
-                letterSpacing: '0.06em',
+                letterSpacing: '-0.03em',
                 fontFamily: "'Outfit', 'Inter', sans-serif"
               }}
             >
-              WAYFINDER
+              CampusBus
             </span>
           </div>
 
           {/* Navigation Links */}
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-            <button
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
               type="button"
               onClick={() => setActiveSection('buses')}
               style={{
@@ -474,9 +459,11 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
             >
               <Bus size={18} />
               <span>Fleet</span>
-            </button>
+            </motion.button>
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
               type="button"
               onClick={() => setActiveSection('routes')}
               style={{
@@ -499,9 +486,11 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
             >
               <GitFork size={18} />
               <span>Routes</span>
-            </button>
+            </motion.button>
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
               type="button"
               onClick={() => setActiveSection('passes')}
               style={{
@@ -524,7 +513,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
             >
               <Shield size={18} />
               <span>Passes</span>
-            </button>
+            </motion.button>
           </nav>
         </div>
 
@@ -563,8 +552,8 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
       </aside>
 
       {/* 2. RIGHT MAIN CONTENT AREA */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {/* TOP BAR */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', width: '100%' }}>
+        {/* TOP BAR - Responsive */}
         <header
           style={{
             height: '68px',
@@ -575,16 +564,18 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
             justifyContent: 'space-between',
             padding: '0 1.75rem',
             flexShrink: 0,
-            zIndex: 10
+            zIndex: 10,
+            gap: '1rem',
+            overflow: 'visible'
           }}
         >
-          {/* Left Title */}
-          <div style={{ color: 'var(--primary, #7c3aed)', fontSize: '1.1rem', fontWeight: 800, letterSpacing: '-0.01em' }}>
-            Fleet Ops Center
+          {/* Left Title - Responsive */}
+          <div style={{ color: 'var(--primary, #7c3aed)', fontSize: 'clamp(0.9rem, 2vw, 1.1rem)', fontWeight: 800, letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>
+            Fleet Ops
           </div>
 
-          {/* Center Search Bar */}
-          <div style={{ position: 'relative', width: '420px' }}>
+          {/* Center Search Bar - Hidden on Mobile */}
+          <div style={{ position: 'relative', width: '420px', display: 'none' }}>
             <Search
               size={16}
               color="var(--text-muted, #94a3b8)"
@@ -653,18 +644,18 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                 transition: 'background-color 0.15s'
               }}
             >
-              <div style={{ textAlign: 'right', lineHeight: 1.25 }}>
+              <div style={{ textAlign: 'right', lineHeight: 1.25, display: 'none' }}>
                 <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                   {user?.name || 'Alex Rivera'}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Fleet Manager</div>
               </div>
 
-              {/* Help / Diamond Icon */}
+              {/* Help / Diamond Icon - Hidden on Mobile */}
               <div
                 style={{
                   color: 'var(--text-secondary)',
-                  display: 'flex',
+                  display: 'none',
                   alignItems: 'center'
                 }}
                 title="System Help"
@@ -698,115 +689,79 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
             </div>
 
             {/* Profile Dropdown Menu */}
-            {showProfileDropdown && (
-              <div
-                onClick={(e) => e.stopPropagation()}
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  right: 0,
-                  marginTop: '0.5rem',
-                  backgroundColor: 'var(--bg-card)',
-                  borderRadius: '14px',
-                  boxShadow: 'var(--shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.15))',
-                  border: '1px solid var(--border-color)',
-                  width: '220px',
-                  padding: '0.5rem',
-                  zIndex: 100
-                }}
-              >
-                <div style={{ padding: '0.6rem 0.75rem', borderBottom: '1px solid var(--border-color)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)' }}>{user?.name || 'Alex Rivera'}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Administrator Account</div>
-                </div>
+            <AnimatePresence>
+              {showProfileDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.2, type: 'spring', stiffness: 300, damping: 20 }}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: '0.5rem',
+                    backgroundColor: 'var(--bg-card)',
+                    borderRadius: '14px',
+                    boxShadow: 'var(--shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.15))',
+                    border: '1px solid var(--border-color)',
+                    width: '220px',
+                    padding: '0.5rem',
+                    zIndex: 100
+                  }}
+                >
+                  <div style={{ padding: '0.6rem 0.75rem', borderBottom: '1px solid var(--border-color)' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)' }}>{user?.name || 'Alex Rivera'}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Administrator Account</div>
+                  </div>
 
-                <div style={{ padding: '0.35rem 0' }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (setActiveRole) setActiveRole('student');
-                      setShowProfileDropdown(false);
-                    }}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.6rem',
-                      padding: '0.55rem 0.75rem',
-                      border: 'none',
-                      backgroundColor: 'transparent',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.85rem',
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      borderRadius: '8px',
-                      textAlign: 'left'
-                    }}
-                  >
-                    <span>👨‍🎓</span> Switch to Student Portal
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (setActiveRole) setActiveRole('driver');
-                      setShowProfileDropdown(false);
-                    }}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.6rem',
-                      padding: '0.55rem 0.75rem',
-                      border: 'none',
-                      backgroundColor: 'transparent',
-                      color: 'var(--text-primary)',
-                      fontSize: '0.85rem',
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      borderRadius: '8px',
-                      textAlign: 'left'
-                    }}
-                  >
-                    <span>🚌</span> Switch to Driver Portal
-                  </button>
-                </div>
-
-                <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '0.35rem' }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowProfileDropdown(false);
-                      logout();
-                    }}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.6rem',
-                      padding: '0.55rem 0.75rem',
-                      border: 'none',
-                      backgroundColor: 'transparent',
-                      color: '#dc2626',
-                      fontSize: '0.85rem',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      borderRadius: '8px',
-                      textAlign: 'left'
-                    }}
-                  >
-                    <LogOut size={16} />
-                    <span>Log Out</span>
-                  </button>
-                </div>
-              </div>
-            )}
+                  <div style={{ paddingTop: '0.35rem' }}>
+                    <motion.button
+                      whileHover={{ scale: 1.02, backgroundColor: 'rgba(220, 38, 38, 0.05)' }}
+                      whileTap={{ scale: 0.98 }}
+                      type="button"
+                      onClick={() => {
+                        setShowProfileDropdown(false);
+                        logout();
+                      }}
+                      style={{
+                        width: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.6rem',
+                        padding: '0.55rem 0.75rem',
+                        border: 'none',
+                        backgroundColor: 'transparent',
+                        color: '#dc2626',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        borderRadius: '8px',
+                        textAlign: 'left'
+                      }}
+                    >
+                      <LogOut size={16} />
+                      <span>Log Out</span>
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </header>
 
         {/* 3. CENTER VIEWPORT + RIGHT LIVE STATUS */}
+        <AnimatePresence mode="wait">
         {activeSection === 'buses' && (
-          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 400px', overflow: 'hidden' }}>
+          <motion.div 
+            key="buses"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            style={{ flex: 1, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) clamp(300px, 30%, 400px)', overflow: 'hidden', gap: 0 }}
+          >
             {/* Map Area */}
             <FleetMap
               buses={buses}
@@ -815,7 +770,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
               onMarkerClick={setSelectedBusId}
             />
 
-            {/* Right Live Status Sidebar */}
+            {/* Right Live Status Sidebar - Scrollable on Mobile */}
             <aside
               style={{
                 backgroundColor: 'var(--bg-secondary)',
@@ -823,8 +778,9 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                 display: 'flex',
                 flexDirection: 'column',
                 height: '100%',
-                padding: '1.25rem',
-                overflow: 'hidden'
+                padding: 'clamp(0.75rem, 3vw, 1.25rem)',
+                overflow: 'hidden',
+                minWidth: '280px'
               }}
             >
               {/* Header */}
@@ -1084,12 +1040,19 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                 )}
               </div>
             </aside>
-          </div>
+          </motion.div>
         )}
 
-        {/* SECTION: ROUTES (STUDIO & ACTIVE TRANSIT ROUTES) */}
+        {/* SECTION: ROUTES */}
         {activeSection === 'routes' && (
-          <div style={{ flex: 1, padding: '1.75rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+          <motion.div 
+            key="routes"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '2rem', overflowY: 'auto', gap: '1.75rem' }}
+          >
             
             {/* 1. ROUTE CREATION STUDIO WITH EMBEDDED MAP */}
             <div className="clean-card" style={{ padding: '1.5rem', borderRadius: '16px' }}>
@@ -1515,12 +1478,19 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* SECTION: PASSES */}
         {activeSection === 'passes' && (
-          <div style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
+          <motion.div 
+            key="passes"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}
+          >
             <div className="clean-card" style={{ padding: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
                 <div>
@@ -1652,13 +1622,18 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                 </button>
               </form>
             </div>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </div>
 
       {/* ── PROFESSIONAL ADD PICKUP STOP IN-APP MODAL (NO WINDOW.PROMPT) ── */}
+      <AnimatePresence>
       {isAddStopModalOpen && (
-        <div
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           style={{
             position: 'fixed',
             top: 0,
@@ -1675,7 +1650,11 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
           }}
           onClick={() => setIsAddStopModalOpen(false)}
         >
-          <div
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             style={{
               backgroundColor: 'var(--bg-card, #ffffff)',
               borderRadius: '16px',
@@ -1786,9 +1765,10 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

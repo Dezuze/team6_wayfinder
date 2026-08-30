@@ -3,8 +3,8 @@
   "name": "Live Campus Bus Tracker & Pass App",
   "icons": [
     {
-      "src": "/vite.svg",
-      "type": "image/svg+xml",
+      "src": "/logo.png",
+      "type": "image/png",
       "sizes": "192x192 512x512"
     }
   ],
