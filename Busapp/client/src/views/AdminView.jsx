@@ -67,7 +67,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
 
   // Fetch Drivers Directory from server on mount
   useEffect(() => {
-    fetch('/api/drivers')
+    fetch(import.meta.env.VITE_API_URL + '/api/drivers')
       .then(r => r.json())
       .then(data => {
         if (data.success && data.drivers) {
@@ -168,7 +168,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     if (!newStudentName || !newStudentEmail) return;
     setIsSubmitting(true);
     try {
-      await fetch('/api/passes', {
+      await fetch(import.meta.env.VITE_API_URL + '/api/passes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

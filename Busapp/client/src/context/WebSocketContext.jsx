@@ -143,9 +143,9 @@ export function WebSocketProvider({ children }) {
   const refreshData = useCallback(async () => {
     try {
       const [resBuses, resRoutes, resPasses] = await Promise.all([
-        fetch('/api/buses').then(r => r.json()),
-        fetch('/api/routes').then(r => r.json()),
-        fetch('/api/passes').then(r => r.json())
+        fetch(import.meta.env.VITE_API_URL + '/api/buses').then(r => r.json()),
+        fetch(import.meta.env.VITE_API_URL + '/api/routes').then(r => r.json()),
+        fetch(import.meta.env.VITE_API_URL + '/api/passes').then(r => r.json())
       ]);
       if (resBuses.success) setBuses(resBuses.buses);
       if (resRoutes.success && Array.isArray(resRoutes.routes)) {
@@ -161,7 +161,7 @@ export function WebSocketProvider({ children }) {
   // Explicit route creation that links backend route with rich frontend road geometry
   const createRoute = useCallback(async (payload, customPath = [], stopCoords = [], metrics = {}) => {
     try {
-      const response = await fetch('/api/routes', {
+      const response = await fetch(import.meta.env.VITE_API_URL + '/api/routes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
