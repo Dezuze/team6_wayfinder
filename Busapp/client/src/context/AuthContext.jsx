@@ -50,36 +50,8 @@ export function AuthProvider({ children }) {
     setError(null);
   };
 
-  const demoLogin = (role) => {
-    if (role === 'driver') {
-      setUser({
-        id: "driver-1",
-        username: "john.driver",
-        name: "John Doe",
-        role: "driver",
-        assignedBusId: "bus-101",
-        phone: "+1-555-0101"
-      });
-    } else if (role === 'admin') {
-      setUser({
-        id: "admin-1",
-        username: "admin",
-        name: "Head Campus Administrator",
-        role: "admin"
-      });
-    } else {
-      setUser({
-        id: "S1001",
-        username: "S1001",
-        name: "Alex Mercer",
-        role: "student",
-        email: "alex.mercer@student.edu"
-      });
-    }
-  };
-
   return (
-    <AuthContext.Provider value={{ user, login, logout, demoLogin, error, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, error, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

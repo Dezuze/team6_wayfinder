@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Bus, Lock, User, ArrowRight } from 'lucide-react';
 
 export default function LoginView() {
-  const { login, demoLogin, error, isLoading } = useAuth();
+  const { login, error, isLoading } = useAuth();
   const [roleTab, setRoleTab] = useState('driver'); // driver, student, admin
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');

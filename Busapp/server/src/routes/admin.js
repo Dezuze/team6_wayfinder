@@ -131,14 +131,6 @@ export default async function adminRoutes(fastify, options) {
       if (exactStudent) {
         return { success: true, user: { id: exactStudent.id, name: exactStudent.name, role: 'student', email: exactStudent.email } };
       }
-      
-      // Fallback for default 'student' test login: returns the first active pass
-      if (username === 'student' || username === 'student123') {
-        const fallbackStudent = db.studentPasses[0];
-        if (fallbackStudent) {
-          return { success: true, user: { id: fallbackStudent.id, name: fallbackStudent.name, role: 'student', email: fallbackStudent.email } };
-        }
-      }
     }
 
     return reply.status(401).send({ success: false, error: 'Invalid username or password' });
