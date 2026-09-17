@@ -18,7 +18,7 @@ function AppContent() {
     }
   }, [user]);
 
-  const showNavbar = activeRole !== 'admin';
+  const showNavbar = Boolean(user) && activeRole !== 'admin';
 
   return (
     <div className="app-container">

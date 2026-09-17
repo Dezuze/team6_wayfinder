@@ -8,7 +8,7 @@ import { Navigation, MapPin, AlertTriangle, QrCode, Bus, Bell, BellOff, Locate, 
 // ────────────────────────────────────────────────
 // CONSTANTS
 // ────────────────────────────────────────────────
-const NEARBY_RADIUS_KM = 2;
+const NEARBY_RADIUS_KM = 50;
 const ALERT_THRESHOLD_MIN = 10;
 const STORAGE_KEY_ALERTS = 'wayfinder_student_alerts';
 const STORAGE_KEY_SELECTED = 'wayfinder_student_selected';
@@ -470,7 +470,7 @@ export default function StudentView() {
               </div>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                 <Loader size={12} className="spin-animation" />
-                <span>Loading...</span>
+                <span>Locating with device GPS...</span>
               </div>
             </div>
           )}
@@ -492,30 +492,32 @@ export default function StudentView() {
               </div>
               <div>
                 <h2 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 0.2rem', color: 'var(--text-primary)' }}>
-                  Location Required
+                  Real Location Required
                 </h2>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', margin: 0, lineHeight: '1.3' }}>
-                  Allow location access to see nearby buses.
+                  Please allow device GPS location access in your browser to view nearby campus shuttles and live ETAs.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={requestLocation}
-                style={{
-                  padding: '0.6rem 1.25rem',
-                  backgroundColor: '#7c3aed',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontWeight: 600,
-                  fontSize: '0.8rem',
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 14px rgba(124, 58, 237, 0.35)',
-                  marginTop: '0.25rem'
-                }}
-              >
-                Enable Location
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  onClick={requestLocation}
+                  style={{
+                    padding: '0.6rem 1.25rem',
+                    backgroundColor: '#7c3aed',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: 600,
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(124, 58, 237, 0.35)',
+                    marginTop: '0.25rem'
+                  }}
+                >
+                  Enable Real Location
+                </button>
+              </div>
             </div>
           )}
 

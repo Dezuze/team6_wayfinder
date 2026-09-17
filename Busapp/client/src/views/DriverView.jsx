@@ -13,7 +13,6 @@ export default function DriverView({ activeRole, setActiveRole }) {
   const [gpsPermission, setGpsPermission] = useState('prompt');
 
   const [isBroadcasting, setIsBroadcasting] = useState(false);
-  const [isSimulating, setIsSimulating] = useState(false);
   const [currentSpeed, setCurrentSpeed] = useState(0);
   const [driverStatus, setDriverStatus] = useState('Active');
   const [coords, setCoords] = useState({ lat: 9.9312, lng: 76.2673 });
@@ -22,18 +21,15 @@ export default function DriverView({ activeRole, setActiveRole }) {
   const [sosReason, setSosReason] = useState('Mechanical Breakdown');
   const [sosTriggered, setSosTriggered] = useState(false);
 
-  const simulationTimerRef = useRef(null);
   const geoWatchRef = useRef(null);
-  const pathIndexRef = useRef(0);
 
   const currentBus = buses.find(b => b.id === selectedBusId) || buses[0] || {};
   const currentRoute = routes.find(r => r.id === currentBus.routeId) || routes[0] || {};
 
   useEffect(() => {
     const savedPerm = localStorage.getItem('campusbus-gps-perm');
-    if (savedPerm) {
-      setGpsPermission(savedPerm);
-      if (savedPerm === 'simulated') setIsSimulating(true);
+    if (savedPerm === 'granted') {
+      setGpsPermission('granted');
     }
   }, []);
 
@@ -45,65 +41,39 @@ export default function DriverView({ activeRole, setActiveRole }) {
 
   const handleRequestPermission = () => {
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser. Switching to simulation mode.');
-      setGpsPermission('simulated');
-      setIsSimulating(true);
-      localStorage.setItem('campusbus-gps-perm', 'simulated');
+      setGpsPermission('denied');
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setGpsPermission('granted');
-        setIsSimulating(false);
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         localStorage.setItem('campusbus-gps-perm', 'granted');
       },
       (err) => {
         console.warn('GPS Permission denied:', err);
-        alert('Could not access hardware GPS. Enabling Simulation Mode for desktop testing.');
-        setGpsPermission('simulated');
-        setIsSimulating(true);
-        localStorage.setItem('campusbus-gps-perm', 'simulated');
+        setGpsPermission('denied');
+        localStorage.removeItem('campusbus-gps-perm');
       },
-      { enableHighAccuracy: true, timeout: 5000 }
+      { enableHighAccuracy: true, timeout: 10000 }
     );
-  };
-
-  const handleEnableSimulation = () => {
-    setGpsPermission('simulated');
-    setIsSimulating(true);
-    localStorage.setItem('campusbus-gps-perm', 'simulated');
   };
 
   useEffect(() => {
     if (!isBroadcasting) {
-      if (simulationTimerRef.current) clearInterval(simulationTimerRef.current);
       if (geoWatchRef.current !== null && navigator.geolocation) {
         navigator.geolocation.clearWatch(geoWatchRef.current);
+        geoWatchRef.current = null;
       }
       return;
     }
 
-    if (isSimulating && currentRoute.path && currentRoute.path.length > 0) {
-      simulationTimerRef.current = setInterval(() => {
-        pathIndexRef.current = (pathIndexRef.current + 1) % currentRoute.path.length;
-        const nextCoord = currentRoute.path[pathIndexRef.current];
-
-        const jitterLat = nextCoord.lat + (Math.random() - 0.5) * 0.0005;
-        const jitterLng = nextCoord.lng + (Math.random() - 0.5) * 0.0005;
-        const simulatedSpeed = Math.floor(25 + Math.random() * 15);
-
-        setCoords({ lat: jitterLat, lng: jitterLng });
-        setCurrentSpeed(simulatedSpeed);
-
-        streamDriverLocation(selectedBusId, jitterLat, jitterLng, simulatedSpeed, driverStatus);
-      }, 2000);
-    } else if (navigator.geolocation) {
+    if (navigator.geolocation) {
       geoWatchRef.current = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude, speed } = position.coords;
-          const calcSpeed = speed ? Math.round(speed * 3.6) : Math.floor(20 + Math.random() * 10);
+          const calcSpeed = speed != null && !isNaN(speed) ? Math.round(speed * 3.6) : 0;
 
           setCoords({ lat: latitude, lng: longitude });
           setCurrentSpeed(calcSpeed);
@@ -111,21 +81,24 @@ export default function DriverView({ activeRole, setActiveRole }) {
           streamDriverLocation(selectedBusId, latitude, longitude, calcSpeed, driverStatus);
         },
         (error) => {
-          console.error("GPS Error:", error);
-          alert("GPS signal lost. Falling back to simulation loop.");
-          setIsSimulating(true);
+          console.error("GPS Watch Error:", error);
+          alert("Real GPS signal lost: " + (error.message || 'Position unavailable'));
+          setIsBroadcasting(false);
         },
-        { enableHighAccuracy: true, maximumAge: 1000, timeout: 5000 }
+        { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
       );
+    } else {
+      alert('Geolocation is not supported by your browser.');
+      setIsBroadcasting(false);
     }
 
     return () => {
-      if (simulationTimerRef.current) clearInterval(simulationTimerRef.current);
       if (geoWatchRef.current !== null && navigator.geolocation) {
         navigator.geolocation.clearWatch(geoWatchRef.current);
+        geoWatchRef.current = null;
       }
     };
-  }, [isBroadcasting, isSimulating, selectedBusId, currentRoute, driverStatus, streamDriverLocation]);
+  }, [isBroadcasting, selectedBusId, driverStatus, streamDriverLocation]);
 
   const toggleBroadcast = () => {
     setIsBroadcasting(!isBroadcasting);
@@ -139,8 +112,8 @@ export default function DriverView({ activeRole, setActiveRole }) {
     setDriverStatus('EMERGENCY SOS');
   };
 
-  // Permission Request Screen
-  if (gpsPermission === 'prompt') {
+  // Permission Request Screen (Only Real GPS)
+  if (gpsPermission !== 'granted') {
     return (
       <div className="mobile-view-wrapper" style={{ padding: '2rem 0', textAlign: 'center', maxWidth: '100%', boxSizing: 'border-box' }}>
         <div className="clean-card" style={{ padding: '2.5rem 1.5rem', borderRadius: 'var(--radius-xl)', maxWidth: '100%', boxSizing: 'border-box' }}>
@@ -148,19 +121,23 @@ export default function DriverView({ activeRole, setActiveRole }) {
             width: '64px',
             height: '64px',
             borderRadius: '16px',
-            backgroundColor: 'var(--primary-light)',
-            color: 'var(--primary)',
+            backgroundColor: gpsPermission === 'denied' ? 'rgba(239, 68, 68, 0.1)' : 'var(--primary-light)',
+            color: gpsPermission === 'denied' ? 'var(--danger)' : 'var(--primary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto 1.5rem'
           }}>
-            <MapPin size={32} />
+            {gpsPermission === 'denied' ? <AlertTriangle size={32} /> : <MapPin size={32} />}
           </div>
 
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem' }}>Enable Location Services</h2>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+            {gpsPermission === 'denied' ? 'Location Permission Denied' : 'Enable Real GPS Services'}
+          </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '2rem', lineHeight: '1.6' }}>
-            To broadcast live coordinates to campus administrators and passengers, CampusBus requires access to device geolocation while on duty.
+            {gpsPermission === 'denied'
+              ? 'Real hardware GPS access was denied or unavailable. Please enable device location in your browser settings to broadcast your bus route.'
+              : 'To broadcast live real-time coordinates to passengers and administrators, CampusBus requires access to your physical device GPS while on duty.'}
           </p>
 
           <div className="flex-col gap-2">
@@ -169,15 +146,7 @@ export default function DriverView({ activeRole, setActiveRole }) {
               className="btn btn-primary btn-lg"
               style={{ width: '100%', borderRadius: 'var(--radius-md)', fontWeight: 600 }}
             >
-              Grant Location Permission
-            </button>
-
-            <button
-              onClick={handleEnableSimulation}
-              className="btn btn-secondary"
-              style={{ width: '100%', borderRadius: 'var(--radius-md)' }}
-            >
-              Use Simulation Mode (Desktop)
+              {gpsPermission === 'denied' ? 'Retry GPS Permission' : 'Connect Real Device GPS'}
             </button>
           </div>
         </div>

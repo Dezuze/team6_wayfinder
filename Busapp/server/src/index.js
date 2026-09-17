@@ -49,28 +49,54 @@ fastify.register(async function (fastifyInstance) {
 
         if (data.type === 'DRIVER_LOCATION') {
           const { busId, lat, lng, speed, status } = data;
-          const busIndex = db.buses.findIndex(b => b.id === busId);
+          let busIndex = db.buses.findIndex(b => b.id === busId);
           
-          if (busIndex !== -1) {
+          if (busIndex === -1) {
+            const newBus = {
+              id: busId || `bus-${Date.now()}`,
+              number: `BUS #${busId}`,
+              routeId: null,
+              driverName: 'Live Driver',
+              status: status || 'Active',
+              location: { lat, lng },
+              speed: speed !== undefined ? speed : 0,
+              lastUpdated: new Date().toISOString()
+            };
+            db.buses.push(newBus);
+            busIndex = db.buses.length - 1;
+          } else {
             if (lat !== undefined && lng !== undefined) {
               db.buses[busIndex].location = { lat, lng };
             }
             if (speed !== undefined) db.buses[busIndex].speed = speed;
             if (status !== undefined) db.buses[busIndex].status = status;
             db.buses[busIndex].lastUpdated = new Date().toISOString();
-
-            // Broadcast new coordinates to all connected students and admins
-            fastify.broadcastBuses();
           }
+
+          // Broadcast new coordinates to all connected students and admins
+          fastify.broadcastBuses();
         } else if (data.type === 'DRIVER_SOS') {
           const { busId, reason } = data;
-          const busIndex = db.buses.findIndex(b => b.id === busId);
-          if (busIndex !== -1) {
+          let busIndex = db.buses.findIndex(b => b.id === busId);
+          if (busIndex === -1) {
+            const newBus = {
+              id: busId || `bus-${Date.now()}`,
+              number: `BUS #${busId}`,
+              routeId: null,
+              driverName: 'Live Driver',
+              status: "🚨 EMERGENCY / SOS",
+              sosReason: reason || "Emergency breakdown or accident reported",
+              location: { lat: 9.6709, lng: 76.8273 },
+              speed: 0,
+              lastUpdated: new Date().toISOString()
+            };
+            db.buses.push(newBus);
+          } else {
             db.buses[busIndex].status = "🚨 EMERGENCY / SOS";
             db.buses[busIndex].sosReason = reason || "Emergency breakdown or accident reported";
             db.buses[busIndex].lastUpdated = new Date().toISOString();
-            fastify.broadcastBuses();
           }
+          fastify.broadcastBuses();
         } else if (data.type === 'REQUEST_INIT') {
           socket.send(JSON.stringify({
             type: 'INIT_DATA',

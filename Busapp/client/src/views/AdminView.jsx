@@ -46,6 +46,11 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
   const [pickedStops, setPickedStops] = useState([]);
   const [candidatePlace, setCandidatePlace] = useState(null);
   const [driversDirectory, setDriversDirectory] = useState([]);
+  const [isAddBusModalOpen, setIsAddBusModalOpen] = useState(false);
+  const [newBusNumber, setNewBusNumber] = useState('');
+  const [newBusRouteId, setNewBusRouteId] = useState('');
+  const [newBusDriverName, setNewBusDriverName] = useState('');
+  const [newBusStatus, setNewBusStatus] = useState('Active');
 
   // ── Professional Add Pickup Stop Modal State ──
   const [isAddStopModalOpen, setIsAddStopModalOpen] = useState(false);
@@ -119,6 +124,66 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
       isMounted = false;
     };
   }, [pickedStops]);
+
+  // Create New Bus
+  const handleCreateBus = async (e) => {
+    if (e) e.preventDefault();
+    if (!newBusNumber.trim()) {
+      alert('Please enter a bus number.');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await fetch((import.meta.env.VITE_API_URL || '') + '/api/buses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          number: newBusNumber.trim(),
+          routeId: newBusRouteId || null,
+          driverName: newBusDriverName.trim() || 'Unassigned',
+          status: newBusStatus
+        })
+      });
+      setNewBusNumber('');
+      setNewBusRouteId('');
+      setNewBusDriverName('');
+      setNewBusStatus('Active');
+      setIsAddBusModalOpen(false);
+      await refreshData();
+    } catch (err) {
+      console.error('Error adding bus:', err);
+      alert('Failed to add bus: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Delete Bus
+  const handleDeleteBus = async (busId) => {
+    if (!confirm('Are you sure you want to delete this bus?')) return;
+    try {
+      await fetch((import.meta.env.VITE_API_URL || '') + `/api/buses/${busId}`, {
+        method: 'DELETE'
+      });
+      setSelectedBusId(null);
+      await refreshData();
+    } catch (err) {
+      console.error('Error deleting bus:', err);
+    }
+  };
+
+  // Delete Student Pass
+  const handleDeletePass = async (passId) => {
+    if (!confirm('Are you sure you want to delete this student pass?')) return;
+    try {
+      await fetch((import.meta.env.VITE_API_URL || '') + `/api/passes/${passId}`, {
+        method: 'DELETE'
+      });
+      await refreshData();
+    } catch (err) {
+      console.error('Error deleting pass:', err);
+    }
+  };
 
   // Update Bus Status
   const _handleUpdateBusStatus = async (busId, newStatus) => {
@@ -788,9 +853,25 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                 <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                   Live Fleet ({filteredFleetCards.length})
                 </h2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text-secondary)' }}>
-                  <SlidersHorizontal size={17} style={{ cursor: 'pointer' }} />
-                  <MoreVertical size={17} style={{ cursor: 'pointer' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddBusModalOpen(true)}
+                    className="btn btn-primary"
+                    style={{
+                      padding: '0.35rem 0.75rem',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.3rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    + Add Bus
+                  </button>
+                  <SlidersHorizontal size={17} style={{ cursor: 'pointer', color: 'var(--text-secondary)' }} />
                 </div>
               </div>
 
@@ -871,6 +952,40 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                         <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem' }}>Live Speed</span>
                         <strong style={{ color: 'var(--text-primary)' }}>{selectedCard.speed}</strong>
                       </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.65rem', paddingTop: '0.65rem', borderTop: '1px solid var(--border-color)', gap: '0.5rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Status:</span>
+                        <select
+                          value={selectedCard.rawBus?.status || 'Active'}
+                          onChange={(e) => _handleUpdateBusStatus(selectedCard.id, e.target.value)}
+                          className="form-select"
+                          style={{ padding: '0.2rem 0.45rem', fontSize: '0.72rem', fontWeight: 600, width: 'auto' }}
+                        >
+                          <option value="Active">Active</option>
+                          <option value="Delayed">Delayed</option>
+                          <option value="Idle">Idle</option>
+                          <option value="Maintenance">Maintenance</option>
+                          <option value="Off Duty">Off Duty</option>
+                        </select>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteBus(selectedCard.id)}
+                        className="btn"
+                        style={{
+                          padding: '0.25rem 0.6rem',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          backgroundColor: 'var(--danger-light, #fee2e2)',
+                          color: 'var(--danger, #ef4444)',
+                          borderColor: '#fca5a5',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Delete Bus
+                      </button>
                     </div>
                   </div>
                 );
@@ -1539,16 +1654,34 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                             </span>
                           </td>
                           <td>
-                            <select
-                              value={pass.passStatus || 'Active'}
-                              onChange={(e) => handleUpdatePassStatus(pass.id, e.target.value)}
-                              className="form-select"
-                              style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', width: 'auto' }}
-                            >
-                              <option value="Active">Active</option>
-                              <option value="Suspended">Suspended</option>
-                              <option value="Expired">Expired</option>
-                            </select>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                              <select
+                                value={pass.passStatus || 'Active'}
+                                onChange={(e) => handleUpdatePassStatus(pass.id, e.target.value)}
+                                className="form-select"
+                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', width: 'auto' }}
+                              >
+                                <option value="Active">Active</option>
+                                <option value="Suspended">Suspended</option>
+                                <option value="Expired">Expired</option>
+                              </select>
+                              <button
+                                type="button"
+                                onClick={() => handleDeletePass(pass.id)}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: 'var(--danger, #ef4444)',
+                                  cursor: 'pointer',
+                                  padding: '0.2rem',
+                                  display: 'flex',
+                                  alignItems: 'center'
+                                }}
+                                title="Delete Student Pass"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -1762,6 +1895,162 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                   }}
                 >
                   Add Pickup Stop
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </motion.div>
+      )}
+      {/* Professional Add Bus Modal */}
+      {isAddBusModalOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.5rem',
+            zIndex: 9999
+          }}
+          onClick={() => setIsAddBusModalOpen(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.94, opacity: 0, y: 16 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.94, opacity: 0, y: 16 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            style={{
+              backgroundColor: 'var(--bg-card, #ffffff)',
+              borderRadius: '16px',
+              padding: '1.75rem',
+              maxWidth: '440px',
+              width: '100%',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
+              border: '1px solid var(--border-color, #cbd5e1)'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(124, 58, 237, 0.12)',
+                  color: '#7c3aed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Bus size={22} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Register New Fleet Bus
+                </h3>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                  Add a new vehicle to the campus transit system
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleCreateBus} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Bus Number & Registration</label>
+                <input
+                  type="text"
+                  autoFocus
+                  value={newBusNumber}
+                  onChange={e => setNewBusNumber(e.target.value)}
+                  placeholder="e.g. BUS #105 (KL-05-ZZ-9999)"
+                  className="form-input"
+                  style={{ width: '100%', fontSize: '0.85rem' }}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Driver Name</label>
+                <input
+                  type="text"
+                  value={newBusDriverName}
+                  onChange={e => setNewBusDriverName(e.target.value)}
+                  placeholder="e.g. Anand Menon"
+                  className="form-input"
+                  style={{ width: '100%', fontSize: '0.85rem' }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Assign Route</label>
+                <select
+                  value={newBusRouteId}
+                  onChange={e => setNewBusRouteId(e.target.value)}
+                  className="form-select"
+                  style={{ width: '100%', fontSize: '0.85rem' }}
+                >
+                  <option value="">-- None (Unassigned) --</option>
+                  {routes.map(r => (
+                    <option key={r.id} value={r.id}>{r.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Initial Status</label>
+                <select
+                  value={newBusStatus}
+                  onChange={e => setNewBusStatus(e.target.value)}
+                  className="form-select"
+                  style={{ width: '100%', fontSize: '0.85rem' }}
+                >
+                  <option value="Active">Active</option>
+                  <option value="Idle">Idle</option>
+                  <option value="Maintenance">Maintenance</option>
+                  <option value="Off Duty">Off Duty</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsAddBusModalOpen(false)}
+                  style={{
+                    padding: '0.6rem 1.1rem',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-color, #cbd5e1)',
+                    backgroundColor: 'transparent',
+                    color: 'var(--text-secondary, #64748b)',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  style={{
+                    padding: '0.6rem 1.25rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    backgroundColor: '#7c3aed',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 3px 10px rgba(124, 58, 237, 0.35)'
+                  }}
+                >
+                  {isSubmitting ? 'Saving...' : 'Create Bus'}
                 </button>
               </div>
             </form>
