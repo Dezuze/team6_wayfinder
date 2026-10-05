@@ -36,7 +36,7 @@ function enrichRoute(route) {
   return {
     ...route,
     path: Array.isArray(path) && path.length >= 2 ? path : [
-      { lat: 9.6709, lng: 76.8273 },
+      { lat: 9.67416, lng: 76.82573 },
       { lat: 9.7123, lng: 76.6834 }
     ],
     stopCoordinates,

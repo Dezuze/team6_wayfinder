@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useAuth } from '../context/AuthContext';
 import FleetMap from '../components/FleetMap';
-import { Navigation, MapPin, AlertTriangle, QrCode, Bus, Bell, BellOff, Locate, Loader } from 'lucide-react';
+import { Navigation, MapPin, AlertTriangle, QrCode, Bus, Bell, BellOff, Locate, Loader, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 // ────────────────────────────────────────────────
 // CONSTANTS
@@ -116,9 +117,7 @@ function calculateETA(bus, route, stopPointIndex) {
   const dist = routePathDistance(route.path, busIdx, stopPointIndex);
   if (dist < 0.01) return 0; // essentially at the stop
 
-  const speed = typeof bus.speed === 'number' && bus.speed > 0 ? bus.speed : null;
-  if (!speed) return null; // can't estimate without speed
-
+  const speed = typeof bus.speed === 'number' && bus.speed > 0 ? bus.speed : 30;
   // ETA in minutes = distance (km) / speed (km/h) * 60
   const etaMin = (dist / speed) * 60;
   return Math.round(etaMin);
@@ -372,7 +371,7 @@ export default function StudentView() {
         // 2. Browser notification
         if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
           try {
-            new Notification('🚌 Bus Arriving Soon!', {
+            new Notification('Bus Arriving Soon!', {
               body: `${bus.number || 'Bus'} is ~${bus.etaMinutes} min from ${alertData.stopName}`,
               icon: '/favicon.svg',
               tag: key // prevent duplicate notifications
@@ -409,16 +408,27 @@ export default function StudentView() {
   }, [alerts]);
 
   return (
-    <div className="mobile-view-wrapper" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Page Header - Compact for Mobile */}
-      <div style={{ padding: '0.75rem 1rem', flexShrink: 0, borderBottom: '1px solid var(--border-color)' }}>
-        <h1 style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '0.1rem', margin: 0 }}>
-          Bus Tracker
-        </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', margin: 0 }}>
-          Real-time updates
-        </p>
-      </div>
+    <div className="mobile-view-wrapper" style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: 'calc(100vh - 65px)',
+      maxHeight: 'calc(100vh - 65px)',
+      overflowY: activeTab === 'pass' ? 'hidden' : 'auto',
+      overflowX: 'hidden',
+      boxSizing: 'border-box',
+      paddingBottom: activeTab === 'pass' ? '0' : '75px'
+    }}>
+      {/* Page Header - Only shown for Routes tab (Radar and Pass have dedicated headers) */}
+      {activeTab === 'routes' && (
+        <div style={{ padding: '0.75rem 1rem', flexShrink: 0, borderBottom: '1px solid var(--border-color)' }}>
+          <h1 style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '0.1rem', margin: 0 }}>
+            Campus Transit
+          </h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', margin: 0 }}>
+            Real-time routes & schedules
+          </p>
+        </div>
+      )}
 
       {/* TAB 1: RADAR */}
       <AnimatePresence mode="wait">
@@ -431,20 +441,8 @@ export default function StudentView() {
           exit={{ opacity: 0, x: 10 }}
           transition={{ duration: 0.2 }}
           className="flex-col gap-1" 
-          style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '0.75rem 1rem' }}
+          style={{ display: 'flex', flexDirection: 'column', padding: '0.5rem 0.75rem 1.5rem', gap: '0.75rem' }}
         >
-          {/* Nearby Shuttles Header - Compact */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem', gap: '0.5rem' }}>
-            <h2 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '0.3rem', flexShrink: 0 }}>
-              <MapPin size={16} color="var(--primary, #7c3aed)" />
-              <span style={{ minWidth: 'auto' }}>Nearby</span>
-            </h2>
-            {nearbyBuses.length > 0 && (
-              <span className="badge" style={{ backgroundColor: 'var(--primary-light, #ede9fe)', color: 'var(--primary, #7c3aed)', fontSize: '0.65rem', padding: '0.2rem 0.5rem' }}>
-                {nearbyBuses.length}
-              </span>
-            )}
-          </div>
 
           {/* Initial GPS Location Loading State - Compact */}
           {geoStatus === 'requesting' && (
@@ -524,14 +522,8 @@ export default function StudentView() {
           {/* Granted GPS Location: Render Real Map Centered on Student */}
           {geoStatus === 'granted' && studentLocation && (
             <>
-              {/* Compact Status Pill */}
-              <div className="student-geo-status" style={{ backgroundColor: 'rgba(16, 185, 129, 0.08)', color: '#10b981', padding: '0.5rem 0.75rem', borderRadius: '8px', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.5rem', flexShrink: 0 }}>
-                <Locate size={12} />
-                <span>Location active</span>
-              </div>
-
-              {/* Always Visible Radar Map - Optimized Height */}
-              <div className="student-radar-map-container" style={{ minHeight: '280px', marginBottom: '0.5rem' }}>
+              {/* Radar Map - 70vh Height */}
+              <div className="student-radar-map-container" style={{ height: '70vh', minHeight: '380px', width: '100%', borderRadius: '14px', overflow: 'hidden', flexShrink: 0, marginBottom: '0.75rem' }}>
                 <FleetMap
                   buses={nearbyBuses.length > 0 ? nearbyBuses : activeBuses}
                   routes={routes}
@@ -547,7 +539,7 @@ export default function StudentView() {
 
               {/* Empty State - Compact */}
               {nearbyBuses.length === 0 && (
-                <div className="clean-card" style={{ textAlign: 'center', padding: '1rem', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="clean-card" style={{ textAlign: 'center', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                   <Bus size={20} color="var(--text-muted)" style={{ marginBottom: '0.4rem' }} />
                   <h3 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.1rem', margin: 0 }}>No Buses Nearby</h3>
                   <p style={{ color: 'var(--text-secondary)', fontSize: '0.7rem', margin: 0 }}>
@@ -556,11 +548,11 @@ export default function StudentView() {
                 </div>
               )}
 
-              {/* Nearby Bus Cards - Mobile Optimized */}
-              <div style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {/* Nearby Bus Cards - Seamless flow without nested scrollbox */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', width: '100%' }}>
                 {nearbyBuses.map(bus => {
             const route = bus.route;
-            const isSos = bus.status === '🚨 EMERGENCY / SOS' || (bus.status || '').includes('SOS') || (bus.status || '').includes('EMERGENCY');
+            const isSos = bus.status === 'EMERGENCY / SOS' || (bus.status || '').includes('SOS') || (bus.status || '').includes('EMERGENCY');
             const isSelected = bus.id === selectedBusId;
             const alertKey = getAlertKey(bus.id, bus.nearestStopName);
             const alertState = alerts[alertKey];
@@ -606,9 +598,16 @@ export default function StudentView() {
                       {isSos ? 'SOS' : 'Live'}
                     </span>
                   </div>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500, flexShrink: 0 }}>
-                    {bus.distanceKm.toFixed(1)}km
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
+                    {bus.speed !== undefined && (
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: bus.speed > 0 ? 'var(--primary)' : 'var(--text-muted)' }}>
+                        {bus.speed} km/h
+                      </span>
+                    )}
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                      {bus.distanceKm.toFixed(1)}km
+                    </span>
+                  </div>
                 </div>
 
                 {/* Route Name - Compact */}
@@ -742,8 +741,8 @@ export default function StudentView() {
 
                 {/* Notification permission note - Compact */}
                 {isAlertOn && typeof Notification !== 'undefined' && Notification.permission === 'denied' && (
-                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.3rem', fontStyle: 'italic' }}>
-                    ⚠ Notifications blocked
+                  <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.3rem', fontStyle: 'italic', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <AlertTriangle size={12} /> Notifications blocked
                   </div>
                 )}
               </div>
@@ -800,55 +799,208 @@ export default function StudentView() {
       )}
 
       {/* TAB 3: BUS PASS */}
-      {activeTab === 'pass' && (
-        <motion.div 
-          key="pass"
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          exit={{ opacity: 0, x: 10 }}
-          transition={{ duration: 0.2 }}
-          style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', padding: '0.75rem 1rem' }}
-        >
-          {/* Pass details */}
-          <div className="clean-card" style={{ padding: '0', overflow: 'hidden' }}>
-            <div style={{ backgroundColor: 'var(--bg-subtle)', padding: '0.75rem 1rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Pass</span>
-                <strong style={{ fontSize: '0.85rem' }}>Campus Shuttle</strong>
-              </div>
-              <span className="badge" style={{ backgroundColor: currentPass.passStatus === 'Active' ? 'var(--success-light)' : 'var(--danger-light)', color: currentPass.passStatus === 'Active' ? 'var(--success)' : 'var(--danger)', fontSize: '0.65rem', padding: '0.2rem 0.4rem' }}>
-                {currentPass.passStatus || 'Active'}
-              </span>
-            </div>
+      {activeTab === 'pass' && (() => {
+        const rawStatus = currentPass.passStatus || currentPass.status || 'Valid';
+        const s = String(rawStatus).toLowerCase();
+        let passState;
+        if (s.includes('suspend')) {
+          passState = {
+            key: 'suspended',
+            label: 'SUSPENDED',
+            color: '#f59e0b',
+            bgColor: 'rgba(245, 158, 11, 0.12)',
+            borderColor: '#f59e0b',
+            headerGradient: 'linear-gradient(135deg, #b45309 0%, #f59e0b 100%)',
+            icon: AlertCircle,
+            message: 'Pass temporarily suspended. Please contact campus transport administration.',
+            qrOpacity: 0.35
+          };
+        } else if (s.includes('cancel') || s.includes('expir') || s.includes('inactive')) {
+          passState = {
+            key: 'canceled',
+            label: 'CANCELED',
+            color: '#ef4444',
+            bgColor: 'rgba(239, 68, 68, 0.12)',
+            borderColor: '#ef4444',
+            headerGradient: 'linear-gradient(135deg, #991b1b 0%, #ef4444 100%)',
+            icon: XCircle,
+            message: 'Pass canceled or expired. Ineligible for campus transit boarding.',
+            qrOpacity: 0.2
+          };
+        } else {
+          passState = {
+            key: 'valid',
+            label: 'VALID',
+            color: '#16a34a',
+            bgColor: 'rgba(34, 197, 94, 0.12)',
+            borderColor: '#22c55e',
+            headerGradient: 'linear-gradient(135deg, #15803d 0%, #22c55e 100%)',
+            icon: CheckCircle2,
+            message: 'Active pass verified for campus shuttle access.',
+            qrOpacity: 1
+          };
+        }
+        const StatusIcon = passState.icon;
 
-            <div style={{ padding: '0.75rem 1rem' }}>
-              <div style={{ marginBottom: '0.75rem' }}>
-                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block' }}>Student</span>
-                <h2 style={{ fontSize: '0.95rem', fontWeight: 600, marginTop: '0.05rem', margin: 0 }}>{currentPass.name || 'Alex Mercer'}</h2>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{currentPass.email || 'alex.mercer@student.edu'}</span>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border-color)', marginBottom: '0.75rem' }}>
+        return (
+          <motion.div 
+            key="pass"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
+            transition={{ duration: 0.2 }}
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0.5rem 1rem 4.5rem',
+              overflow: 'hidden',
+              minHeight: 0
+            }}
+          >
+            {/* Color-Coded Student Pass Card */}
+            <div style={{
+              width: '100%',
+              maxWidth: '380px',
+              borderRadius: '16px',
+              border: `2px solid ${passState.borderColor}`,
+              boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
+              backgroundColor: 'var(--bg-card)',
+              overflow: 'hidden',
+              transition: 'all 0.3s ease'
+            }}>
+              {/* Header Ribbon */}
+              <div style={{
+                background: passState.headerGradient,
+                padding: '0.65rem 1rem',
+                color: '#ffffff',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
                 <div>
-                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block' }}>Valid Until</span>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>{currentPass.validUntil || '2026-12-31'}</span>
+                  <span style={{ fontSize: '0.62rem', textTransform: 'uppercase', opacity: 0.9, letterSpacing: '0.06em', fontWeight: 600, display: 'block' }}>
+                    Campus Shuttle Pass
+                  </span>
+                  <strong style={{ fontSize: '0.9rem', letterSpacing: '-0.02em', color: '#ffffff' }}>College Transit Pass</strong>
                 </div>
-                <div>
-                  <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block' }}>Access</span>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>{currentPass.routeEntitlement || 'All Routes'}</span>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  backgroundColor: '#ffffff',
+                  color: passState.color,
+                  fontWeight: 800,
+                  fontSize: '0.7rem',
+                  padding: '0.22rem 0.55rem',
+                  borderRadius: '999px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                }}>
+                  <StatusIcon size={13} />
+                  <span>{passState.label}</span>
                 </div>
               </div>
 
-              <div style={{ textAlign: 'center', padding: '0.75rem', backgroundColor: 'var(--bg-subtle)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                <QrCode size={72} color="var(--text-primary)" style={{ margin: '0 auto 0.4rem', opacity: currentPass.passStatus === 'Active' ? 1 : 0.3 }} />
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                  {currentPass.id || 'S1001'}
-                </span>
+              {/* Pass Content */}
+              <div style={{ padding: '0.75rem 1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.6rem' }}>
+                  <div>
+                    <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Student Name</span>
+                    <h2 style={{ fontSize: '0.98rem', fontWeight: 700, margin: '0.05rem 0 0.1rem', color: 'var(--text-primary)' }}>
+                      {currentPass.name || currentPass.studentName || 'Alex Mercer'}
+                    </h2>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                      {currentPass.email || 'alex.mercer@student.edu'}
+                    </span>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Student ID</span>
+                    <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                      {currentPass.id || 'S1001'}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '0.5rem',
+                  padding: '0.5rem 0',
+                  borderTop: '1px solid var(--border-color)',
+                  borderBottom: '1px solid var(--border-color)',
+                  marginBottom: '0.6rem'
+                }}>
+                  <div>
+                    <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', display: 'block' }}>Route Access</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 600 }}>{currentPass.routeEntitlement || 'All Routes'}</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', display: 'block' }}>Valid Until</span>
+                    <span style={{ fontSize: '0.78rem', fontWeight: 600 }}>{currentPass.validUntil || '2026-12-31'}</span>
+                  </div>
+                </div>
+
+                {/* QR Code Section: Standard Version 1 (21x21 modules matrix) */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0.65rem',
+                  backgroundColor: 'var(--bg-subtle)',
+                  borderRadius: '12px',
+                  border: `1px solid ${passState.borderColor}`
+                }}>
+                  <div style={{
+                    padding: '0.5rem',
+                    backgroundColor: '#ffffff',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                    opacity: passState.qrOpacity,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <QRCodeSVG
+                      value={currentPass.id || 'S1001'}
+                      size={120}
+                      minVersion={1}
+                      boostLevel={false}
+                      level="L"
+                      bgColor="#ffffff"
+                      fgColor="#000000"
+                    />
+                  </div>
+
+                  <div style={{ marginTop: '0.35rem', textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.7rem', fontFamily: 'monospace', color: 'var(--text-muted)' }}>
+                      ID: {currentPass.id || 'S1001'}
+                    </div>
+                  </div>
+
+                  {passState.key !== 'valid' && (
+                    <div style={{
+                      marginTop: '0.5rem',
+                      padding: '0.4rem 0.65rem',
+                      borderRadius: '6px',
+                      backgroundColor: passState.bgColor,
+                      color: passState.color,
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      textAlign: 'center',
+                      width: '100%'
+                    }}>
+                      {passState.message}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        );
+      })()}
       </AnimatePresence>
       {/* Bottom Navigation Bar */}
       <div className="bottom-nav-bar">

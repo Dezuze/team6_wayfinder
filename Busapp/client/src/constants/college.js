@@ -4,9 +4,9 @@
 export const COLLEGE_DESTINATION = {
   name: "College of Engineering Poonjar",
   shortName: "CEP Poonjar",
-  lat: 9.6709,
-  lng: 76.8273,
-  address: "Poonjar Thekkekara, Kottayam District, Kerala - 686581"
+  lat: 9.67416,
+  lng: 76.82573,
+  address: "Payyanithottam, Poonjar Thekkekara, Kottayam District, Kerala - 686582"
 };
 
 // Geographic bounding box for Kottayam / Poonjar / Pala / Erattupetta transit area

@@ -25,18 +25,6 @@ export default function Navbar({ activeRole, setActiveRole }) {
       </div>
 
       <div className="navbar-controls">
-        {/* WebSocket Status - Minimal Dot */}
-        <div 
-          className={isConnected ? 'pulse-indicator' : ''}
-          style={{
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            backgroundColor: isConnected ? 'var(--success)' : 'var(--danger)',
-            marginRight: '0.25rem'
-          }}
-          title={isConnected ? 'Live' : 'Offline'}
-        />
 
         {/* Desktop Role Tabs (hidden on mobile, handled by dropdown) */}
         <div className="role-tabs" style={{ display: 'none' /* We'll just rely on the mobile menu for simplicity in this redesign, or we can use CSS media queries. For now, let's keep it simple and put it in the menu */ }}>

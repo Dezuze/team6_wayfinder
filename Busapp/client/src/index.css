@@ -200,6 +200,19 @@ body {
   overflow: hidden !important;
 }
 
+.login-layout-main {
+  max-width: 100% !important;
+  width: 100% !important;
+  padding: 1.5rem !important;
+  margin: 0 !important;
+  height: 100dvh !important;
+  min-height: 100vh !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow-y: auto !important;
+}
+
 .mobile-view-wrapper {
   max-width: 100%;
   margin: 0 auto;
@@ -707,3 +720,31 @@ body {
 .student-alert-toggle-row:hover {
   filter: brightness(0.97);
 }
+
+/* 3D Bus Marker & Vehicle Motion */
+.custom-3d-bus-marker {
+  transition: transform 0.95s linear;
+  cursor: pointer;
+  z-index: 800 !important;
+}
+
+.leaflet-zoom-anim .custom-3d-bus-marker,
+.leaflet-pan-anim .custom-3d-bus-marker {
+  transition: none !important;
+}
+
+@keyframes pulse3d {
+  0% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.35;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0.85;
+  }
+}
+

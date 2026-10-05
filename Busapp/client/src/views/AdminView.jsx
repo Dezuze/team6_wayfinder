@@ -4,6 +4,8 @@ import { useWebSocket } from '../context/WebSocketContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import FleetMap from '../components/FleetMap';
+import BulkCsvUploader from '../components/BulkCsvUploader';
+import { STUDENT_PASS_CSV_TEMPLATE, DRIVER_CSV_TEMPLATE, BUS_CSV_TEMPLATE, ROUTE_CSV_TEMPLATE } from '../utils/csv';
 import { COLLEGE_DESTINATION } from '../constants/college';
 import { fetchRoadRoute } from '../utils/routing';
 import {
@@ -22,7 +24,24 @@ import {
   Trash2,
   ArrowDown,
   Loader,
-  Users
+  Users,
+  Plus,
+  Check,
+  X,
+  Clock,
+  Navigation,
+  GraduationCap,
+  Building2,
+  Flag,
+  AlertTriangle,
+  RefreshCw,
+  FileText,
+  Pencil,
+  Key,
+  Lock,
+  Eye,
+  EyeOff,
+  UserPlus
 } from 'lucide-react';
 
 export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
@@ -52,6 +71,52 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
   const [newBusDriverName, setNewBusDriverName] = useState('');
   const [newBusStatus, setNewBusStatus] = useState('Active');
 
+  // Mode toggles for bulk csv add
+  const [passAddMode, setPassAddMode] = useState('single'); // single, bulk
+  const [driverAddMode, setDriverAddMode] = useState('single'); // single, bulk
+  const [busAddMode, setBusAddMode] = useState('single'); // single, bulk
+  const [routeAddMode, setRouteAddMode] = useState('builder'); // builder, bulk
+
+  // Driver management & modal states
+  const [isAddDriverModalOpen, setIsAddDriverModalOpen] = useState(false);
+  const [editingDriver, setEditingDriver] = useState(null);
+  const [showDriverPassword, setShowDriverPassword] = useState(false);
+  const [showEditDriverPassword, setShowEditDriverPassword] = useState(false);
+  const [newDriverName, setNewDriverName] = useState('');
+  const [newDriverUsername, setNewDriverUsername] = useState('');
+  const [newDriverPassword, setNewDriverPassword] = useState('');
+  const [newDriverPhone, setNewDriverPhone] = useState('');
+  const [newDriverBusId, setNewDriverBusId] = useState('');
+  const [newDriverStatus, setNewDriverStatus] = useState('Active');
+  const [driverSearchQuery, setDriverSearchQuery] = useState('');
+
+  const [editDriverName, setEditDriverName] = useState('');
+  const [editDriverUsername, setEditDriverUsername] = useState('');
+  const [editDriverPassword, setEditDriverPassword] = useState('');
+  const [editDriverPhone, setEditDriverPhone] = useState('');
+  const [editDriverBusId, setEditDriverBusId] = useState('');
+  const [editDriverStatus, setEditDriverStatus] = useState('Active');
+
+  // Student management & modal states
+  const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
+  const [showStudentPassword, setShowStudentPassword] = useState(false);
+  const [showEditStudentPassword, setShowEditStudentPassword] = useState(false);
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
+  const [newStudentUsername, setNewStudentUsername] = useState('');
+  const [newStudentPassword, setNewStudentPassword] = useState('');
+  const [newStudentStatus, setNewStudentStatus] = useState('Valid');
+  const [newStudentValidUntil, setNewStudentValidUntil] = useState('2026-12-31');
+
+  const [editStudentName, setEditStudentName] = useState('');
+  const [editStudentUsername, setEditStudentUsername] = useState('');
+  const [editStudentPassword, setEditStudentPassword] = useState('');
+  const [editStudentId, setEditStudentId] = useState('');
+  const [editStudentEmail, setEditStudentEmail] = useState('');
+  const [editStudentRoute, setEditStudentRoute] = useState('All Routes');
+  const [editStudentStatus, setEditStudentStatus] = useState('Valid');
+  const [editStudentValidUntil, setEditStudentValidUntil] = useState('2026-12-31');
+
   // ── Professional Add Pickup Stop Modal State ──
   const [isAddStopModalOpen, setIsAddStopModalOpen] = useState(false);
   const [modalStopData, setModalStopData] = useState({
@@ -70,16 +135,21 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
   const [routeCalcError, setRouteCalcError] = useState(null);
   const [routeSuccessMsg, setRouteSuccessMsg] = useState(null);
 
+  const fetchDrivers = async () => {
+    try {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/drivers');
+      const data = await res.json();
+      if (data.success && data.drivers) {
+        setDriversDirectory(data.drivers);
+      }
+    } catch (err) {
+      console.error('Error loading drivers directory:', err);
+    }
+  };
+
   // Fetch Drivers Directory from server on mount
   useEffect(() => {
-    fetch((import.meta.env.VITE_API_URL || '') + '/api/drivers')
-      .then(r => r.json())
-      .then(data => {
-        if (data.success && data.drivers) {
-          setDriversDirectory(data.drivers);
-        }
-      })
-      .catch(err => console.error('Error loading drivers directory:', err));
+    fetchDrivers();
   }, []);
 
   // Recalculate real road-following route whenever pickedStops change
@@ -227,6 +297,55 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     }
   };
 
+  // Open Edit Student Modal
+  const handleOpenEditStudent = (pass) => {
+    setEditingStudent(pass);
+    setEditStudentName(pass.name || pass.studentName || '');
+    setEditStudentUsername(pass.username || pass.id || '');
+    setEditStudentPassword(pass.password || 'student123');
+    setEditStudentId(pass.id || '');
+    setEditStudentEmail(pass.email || '');
+    setEditStudentRoute(pass.routeEntitlement || 'All Routes');
+    setEditStudentStatus(pass.passStatus || pass.status || 'Valid');
+    setEditStudentValidUntil(pass.validUntil || '2026-12-31');
+    setShowEditStudentPassword(false);
+  };
+
+  // Submit Student Edit
+  const handleUpdateStudent = async (e) => {
+    e.preventDefault();
+    if (!editingStudent || !editStudentName.trim() || !editStudentEmail.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/passes/${editingStudent.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editStudentName.trim(),
+          username: (editStudentUsername || '').trim(),
+          password: editStudentPassword || 'student123',
+          email: editStudentEmail.trim(),
+          newId: editStudentId.trim(),
+          routeEntitlement: editStudentRoute,
+          passStatus: editStudentStatus,
+          validUntil: editStudentValidUntil
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEditingStudent(null);
+        await refreshData();
+      } else {
+        alert(data.error || 'Failed to update student credentials');
+      }
+    } catch (err) {
+      console.error('Error updating student pass:', err);
+      alert('Error updating student pass: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Create New Student Pass
   const handleCreatePass = async (e) => {
     e.preventDefault();
@@ -238,16 +357,219 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           name: newStudentName.trim(), 
+          username: (newStudentUsername || '').trim(),
+          password: newStudentPassword || 'student123',
           email: newStudentEmail.trim(), 
-          routeEntitlement: newStudentRoute 
+          routeEntitlement: newStudentRoute,
+          passStatus: newStudentStatus || 'Valid',
+          validUntil: newStudentValidUntil || '2026-12-31'
         })
       });
       setNewStudentName('');
+      setNewStudentUsername('');
+      setNewStudentPassword('');
       setNewStudentEmail('');
       setNewStudentRoute('All Routes');
+      setNewStudentStatus('Valid');
+      setNewStudentValidUntil('2026-12-31');
+      setIsAddStudentModalOpen(false);
       await refreshData();
     } catch (err) {
       console.error('Error creating pass:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Open Edit Driver Modal
+  const handleOpenEditDriver = (driver) => {
+    setEditingDriver(driver);
+    setEditDriverName(driver.name || '');
+    setEditDriverUsername(driver.username || '');
+    setEditDriverPassword(driver.password || 'password123');
+    setEditDriverPhone(driver.phone || '');
+    setEditDriverBusId(driver.assignedBusId || '');
+    setEditDriverStatus(driver.status || 'Active');
+    setShowEditDriverPassword(false);
+  };
+
+  // Submit Driver Edit
+  const handleUpdateDriver = async (e) => {
+    e.preventDefault();
+    if (!editingDriver || !editDriverName.trim() || !editDriverUsername.trim()) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/drivers/${editingDriver.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editDriverName.trim(),
+          username: editDriverUsername.trim(),
+          password: editDriverPassword || 'password123',
+          phone: editDriverPhone.trim(),
+          assignedBusId: editDriverBusId || '',
+          status: editDriverStatus
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEditingDriver(null);
+        await fetchDrivers();
+      } else {
+        alert(data.error || 'Failed to update driver credentials');
+      }
+    } catch (err) {
+      console.error('Error updating driver:', err);
+      alert('Error updating driver: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Create New Driver
+  const handleCreateDriver = async (e) => {
+    e.preventDefault();
+    if (!newDriverName || !newDriverUsername) return;
+    setIsSubmitting(true);
+    try {
+      await fetch((import.meta.env.VITE_API_URL || '') + '/api/drivers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newDriverName.trim(),
+          username: newDriverUsername.trim(),
+          password: newDriverPassword || 'password123',
+          phone: newDriverPhone || '+1-555-0000',
+          assignedBusId: newDriverBusId || '',
+          status: newDriverStatus || 'Active'
+        })
+      });
+      setNewDriverName('');
+      setNewDriverUsername('');
+      setNewDriverPassword('');
+      setNewDriverPhone('');
+      setNewDriverBusId('');
+      setNewDriverStatus('Active');
+      setIsAddDriverModalOpen(false);
+      await fetchDrivers();
+    } catch (err) {
+      console.error('Error creating driver:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Delete Driver
+  const handleDeleteDriver = async (driverId) => {
+    if (!confirm('Are you sure you want to delete this driver?')) return;
+    try {
+      await fetch((import.meta.env.VITE_API_URL || '') + `/api/drivers/${driverId}`, {
+        method: 'DELETE'
+      });
+      await fetchDrivers();
+    } catch (err) {
+      console.error('Error deleting driver:', err);
+    }
+  };
+
+  // Bulk Upload Student Passes
+  const handleBulkUploadPasses = async (rows) => {
+    setIsSubmitting(true);
+    try {
+      const passesToCreate = rows.map(r => ({
+        name: r.name || r.studentname || 'Student',
+        username: r.username || (r.email ? r.email.split('@')[0] : `student${Date.now()}`),
+        password: r.password || 'student123',
+        email: r.email || `student${Date.now()}@edu.com`,
+        routeEntitlement: r.routeentitlement || r.route || 'All Routes',
+        validUntil: r.validuntil || r.expiry || '2026-12-31',
+        passStatus: r.status || r.passstatus || 'Valid'
+      }));
+      await fetch((import.meta.env.VITE_API_URL || '') + '/api/passes/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passes: passesToCreate })
+      });
+      setIsAddStudentModalOpen(false);
+      await refreshData();
+    } catch (err) {
+      console.error('Error in bulk pass import:', err);
+      alert('Bulk pass import failed: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Bulk Upload Drivers
+  const handleBulkUploadDrivers = async (rows) => {
+    setIsSubmitting(true);
+    try {
+      const driversToCreate = rows.map((r, i) => ({
+        name: r.name || r.drivername || 'Driver',
+        username: r.username || `driver.${Date.now()}${i}`,
+        password: r.password || 'password123',
+        phone: r.phone || r.phonenumber || '+1-555-0000',
+        assignedBusId: r.assignedbusid || r.bus || r.busid || '',
+        status: r.status || 'Active'
+      }));
+      await fetch((import.meta.env.VITE_API_URL || '') + '/api/drivers/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ drivers: driversToCreate })
+      });
+      setIsAddDriverModalOpen(false);
+      await fetchDrivers();
+    } catch (err) {
+      console.error('Error in bulk driver import:', err);
+      alert('Bulk driver import failed: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Bulk Upload Buses
+  const handleBulkUploadBuses = async (rows) => {
+    setIsSubmitting(true);
+    try {
+      const busesToCreate = rows.map((r, i) => ({
+        number: r.number || r.busnumber || `BUS #${Math.floor(100 + Math.random() * 900)}`,
+        driverName: r.drivername || r.driver || 'Unassigned',
+        routeId: r.routeid || r.route || null,
+        status: r.status || 'Active'
+      }));
+      await fetch((import.meta.env.VITE_API_URL || '') + '/api/buses/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ buses: busesToCreate })
+      });
+      await refreshData();
+      setIsAddBusModalOpen(false);
+    } catch (err) {
+      console.error('Error in bulk bus import:', err);
+      alert('Bulk bus import failed: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Bulk Upload Routes
+  const handleBulkUploadRoutes = async (rows) => {
+    setIsSubmitting(true);
+    try {
+      const routesToCreate = rows.map((r, i) => ({
+        name: r.name || r.routename || `Route ${Date.now()}`,
+        color: r.color || '#7c3aed',
+        stops: r.stops ? (typeof r.stops === 'string' ? r.stops.split(',').map(s => s.trim()) : r.stops) : ['Kottayam', COLLEGE_DESTINATION.shortName]
+      }));
+      await fetch((import.meta.env.VITE_API_URL || '') + '/api/routes/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ routes: routesToCreate })
+      });
+      await refreshData();
+    } catch (err) {
+      console.error('Error in bulk route import:', err);
+      alert('Bulk route import failed: ' + err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -371,7 +693,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
       const result = await createRoute(payload, customPath, stopCoords, routeMetrics);
 
       if (result && result.success) {
-        setRouteSuccessMsg(`✓ Route "${newRouteName.trim()}" created successfully with ${pickedStops.length} pickup stop(s) ending at ${COLLEGE_DESTINATION.shortName}!`);
+        setRouteSuccessMsg(`Route "${newRouteName.trim()}" created successfully with ${pickedStops.length} pickup stop(s) ending at ${COLLEGE_DESTINATION.shortName}!`);
         setNewRouteName('');
         setPickedStops([]);
         setCandidatePlace(null);
@@ -417,7 +739,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
       routeId: bus.routeId,
       driverName: bus.driverName || 'Unassigned Driver',
       avatarUrl: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80`,
-      status: isSos ? '🚨 SOS ALERT' : isDelayed ? 'DELAYED' : isIdle ? 'OFF DUTY' : (bus.status || 'ON TIME'),
+      status: isSos ? 'SOS ALERT' : isDelayed ? 'DELAYED' : isIdle ? 'OFF DUTY' : (bus.status || 'ON TIME'),
       category: isSos || isDelayed ? 'Delayed' : isIdle ? 'Idle' : 'Active',
       battery: '88%',
       speed: `${bus.speed || 0} km/h`,
@@ -524,6 +846,33 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
             >
               <Bus size={18} />
               <span>Fleet</span>
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.95 }}
+              type="button"
+              onClick={() => setActiveSection('drivers')}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.85rem',
+                padding: '0.75rem 1rem',
+                borderRadius: '12px',
+                border: 'none',
+                backgroundColor: activeSection === 'drivers' ? '#7c3aed' : 'transparent',
+                color: activeSection === 'drivers' ? '#ffffff' : 'var(--text-secondary, #64748b)',
+                fontWeight: activeSection === 'drivers' ? 600 : 500,
+                fontSize: '0.9rem',
+                cursor: 'pointer',
+                boxShadow: activeSection === 'drivers' ? '0 4px 14px rgba(124, 58, 237, 0.3)' : 'none',
+                transition: 'all 0.15s ease',
+                textAlign: 'left'
+              }}
+            >
+              <Users size={18} />
+              <span>Drivers</span>
             </motion.button>
 
             <motion.button
@@ -899,9 +1248,9 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                       <button
                         type="button"
                         onClick={() => setSelectedBusId(null)}
-                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.75rem' }}
+                        style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
                       >
-                        ✕ Close
+                        <X size={14} /> Close
                       </button>
                     </div>
 
@@ -1171,18 +1520,70 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
             
             {/* 1. ROUTE CREATION STUDIO WITH EMBEDDED MAP */}
             <div className="clean-card" style={{ padding: '1.5rem', borderRadius: '16px' }}>
-              <div style={{ marginBottom: '1.25rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                  <GitFork size={20} color="#7c3aed" />
-                  <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-                    Transit Route Creator
-                  </h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                    <GitFork size={20} color="#7c3aed" />
+                    <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                      Transit Route Creator
+                    </h2>
+                  </div>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem', margin: 0 }}>
+                    Build ordered pickup routes terminating at <strong>{COLLEGE_DESTINATION.name}</strong>.
+                  </p>
                 </div>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.84rem', margin: 0 }}>
-                  Build ordered pickup routes terminating at <strong>{COLLEGE_DESTINATION.name}</strong>. Search Kottayam/Poonjar locations or click on the map to add stops in sequence.
-                </p>
+
+                <div style={{ display: 'inline-flex', backgroundColor: 'var(--bg-subtle)', borderRadius: '8px', padding: '3px', border: '1px solid var(--border-color)' }}>
+                  <button
+                    type="button"
+                    onClick={() => setRouteAddMode('builder')}
+                    style={{
+                      padding: '0.35rem 0.85rem',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      borderRadius: '6px',
+                      border: 'none',
+                      backgroundColor: routeAddMode === 'builder' ? '#7c3aed' : 'transparent',
+                      color: routeAddMode === 'builder' ? '#ffffff' : 'var(--text-secondary)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Interactive Map Builder
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRouteAddMode('bulk')}
+                    style={{
+                      padding: '0.35rem 0.85rem',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      borderRadius: '6px',
+                      border: 'none',
+                      backgroundColor: routeAddMode === 'bulk' ? '#7c3aed' : 'transparent',
+                      color: routeAddMode === 'bulk' ? '#ffffff' : 'var(--text-secondary)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Bulk Import (CSV)
+                  </button>
+                </div>
               </div>
 
+              {routeAddMode === 'bulk' ? (
+                <BulkCsvUploader
+                  title="Bulk Import Transit Routes"
+                  templateFilename="transit_routes_template.csv"
+                  templateContent={ROUTE_CSV_TEMPLATE}
+                  columns={[
+                    { key: 'name', label: 'Route Name', required: true },
+                    { key: 'color', label: 'Color Hex' },
+                    { key: 'stops', label: 'Stops (Comma Separated)', required: true }
+                  ]}
+                  onUpload={handleBulkUploadRoutes}
+                  isSubmitting={isSubmitting}
+                  entityName="Routes"
+                />
+              ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 380px', gap: '1.5rem', alignItems: 'stretch' }}>
                 {/* Left: Embedded Kottayam/Poonjar Map for Route Construction */}
                 <div style={{ height: '560px', minHeight: '560px', position: 'relative', borderRadius: '14px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
@@ -1249,14 +1650,14 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
 
                     {routeMetrics.distanceKm > 0 && !isCalculatingRoute && (
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.78rem', color: '#15803d', backgroundColor: '#f0fdf4', padding: '0.45rem 0.75rem', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
-                        <span>🛣️ Road Route: <strong>{routeMetrics.distanceKm} km</strong></span>
-                        <span>⏱️ ~<strong>{routeMetrics.durationMin} min</strong> to Campus</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}><Navigation size={13} /> Road Route: <strong>{routeMetrics.distanceKm} km</strong></span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}><Clock size={13} /> ~<strong>{routeMetrics.durationMin} min</strong> to Campus</span>
                       </div>
                     )}
 
                     {routeCalcError && (
-                      <div style={{ fontSize: '0.75rem', color: '#b91c1c', backgroundColor: '#fee2e2', padding: '0.4rem 0.6rem', borderRadius: '6px' }}>
-                        ⚠️ {routeCalcError}
+                      <div style={{ fontSize: '0.75rem', color: '#b91c1c', backgroundColor: '#fee2e2', padding: '0.4rem 0.6rem', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <AlertTriangle size={13} /> {routeCalcError}
                       </div>
                     )}
 
@@ -1280,21 +1681,21 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                           <button
                             type="button"
                             onClick={() => setCandidatePlace(null)}
-                            style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '0.75rem' }}
+                            style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center' }}
                           >
-                            ✕
+                            <X size={14} />
                           </button>
                         </div>
-                        <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#1e293b' }}>
-                          📍 {candidatePlace.shortName || candidatePlace.name}
+                        <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                          <MapPin size={14} color="#7c3aed" /> {candidatePlace.shortName || candidatePlace.name}
                         </div>
                         <div style={{ fontSize: '0.72rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {candidatePlace.displayName}
                         </div>
 
                         {candidatePlace.isCollege || (candidatePlace.shortName || '').toLowerCase().includes('college of engineering poonjar') ? (
-                          <div style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: 600, marginTop: '0.2rem' }}>
-                            🏫 Fixed final destination of all routes. It will automatically be appended as the destination.
+                          <div style={{ fontSize: '0.75rem', color: '#15803d', fontWeight: 600, marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <GraduationCap size={15} /> Fixed final destination of all routes. It will automatically be appended as the destination.
                           </div>
                         ) : (
                           <button
@@ -1438,7 +1839,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                             border: '1px dashed var(--success, #16a34a)'
                           }}
                         >
-                          <span style={{ fontSize: '1rem' }}>🏫</span>
+                          <GraduationCap size={18} color="#16a34a" />
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: '0.82rem', fontWeight: 800, color: 'var(--success, #15803d)' }}>
                               {COLLEGE_DESTINATION.name}
@@ -1488,6 +1889,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                   </form>
                 </div>
               </div>
+              )}
             </div>
 
             {/* 2. REGISTERED ACTIVE TRANSIT ROUTES */}
@@ -1569,7 +1971,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                               ))}
                               {/* Destination Indicator */}
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--success, #16a34a)', fontWeight: 700, marginTop: '0.15rem' }}>
-                                <span>🏁</span>
+                                <Flag size={14} color="#16a34a" />
                                 <span>{COLLEGE_DESTINATION.name}</span>
                               </div>
                             </div>
@@ -1596,7 +1998,186 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
           </motion.div>
         )}
 
-        {/* SECTION: PASSES */}
+        {/* SECTION: DRIVERS */}
+        {/* SECTION: DRIVERS */}
+        {activeSection === 'drivers' && (
+          <motion.div 
+            key="drivers"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}
+          >
+            <div className="clean-card" style={{ padding: '1.5rem' }}>
+              {/* Header with Top Right Corner Button */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
+                    Drivers Directory ({driversDirectory.length})
+                  </h2>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                    Manage driver login credentials, fleet assignments, and active duty status
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <div style={{ position: 'relative' }}>
+                    <Search size={14} color="var(--text-muted)" style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)' }} />
+                    <input
+                      type="text"
+                      placeholder="Search drivers..."
+                      value={driverSearchQuery}
+                      onChange={e => setDriverSearchQuery(e.target.value)}
+                      className="form-input"
+                      style={{ paddingLeft: '2rem', paddingRight: '0.75rem', height: '36px', fontSize: '0.8rem', width: '200px' }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={fetchDrivers}
+                    className="btn btn-secondary"
+                    style={{ height: '36px', padding: '0 0.65rem', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', cursor: 'pointer' }}
+                    title="Refresh drivers"
+                  >
+                    <RefreshCw size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDriverAddMode('single');
+                      setIsAddDriverModalOpen(true);
+                    }}
+                    className="btn btn-primary"
+                    style={{
+                      height: '36px',
+                      padding: '0 1rem',
+                      borderRadius: '8px',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Plus size={15} />
+                    <span>Add Driver</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="data-table-container">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Driver Name</th>
+                      <th>Username</th>
+                      <th>Password</th>
+                      <th>Phone</th>
+                      <th>Assigned Bus</th>
+                      <th>Status</th>
+                      <th style={{ textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {driversDirectory.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                          No drivers registered
+                        </td>
+                      </tr>
+                    ) : (
+                      driversDirectory
+                        .filter(d => 
+                          (d.name || '').toLowerCase().includes(driverSearchQuery.toLowerCase()) || 
+                          (d.username || '').toLowerCase().includes(driverSearchQuery.toLowerCase()) ||
+                          (d.phone || '').toLowerCase().includes(driverSearchQuery.toLowerCase())
+                        )
+                        .map(driver => {
+                          const assignedBus = buses.find(b => b.id === driver.assignedBusId);
+                          const isOffDuty = driver.status === 'Off Duty';
+                          return (
+                            <tr key={driver.id}>
+                              <td style={{ fontWeight: 600 }}>{driver.name}</td>
+                              <td style={{ fontFamily: 'monospace', fontSize: '0.84rem', fontWeight: 600, color: '#7c3aed' }}>{driver.username}</td>
+                              <td style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', backgroundColor: 'var(--bg-subtle)', padding: '0.2rem 0.5rem', borderRadius: '5px' }}>
+                                  <Lock size={11} color="var(--text-muted)" />
+                                  <span>{driver.password ? '••••••••' : 'default'}</span>
+                                </span>
+                              </td>
+                              <td>{driver.phone || '-'}</td>
+                              <td>
+                                {assignedBus ? (
+                                  <span className="badge" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#2563eb', fontWeight: 600 }}>
+                                    {assignedBus.number || assignedBus.id}
+                                  </span>
+                                ) : (
+                                  <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>Unassigned</span>
+                                )}
+                              </td>
+                              <td>
+                                <span className="badge" style={{
+                                  backgroundColor: isOffDuty ? 'rgba(100, 116, 139, 0.12)' : 'rgba(34, 197, 94, 0.12)',
+                                  color: isOffDuty ? '#64748b' : '#16a34a',
+                                  fontWeight: 700
+                                }}>
+                                  {driver.status || 'Active'}
+                                </span>
+                              </td>
+                              <td style={{ textAlign: 'right' }}>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEditDriver(driver)}
+                                    className="btn btn-secondary"
+                                    style={{
+                                      padding: '0.3rem 0.65rem',
+                                      fontSize: '0.78rem',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.35rem',
+                                      borderRadius: '6px',
+                                      border: '1px solid var(--border-color)',
+                                      color: '#7c3aed',
+                                      cursor: 'pointer'
+                                    }}
+                                    title="Edit Driver Credentials"
+                                  >
+                                    <Pencil size={13} />
+                                    <span>Edit</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteDriver(driver.id)}
+                                    style={{
+                                      background: 'none',
+                                      border: 'none',
+                                      color: 'var(--danger, #ef4444)',
+                                      cursor: 'pointer',
+                                      padding: '0.3rem',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      borderRadius: '6px'
+                                    }}
+                                    title="Delete Driver"
+                                  >
+                                    <Trash2 size={15} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* SECTION: PASSES (STUDENTS) */}
         {activeSection === 'passes' && (
           <motion.div 
             key="passes"
@@ -1607,14 +2188,59 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
             style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}
           >
             <div className="clean-card" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+              {/* Header with Top Right Corner Button */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                 <div>
-                  <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary, #1e293b)', margin: 0 }}>
+                  <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
                     Student Transit Passes ({passes.length})
                   </h2>
-                  <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary, #64748b)', marginTop: '0.2rem' }}>
-                    Manage student bus pass access and status entitlements
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                    Manage student user credentials, transit pass access, and status entitlements
                   </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <div style={{ position: 'relative' }}>
+                    <Search size={14} color="var(--text-muted)" style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)' }} />
+                    <input
+                      type="text"
+                      placeholder="Search students..."
+                      value={studentSearchQuery}
+                      onChange={e => setStudentSearchQuery(e.target.value)}
+                      className="form-input"
+                      style={{ paddingLeft: '2rem', paddingRight: '0.75rem', height: '36px', fontSize: '0.8rem', width: '200px' }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={refreshData}
+                    className="btn btn-secondary"
+                    style={{ height: '36px', padding: '0 0.65rem', borderRadius: '8px', border: '1px solid var(--border-color)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.8rem', cursor: 'pointer' }}
+                    title="Refresh student passes"
+                  >
+                    <RefreshCw size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPassAddMode('single');
+                      setIsAddStudentModalOpen(true);
+                    }}
+                    className="btn btn-primary"
+                    style={{
+                      height: '36px',
+                      padding: '0 1rem',
+                      borderRadius: '8px',
+                      fontSize: '0.82rem',
+                      fontWeight: 600,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Plus size={15} />
+                    <span>Add Student</span>
+                  </button>
                 </div>
               </div>
 
@@ -1623,137 +2249,128 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                   <thead>
                     <tr>
                       <th>Student Name</th>
-                      <th>Pass ID</th>
+                      <th>Username</th>
+                      <th>Student ID</th>
+                      <th>Email</th>
                       <th>Route Entitlement</th>
                       <th>Valid Until</th>
                       <th>Status</th>
-                      <th>Actions</th>
+                      <th style={{ textAlign: 'right' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {passes.length === 0 ? (
                       <tr>
-                        <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted, #64748b)' }}>
+                        <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                           No student passes registered
                         </td>
                       </tr>
                     ) : (
-                      passes.map(pass => (
-                        <tr key={pass.id}>
-                          <td style={{ fontWeight: 600 }}>{pass.name || pass.studentName || 'Student Pass'}</td>
-                          <td style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: 'var(--text-muted, #64748b)' }}>{pass.id}</td>
-                          <td>{pass.routeEntitlement || 'All Routes'}</td>
-                          <td>{pass.validUntil || '2026-12-31'}</td>
-                          <td>
-                            <span
-                              className={`badge ${
-                                pass.passStatus === 'Active' ? 'badge-success' : 'badge-danger'
-                              }`}
-                            >
-                              {pass.passStatus || 'Active'}
-                            </span>
-                          </td>
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                              <select
-                                value={pass.passStatus || 'Active'}
-                                onChange={(e) => handleUpdatePassStatus(pass.id, e.target.value)}
-                                className="form-select"
-                                style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', width: 'auto' }}
-                              >
-                                <option value="Active">Active</option>
-                                <option value="Suspended">Suspended</option>
-                                <option value="Expired">Expired</option>
-                              </select>
-                              <button
-                                type="button"
-                                onClick={() => handleDeletePass(pass.id)}
-                                style={{
-                                  background: 'none',
-                                  border: 'none',
-                                  color: 'var(--danger, #ef4444)',
-                                  cursor: 'pointer',
-                                  padding: '0.2rem',
-                                  display: 'flex',
-                                  alignItems: 'center'
-                                }}
-                                title="Delete Student Pass"
-                              >
-                                <Trash2 size={15} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
+                      passes
+                        .filter(p => {
+                          const q = studentSearchQuery.toLowerCase();
+                          return (
+                            (p.name || p.studentName || '').toLowerCase().includes(q) ||
+                            (p.username || '').toLowerCase().includes(q) ||
+                            (p.id || '').toLowerCase().includes(q) ||
+                            (p.email || '').toLowerCase().includes(q)
+                          );
+                        })
+                        .map(pass => {
+                          const rawStatus = pass.passStatus || pass.status || 'Valid';
+                          const s = String(rawStatus).toLowerCase();
+                          let badgeStyle, badgeText;
+                          if (s.includes('suspend')) {
+                            badgeStyle = { backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.3)' };
+                            badgeText = 'Suspended';
+                          } else if (s.includes('cancel') || s.includes('expir') || s.includes('inactive')) {
+                            badgeStyle = { backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#dc2626', border: '1px solid rgba(239, 68, 68, 0.3)' };
+                            badgeText = 'Canceled';
+                          } else {
+                            badgeStyle = { backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#16a34a', border: '1px solid rgba(34, 197, 94, 0.3)' };
+                            badgeText = 'Valid';
+                          }
+
+                          return (
+                            <tr key={pass.id}>
+                              <td style={{ fontWeight: 600 }}>{pass.name || pass.studentName || 'Student Pass'}</td>
+                              <td style={{ fontFamily: 'monospace', fontSize: '0.84rem', fontWeight: 600, color: '#7c3aed' }}>
+                                {pass.username || pass.id}
+                              </td>
+                              <td style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: 'var(--text-muted)' }}>{pass.id}</td>
+                              <td>{pass.email || '-'}</td>
+                              <td>{pass.routeEntitlement || 'All Routes'}</td>
+                              <td>{pass.validUntil || '2026-12-31'}</td>
+                              <td>
+                                <span
+                                  className="badge"
+                                  style={{
+                                    ...badgeStyle,
+                                    fontWeight: 700,
+                                    padding: '0.25rem 0.6rem',
+                                    borderRadius: '6px'
+                                  }}
+                                >
+                                  {badgeText}
+                                </span>
+                              </td>
+                              <td style={{ textAlign: 'right' }}>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                                  <select
+                                    value={badgeText}
+                                    onChange={(e) => handleUpdatePassStatus(pass.id, e.target.value)}
+                                    className="form-select"
+                                    style={{ padding: '0.25rem 0.5rem', fontSize: '0.78rem', width: 'auto' }}
+                                  >
+                                    <option value="Valid">Valid</option>
+                                    <option value="Suspended">Suspended</option>
+                                    <option value="Canceled">Canceled</option>
+                                  </select>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEditStudent(pass)}
+                                    className="btn btn-secondary"
+                                    style={{
+                                      padding: '0.25rem 0.55rem',
+                                      fontSize: '0.78rem',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.3rem',
+                                      borderRadius: '6px',
+                                      border: '1px solid var(--border-color)',
+                                      color: '#7c3aed',
+                                      cursor: 'pointer'
+                                    }}
+                                    title="Edit Student Credentials"
+                                  >
+                                    <Pencil size={13} />
+                                    <span>Edit</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeletePass(pass.id)}
+                                    style={{
+                                      background: 'none',
+                                      border: 'none',
+                                      color: 'var(--danger, #ef4444)',
+                                      cursor: 'pointer',
+                                      padding: '0.2rem',
+                                      display: 'flex',
+                                      alignItems: 'center'
+                                    }}
+                                    title="Delete Student Pass"
+                                  >
+                                    <Trash2 size={15} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
                     )}
                   </tbody>
                 </table>
               </div>
-            </div>
-
-            {/* Create New Student Pass Form */}
-            <div className="clean-card" style={{ padding: '1.5rem', marginTop: '1.5rem' }}>
-              <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-primary, #1e293b)' }}>
-                <Users size={18} /> Register Student Pass
-              </h2>
-              <form onSubmit={handleCreatePass} className="flex-col gap-1">
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div className="form-group">
-                    <label className="form-label">Student Name</label>
-                    <input
-                      type="text"
-                      value={newStudentName}
-                      onChange={(e) => setNewStudentName(e.target.value)}
-                      placeholder="e.g. John Doe"
-                      className="form-input"
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Student Email / Username</label>
-                    <input
-                      type="text"
-                      value={newStudentEmail}
-                      onChange={(e) => setNewStudentEmail(e.target.value)}
-                      placeholder="john@student.edu"
-                      className="form-input"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="form-group" style={{ marginTop: '0.5rem' }}>
-                  <label className="form-label">Route Entitlement</label>
-                  <select
-                    value={newStudentRoute}
-                    onChange={(e) => setNewStudentRoute(e.target.value)}
-                    className="form-select"
-                  >
-                    <option value="All Routes">All Routes</option>
-                    {routes.map(r => (
-                      <option key={r.id} value={r.name}>{r.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  style={{
-                    width: '100%',
-                    marginTop: '0.75rem',
-                    padding: '0.75rem',
-                    backgroundColor: '#10b981',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '10px',
-                    fontWeight: 700,
-                    cursor: 'pointer'
-                  }}
-                >
-                  {isSubmitting ? 'Registering...' : 'Issue Bus Pass'}
-                </button>
-              </form>
             </div>
           </motion.div>
         )}
@@ -1818,11 +2435,12 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                   border: 'none',
                   color: 'var(--text-muted, #64748b)',
                   cursor: 'pointer',
-                  fontSize: '1.1rem',
+                  display: 'flex',
+                  alignItems: 'center',
                   padding: '0.2rem'
                 }}
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
 
@@ -1831,8 +2449,8 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
               <span style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted, #64748b)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                 {modalStopData.isSearch ? 'Selected Location' : 'Selected Coordinates'}
               </span>
-              <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary, #1e293b)', marginTop: '0.2rem' }}>
-                📍 {modalStopData.name || modalStopData.address}
+              <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary, #1e293b)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <MapPin size={15} color="#7c3aed" /> {modalStopData.name || modalStopData.address}
               </div>
               {modalStopData.isSearch && modalStopData.address && (
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #64748b)', marginTop: '0.2rem', lineHeight: '1.3' }}>
@@ -1857,8 +2475,8 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                   style={{ width: '100%', fontSize: '0.9rem', padding: '0.65rem 0.85rem' }}
                   required
                 />
-                <div style={{ fontSize: '0.78rem', color: '#7c3aed', fontWeight: 600, marginTop: '0.4rem' }}>
-                  ✓ This will become <strong>Pickup Stop #{pickedStops.length + 1}</strong> in the route sequence
+                <div style={{ fontSize: '0.78rem', color: '#7c3aed', fontWeight: 600, marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <Check size={14} /> This will become <strong>Pickup Stop #{pickedStops.length + 1}</strong> in the route sequence
                 </div>
               </div>
 
@@ -1929,10 +2547,529 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
               backgroundColor: 'var(--bg-card, #ffffff)',
               borderRadius: '16px',
               padding: '1.75rem',
-              maxWidth: '440px',
+              maxWidth: busAddMode === 'bulk' ? '600px' : '440px',
               width: '100%',
               boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
               border: '1px solid var(--border-color, #cbd5e1)'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(124, 58, 237, 0.12)',
+                    color: '#7c3aed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Bus size={22} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                    Register Fleet Buses
+                  </h3>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                    Add vehicles to the campus transit system
+                  </div>
+                </div>
+              </div>
+
+              {/* Mode Switch */}
+              <div style={{ display: 'flex', gap: '0.25rem', backgroundColor: 'var(--bg-secondary, #f1f5f9)', padding: '0.25rem', borderRadius: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setBusAddMode('single')}
+                  style={{
+                    padding: '0.35rem 0.85rem',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    borderRadius: '6px',
+                    border: 'none',
+                    backgroundColor: busAddMode === 'single' ? '#7c3aed' : 'transparent',
+                    color: busAddMode === 'single' ? '#ffffff' : 'var(--text-secondary)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Single Bus
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBusAddMode('bulk')}
+                  style={{
+                    padding: '0.35rem 0.85rem',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    borderRadius: '6px',
+                    border: 'none',
+                    backgroundColor: busAddMode === 'bulk' ? '#7c3aed' : 'transparent',
+                    color: busAddMode === 'bulk' ? '#ffffff' : 'var(--text-secondary)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Bulk Add (CSV)
+                </button>
+              </div>
+            </div>
+
+            {busAddMode === 'single' ? (
+              <form onSubmit={handleCreateBus} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Bus Number & Registration</label>
+                  <input
+                    type="text"
+                    autoFocus
+                    value={newBusNumber}
+                    onChange={e => setNewBusNumber(e.target.value)}
+                    placeholder="e.g. BUS #105 (KL-05-ZZ-9999)"
+                    className="form-input"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Driver Name</label>
+                  <input
+                    type="text"
+                    value={newBusDriverName}
+                    onChange={e => setNewBusDriverName(e.target.value)}
+                    placeholder="e.g. Anand Menon"
+                    className="form-input"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Assign Route</label>
+                  <select
+                    value={newBusRouteId}
+                    onChange={e => setNewBusRouteId(e.target.value)}
+                    className="form-select"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                  >
+                    <option value="">-- None (Unassigned) --</option>
+                    {routes.map(r => (
+                      <option key={r.id} value={r.id}>{r.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Initial Status</label>
+                  <select
+                    value={newBusStatus}
+                    onChange={e => setNewBusStatus(e.target.value)}
+                    className="form-select"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Idle">Idle</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Off Duty">Off Duty</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddBusModalOpen(false)}
+                    style={{
+                      padding: '0.6rem 1.1rem',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border-color, #cbd5e1)',
+                      backgroundColor: 'transparent',
+                      color: 'var(--text-secondary, #64748b)',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    style={{
+                      padding: '0.6rem 1.25rem',
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: '#7c3aed',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      boxShadow: '0 3px 10px rgba(124, 58, 237, 0.35)'
+                    }}
+                  >
+                    {isSubmitting ? 'Saving...' : 'Create Bus'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div>
+                <BulkCsvUploader
+                  title="Bulk Import Fleet Buses"
+                  templateFilename="fleet_buses_template.csv"
+                  templateContent={BUS_CSV_TEMPLATE}
+                  columns={[
+                    { key: 'number', label: 'Bus Number', required: true },
+                    { key: 'drivername', label: 'Driver' },
+                    { key: 'routeid', label: 'Route ID' },
+                    { key: 'status', label: 'Status' }
+                  ]}
+                  onUpload={handleBulkUploadBuses}
+                  isSubmitting={isSubmitting}
+                  entityName="Buses"
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddBusModalOpen(false)}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border-color, #cbd5e1)',
+                      backgroundColor: 'transparent',
+                      color: 'var(--text-secondary, #64748b)',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Professional Add Driver Modal (Single / Bulk CSV) */}
+      {isAddDriverModalOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.5rem',
+            zIndex: 9999
+          }}
+          onClick={() => setIsAddDriverModalOpen(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.94, opacity: 0, y: 16 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.94, opacity: 0, y: 16 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            style={{
+              backgroundColor: 'var(--bg-card, #ffffff)',
+              borderRadius: '16px',
+              padding: '1.75rem',
+              maxWidth: driverAddMode === 'bulk' ? '640px' : '480px',
+              width: '100%',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
+              border: '1px solid var(--border-color, #cbd5e1)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(124, 58, 237, 0.12)',
+                    color: '#7c3aed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <UserPlus size={22} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                    Add Transit Driver
+                  </h3>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                    Create driver login credentials and vehicle assignment
+                  </div>
+                </div>
+              </div>
+
+              {/* Mode Switch */}
+              <div style={{ display: 'flex', gap: '0.25rem', backgroundColor: 'var(--bg-secondary, #f1f5f9)', padding: '0.25rem', borderRadius: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setDriverAddMode('single')}
+                  style={{
+                    padding: '0.35rem 0.85rem',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    borderRadius: '6px',
+                    border: 'none',
+                    backgroundColor: driverAddMode === 'single' ? '#7c3aed' : 'transparent',
+                    color: driverAddMode === 'single' ? '#ffffff' : 'var(--text-secondary)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Single Driver
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDriverAddMode('bulk')}
+                  style={{
+                    padding: '0.35rem 0.85rem',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    borderRadius: '6px',
+                    border: 'none',
+                    backgroundColor: driverAddMode === 'bulk' ? '#7c3aed' : 'transparent',
+                    color: driverAddMode === 'bulk' ? '#ffffff' : 'var(--text-secondary)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Bulk Add (CSV)
+                </button>
+              </div>
+            </div>
+
+            {driverAddMode === 'single' ? (
+              <form onSubmit={handleCreateDriver} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Full Name *</label>
+                  <input
+                    type="text"
+                    autoFocus
+                    value={newDriverName}
+                    onChange={e => setNewDriverName(e.target.value)}
+                    placeholder="e.g. Ramesh Kumar"
+                    className="form-input"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Username *</label>
+                    <input
+                      type="text"
+                      value={newDriverUsername}
+                      onChange={e => setNewDriverUsername(e.target.value)}
+                      placeholder="e.g. driver.ramesh"
+                      className="form-input"
+                      style={{ width: '100%', fontSize: '0.85rem' }}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Password *</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type={showDriverPassword ? 'text' : 'password'}
+                        value={newDriverPassword}
+                        onChange={e => setNewDriverPassword(e.target.value)}
+                        placeholder="password123"
+                        className="form-input"
+                        style={{ width: '100%', fontSize: '0.85rem', paddingRight: '2.2rem' }}
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowDriverPassword(!showDriverPassword)}
+                        style={{
+                          position: 'absolute',
+                          right: '0.5rem',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: 'var(--text-muted)'
+                        }}
+                      >
+                        {showDriverPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Phone Number</label>
+                  <input
+                    type="text"
+                    value={newDriverPhone}
+                    onChange={e => setNewDriverPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    className="form-input"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Assign Bus</label>
+                    <select
+                      value={newDriverBusId}
+                      onChange={e => setNewDriverBusId(e.target.value)}
+                      className="form-select"
+                      style={{ width: '100%', fontSize: '0.85rem' }}
+                    >
+                      <option value="">-- None (Unassigned) --</option>
+                      {buses.map(b => (
+                        <option key={b.id} value={b.id}>
+                          {b.number} ({b.status})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Duty Status</label>
+                    <select
+                      value={newDriverStatus}
+                      onChange={e => setNewDriverStatus(e.target.value)}
+                      className="form-select"
+                      style={{ width: '100%', fontSize: '0.85rem' }}
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Idle">Idle</option>
+                      <option value="Off Duty">Off Duty</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddDriverModalOpen(false)}
+                    style={{
+                      padding: '0.6rem 1.1rem',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border-color, #cbd5e1)',
+                      backgroundColor: 'transparent',
+                      color: 'var(--text-secondary, #64748b)',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    style={{
+                      padding: '0.6rem 1.25rem',
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: '#7c3aed',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      boxShadow: '0 3px 10px rgba(124, 58, 237, 0.35)'
+                    }}
+                  >
+                    {isSubmitting ? 'Saving...' : 'Add Driver'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div>
+                <BulkCsvUploader
+                  title="Bulk Import Drivers"
+                  templateFilename="drivers_template.csv"
+                  templateContent={DRIVER_CSV_TEMPLATE}
+                  columns={[
+                    { key: 'name', label: 'Full Name', required: true },
+                    { key: 'username', label: 'Username', required: true },
+                    { key: 'password', label: 'Password' },
+                    { key: 'phone', label: 'Phone' },
+                    { key: 'assignedbusid', label: 'Assigned Bus ID' },
+                    { key: 'status', label: 'Status' }
+                  ]}
+                  onUpload={handleBulkUploadDrivers}
+                  isSubmitting={isSubmitting}
+                  entityName="Drivers"
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddDriverModalOpen(false)}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border-color, #cbd5e1)',
+                      backgroundColor: 'transparent',
+                      color: 'var(--text-secondary, #64748b)',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Edit Driver Credentials Modal */}
+      {editingDriver && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.5rem',
+            zIndex: 9999
+          }}
+          onClick={() => setEditingDriver(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.94, opacity: 0, y: 16 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.94, opacity: 0, y: 16 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            style={{
+              backgroundColor: 'var(--bg-card, #ffffff)',
+              borderRadius: '16px',
+              padding: '1.75rem',
+              maxWidth: '480px',
+              width: '100%',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
+              border: '1px solid var(--border-color, #cbd5e1)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
             }}
             onClick={e => e.stopPropagation()}
           >
@@ -1949,79 +3086,124 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                   justifyContent: 'center'
                 }}
               >
-                <Bus size={22} />
+                <Key size={22} />
               </div>
               <div>
                 <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
-                  Register New Fleet Bus
+                  Edit Driver Credentials
                 </h3>
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                  Add a new vehicle to the campus transit system
+                  Update credentials and assignments for {editingDriver.name}
                 </div>
               </div>
             </div>
 
-            <form onSubmit={handleCreateBus} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleUpdateDriver} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div className="form-group">
-                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Bus Number & Registration</label>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Full Name *</label>
                 <input
                   type="text"
-                  autoFocus
-                  value={newBusNumber}
-                  onChange={e => setNewBusNumber(e.target.value)}
-                  placeholder="e.g. BUS #105 (KL-05-ZZ-9999)"
+                  value={editDriverName}
+                  onChange={e => setEditDriverName(e.target.value)}
                   className="form-input"
                   style={{ width: '100%', fontSize: '0.85rem' }}
                   required
                 />
               </div>
 
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Username *</label>
+                  <input
+                    type="text"
+                    value={editDriverUsername}
+                    onChange={e => setEditDriverUsername(e.target.value)}
+                    className="form-input"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Password *</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showEditDriverPassword ? 'text' : 'password'}
+                      value={editDriverPassword}
+                      onChange={e => setEditDriverPassword(e.target.value)}
+                      className="form-input"
+                      style={{ width: '100%', fontSize: '0.85rem', paddingRight: '2.2rem' }}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowEditDriverPassword(!showEditDriverPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '0.5rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--text-muted)'
+                      }}
+                    >
+                      {showEditDriverPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <div className="form-group">
-                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Driver Name</label>
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Phone Number</label>
                 <input
                   type="text"
-                  value={newBusDriverName}
-                  onChange={e => setNewBusDriverName(e.target.value)}
-                  placeholder="e.g. Anand Menon"
+                  value={editDriverPhone}
+                  onChange={e => setEditDriverPhone(e.target.value)}
+                  placeholder="+91 98765 43210"
                   className="form-input"
                   style={{ width: '100%', fontSize: '0.85rem' }}
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Assign Route</label>
-                <select
-                  value={newBusRouteId}
-                  onChange={e => setNewBusRouteId(e.target.value)}
-                  className="form-select"
-                  style={{ width: '100%', fontSize: '0.85rem' }}
-                >
-                  <option value="">-- None (Unassigned) --</option>
-                  {routes.map(r => (
-                    <option key={r.id} value={r.id}>{r.name}</option>
-                  ))}
-                </select>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Assigned Bus</label>
+                  <select
+                    value={editDriverBusId}
+                    onChange={e => setEditDriverBusId(e.target.value)}
+                    className="form-select"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                  >
+                    <option value="">-- None (Unassigned) --</option>
+                    {buses.map(b => (
+                      <option key={b.id} value={b.id}>
+                        {b.number} ({b.status})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Duty Status</label>
+                  <select
+                    value={editDriverStatus}
+                    onChange={e => setEditDriverStatus(e.target.value)}
+                    className="form-select"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Idle">Idle</option>
+                    <option value="Off Duty">Off Duty</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Initial Status</label>
-                <select
-                  value={newBusStatus}
-                  onChange={e => setNewBusStatus(e.target.value)}
-                  className="form-select"
-                  style={{ width: '100%', fontSize: '0.85rem' }}
-                >
-                  <option value="Active">Active</option>
-                  <option value="Idle">Idle</option>
-                  <option value="Maintenance">Maintenance</option>
-                  <option value="Off Duty">Off Duty</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
                 <button
                   type="button"
-                  onClick={() => setIsAddBusModalOpen(false)}
+                  onClick={() => setEditingDriver(null)}
                   style={{
                     padding: '0.6rem 1.1rem',
                     borderRadius: '8px',
@@ -2050,7 +3232,528 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     boxShadow: '0 3px 10px rgba(124, 58, 237, 0.35)'
                   }}
                 >
-                  {isSubmitting ? 'Saving...' : 'Create Bus'}
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Professional Add Student Modal (Single / Bulk CSV) */}
+      {isAddStudentModalOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.5rem',
+            zIndex: 9999
+          }}
+          onClick={() => setIsAddStudentModalOpen(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.94, opacity: 0, y: 16 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.94, opacity: 0, y: 16 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            style={{
+              backgroundColor: 'var(--bg-card, #ffffff)',
+              borderRadius: '16px',
+              padding: '1.75rem',
+              maxWidth: passAddMode === 'bulk' ? '640px' : '500px',
+              width: '100%',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
+              border: '1px solid var(--border-color, #cbd5e1)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(124, 58, 237, 0.12)',
+                    color: '#7c3aed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <GraduationCap size={22} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                    Issue Student Pass
+                  </h3>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                    Add student transit credentials and pass entitlements
+                  </div>
+                </div>
+              </div>
+
+              {/* Mode Switch */}
+              <div style={{ display: 'flex', gap: '0.25rem', backgroundColor: 'var(--bg-secondary, #f1f5f9)', padding: '0.25rem', borderRadius: '8px' }}>
+                <button
+                  type="button"
+                  onClick={() => setPassAddMode('single')}
+                  style={{
+                    padding: '0.35rem 0.85rem',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    borderRadius: '6px',
+                    border: 'none',
+                    backgroundColor: passAddMode === 'single' ? '#7c3aed' : 'transparent',
+                    color: passAddMode === 'single' ? '#ffffff' : 'var(--text-secondary)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Single Student
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPassAddMode('bulk')}
+                  style={{
+                    padding: '0.35rem 0.85rem',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    borderRadius: '6px',
+                    border: 'none',
+                    backgroundColor: passAddMode === 'bulk' ? '#7c3aed' : 'transparent',
+                    color: passAddMode === 'bulk' ? '#ffffff' : 'var(--text-secondary)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Bulk Add (CSV)
+                </button>
+              </div>
+            </div>
+
+            {passAddMode === 'single' ? (
+              <form onSubmit={handleCreatePass} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Student Full Name *</label>
+                  <input
+                    type="text"
+                    autoFocus
+                    value={newStudentName}
+                    onChange={e => setNewStudentName(e.target.value)}
+                    placeholder="e.g. Ananya Nair"
+                    className="form-input"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Username / Student ID</label>
+                    <input
+                      type="text"
+                      value={newStudentUsername}
+                      onChange={e => setNewStudentUsername(e.target.value)}
+                      placeholder="e.g. STU-2026-99"
+                      className="form-input"
+                      style={{ width: '100%', fontSize: '0.85rem' }}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Password</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type={showStudentPassword ? 'text' : 'password'}
+                        value={newStudentPassword}
+                        onChange={e => setNewStudentPassword(e.target.value)}
+                        placeholder="student123"
+                        className="form-input"
+                        style={{ width: '100%', fontSize: '0.85rem', paddingRight: '2.2rem' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowStudentPassword(!showStudentPassword)}
+                        style={{
+                          position: 'absolute',
+                          right: '0.5rem',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: 'var(--text-muted)'
+                        }}
+                      >
+                        {showStudentPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Email Address *</label>
+                  <input
+                    type="email"
+                    value={newStudentEmail}
+                    onChange={e => setNewStudentEmail(e.target.value)}
+                    placeholder="student@cep.ac.in"
+                    className="form-input"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                    required
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Route Entitlement</label>
+                    <select
+                      value={newStudentRoute}
+                      onChange={e => setNewStudentRoute(e.target.value)}
+                      className="form-select"
+                      style={{ width: '100%', fontSize: '0.85rem' }}
+                    >
+                      <option value="All Routes">All Routes (Universal Pass)</option>
+                      {routes.map(r => (
+                        <option key={r.id} value={r.name}>{r.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Pass Status</label>
+                    <select
+                      value={newStudentStatus}
+                      onChange={e => setNewStudentStatus(e.target.value)}
+                      className="form-select"
+                      style={{ width: '100%', fontSize: '0.85rem' }}
+                    >
+                      <option value="Valid">Valid</option>
+                      <option value="Suspended">Suspended</option>
+                      <option value="Canceled">Canceled</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Valid Until</label>
+                  <input
+                    type="date"
+                    value={newStudentValidUntil}
+                    onChange={e => setNewStudentValidUntil(e.target.value)}
+                    className="form-input"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddStudentModalOpen(false)}
+                    style={{
+                      padding: '0.6rem 1.1rem',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border-color, #cbd5e1)',
+                      backgroundColor: 'transparent',
+                      color: 'var(--text-secondary, #64748b)',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    style={{
+                      padding: '0.6rem 1.25rem',
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: '#7c3aed',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      boxShadow: '0 3px 10px rgba(124, 58, 237, 0.35)'
+                    }}
+                  >
+                    {isSubmitting ? 'Saving...' : 'Issue Pass'}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div>
+                <BulkCsvUploader
+                  title="Bulk Import Student Passes"
+                  templateFilename="student_passes_template.csv"
+                  templateContent={STUDENT_PASS_CSV_TEMPLATE}
+                  columns={[
+                    { key: 'name', label: 'Full Name', required: true },
+                    { key: 'username', label: 'Username', required: true },
+                    { key: 'password', label: 'Password' },
+                    { key: 'email', label: 'Email', required: true },
+                    { key: 'routeentitlement', label: 'Route Entitlement' },
+                    { key: 'passstatus', label: 'Status' },
+                    { key: 'validuntil', label: 'Valid Until' }
+                  ]}
+                  onUpload={handleBulkUploadPasses}
+                  isSubmitting={isSubmitting}
+                  entityName="Student Passes"
+                />
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsAddStudentModalOpen(false)}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border-color, #cbd5e1)',
+                      backgroundColor: 'transparent',
+                      color: 'var(--text-secondary, #64748b)',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Edit Student Credentials Modal */}
+      {editingStudent && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.5rem',
+            zIndex: 9999
+          }}
+          onClick={() => setEditingStudent(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.94, opacity: 0, y: 16 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.94, opacity: 0, y: 16 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            style={{
+              backgroundColor: 'var(--bg-card, #ffffff)',
+              borderRadius: '16px',
+              padding: '1.75rem',
+              maxWidth: '500px',
+              width: '100%',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
+              border: '1px solid var(--border-color, #cbd5e1)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(124, 58, 237, 0.12)',
+                  color: '#7c3aed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Key size={22} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                  Edit Student Credentials
+                </h3>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                  Update credentials and entitlements for {editingStudent.name || editingStudent.id}
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleUpdateStudent} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Student Full Name *</label>
+                <input
+                  type="text"
+                  value={editStudentName}
+                  onChange={e => setEditStudentName(e.target.value)}
+                  className="form-input"
+                  style={{ width: '100%', fontSize: '0.85rem' }}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Username *</label>
+                  <input
+                    type="text"
+                    value={editStudentUsername}
+                    onChange={e => setEditStudentUsername(e.target.value)}
+                    className="form-input"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Password *</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showEditStudentPassword ? 'text' : 'password'}
+                      value={editStudentPassword}
+                      onChange={e => setEditStudentPassword(e.target.value)}
+                      className="form-input"
+                      style={{ width: '100%', fontSize: '0.85rem', paddingRight: '2.2rem' }}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowEditStudentPassword(!showEditStudentPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '0.5rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--text-muted)'
+                      }}
+                    >
+                      {showEditStudentPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Student ID / Pass ID *</label>
+                  <input
+                    type="text"
+                    value={editStudentId}
+                    onChange={e => setEditStudentId(e.target.value)}
+                    className="form-input"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Email Address *</label>
+                  <input
+                    type="email"
+                    value={editStudentEmail}
+                    onChange={e => setEditStudentEmail(e.target.value)}
+                    className="form-input"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Route Entitlement</label>
+                  <select
+                    value={editStudentRoute}
+                    onChange={e => setEditStudentRoute(e.target.value)}
+                    className="form-select"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                  >
+                    <option value="All Routes">All Routes (Universal Pass)</option>
+                    {routes.map(r => (
+                      <option key={r.id} value={r.name}>{r.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Status</label>
+                  <select
+                    value={editStudentStatus}
+                    onChange={e => setEditStudentStatus(e.target.value)}
+                    className="form-select"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                  >
+                    <option value="Valid">Valid</option>
+                    <option value="Suspended">Suspended</option>
+                    <option value="Canceled">Canceled</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Valid Until</label>
+                <input
+                  type="date"
+                  value={editStudentValidUntil}
+                  onChange={e => setEditStudentValidUntil(e.target.value)}
+                  className="form-input"
+                  style={{ width: '100%', fontSize: '0.85rem' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setEditingStudent(null)}
+                  style={{
+                    padding: '0.6rem 1.1rem',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-color, #cbd5e1)',
+                    backgroundColor: 'transparent',
+                    color: 'var(--text-secondary, #64748b)',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  style={{
+                    padding: '0.6rem 1.25rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    backgroundColor: '#7c3aed',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 3px 10px rgba(124, 58, 237, 0.35)'
+                  }}
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>

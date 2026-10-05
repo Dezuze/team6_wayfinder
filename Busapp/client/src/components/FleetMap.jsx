@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import { Users, Clock, AlertTriangle, Zap, MapPin, Search, X, Bus, Locate } from 'lucide-react';
+import { Users, Clock, AlertTriangle, Zap, MapPin, Search, X, Bus, Locate, Check, GraduationCap, Building2 } from 'lucide-react';
 import { COLLEGE_DESTINATION, KOTTAYAM_POONJAR_BOUNDS } from '../constants/college';
+import { bus3dManager } from '../utils/bus3dManager';
 
 /**
  * Custom Leaflet DivIcon for the verified College Destination (College of Engineering Poonjar)
@@ -31,9 +32,10 @@ export function createCollegeMarkerIcon() {
         border: 2px solid #ffffff;
         display: flex;
         align-items: center;
-        gap: 4px;
+        gap: 5px;
       ">
-        🏫 ${COLLEGE_DESTINATION.shortName}
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+        ${COLLEGE_DESTINATION.shortName}
       </div>
       <div style="
         width: 28px;
@@ -42,14 +44,12 @@ export function createCollegeMarkerIcon() {
         border: 3px solid #ffffff;
         border-radius: 50%;
         color: #ffffff;
-        font-weight: 800;
-        font-size: 13px;
         display: flex;
         align-items: center;
         justify-content: center;
         box-shadow: 0 4px 12px rgba(22, 163, 74, 0.5);
       ">
-        🎓
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
       </div>
     </div>
   `;
@@ -74,42 +74,191 @@ export function defaultGetMarkerColor(status, _isSelected) {
 }
 
 /**
- * Default Leaflet DivIcon generator
+ * Helper to calculate geographic bearing between two coordinates
  */
-export function defaultCreateMarkerIcon(color, isSelected, isSearchMatch) {
-  const borderStyle = isSelected ? '3px solid #ffffff' : isSearchMatch ? '3px solid #fbbf24' : '2px solid #ffffff';
-  const scale = isSelected ? 'scale(1.2)' : isSearchMatch ? 'scale(1.15)' : 'scale(1)';
-  const zIndex = isSelected ? 1000 : isSearchMatch ? 900 : 1;
-  const shadow = isSearchMatch ? '0 0 16px rgba(251, 191, 36, 0.8)' : '0 4px 14px rgba(0,0,0,0.35)';
+export function calculateBearing(lat1, lng1, lat2, lng2) {
+  const dLng = (lng2 - lng1) * (Math.PI / 180);
+  const phi1 = lat1 * (Math.PI / 180);
+  const phi2 = lat2 * (Math.PI / 180);
+  const y = Math.sin(dLng) * Math.cos(phi2);
+  const x = Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(dLng);
+  let bearing = (Math.atan2(y, x) * 180) / Math.PI;
+  return ((bearing % 360) + 360) % 360;
+}
 
-  const html = `
+/**
+ * Helper to find tangent bearing along a route path
+ */
+export function findBearingOnRoute(busLoc, routePath) {
+  if (!busLoc || !routePath || routePath.length < 2) return 90;
+  let minDst = Infinity;
+  let closestIdx = 0;
+  for (let i = 0; i < routePath.length; i++) {
+    const pt = routePath[i];
+    const d = Math.hypot(pt.lat - busLoc.lat, pt.lng - busLoc.lng);
+    if (d < minDst) {
+      minDst = d;
+      closestIdx = i;
+    }
+  }
+  // Look ahead ~6 points (~25-35m) along route for stable, non-jittery tangent
+  const aheadIdx = Math.min(closestIdx + 6, routePath.length - 1);
+  if (aheadIdx === closestIdx && closestIdx > 0) {
+    const prevIdx = Math.max(0, closestIdx - 6);
+    return calculateBearing(routePath[prevIdx].lat, routePath[prevIdx].lng, routePath[closestIdx].lat, routePath[closestIdx].lng);
+  }
+  return calculateBearing(routePath[closestIdx].lat, routePath[closestIdx].lng, routePath[aheadIdx].lat, routePath[aheadIdx].lng);
+}
+
+/**
+ * 3D Bus Leaflet DivIcon generator using the real 3d bus.obj model.
+ * The front side of the 3d model (+X in bus.obj) dynamically faces the forward bearing along the route.
+ */
+export function create3DBusMarkerIcon(bus, color, isSelected, isSearchMatch, bearing = 0) {
+  const normBearing = ((Math.round(bearing) % 360) + 360) % 360;
+  const dataUrl = bus3dManager.getBusIconDataUrl({
+    bearing: normBearing,
+    color,
+    status: bus?.status || 'Active',
+    isSelected
+  });
+
+  const busNumberText = bus?.number
+    ? (bus.number.match(/#\d+/) ? bus.number.match(/#\d+/)[0] : bus.number.split(' ')[1] || bus.number.split(' ')[0])
+    : 'BUS';
+  const speedText = bus?.speed !== undefined ? `${bus.speed} km/h` : '';
+
+  const selectionRing = isSelected ? `
     <div style="
-      position: relative;
-      width: 38px;
-      height: 38px;
-      background-color: ${color};
-      border: ${borderStyle};
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 78px;
+      height: 78px;
       border-radius: 50%;
-      box-shadow: ${shadow};
+      border: 3px solid ${color};
+      box-shadow: 0 0 20px ${color}, inset 0 0 10px ${color};
+      animation: pulse3d 2s infinite ease-in-out;
+      pointer-events: none;
+      z-index: 1;
+    "></div>
+  ` : isSearchMatch ? `
+    <div style="
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 74px;
+      height: 74px;
+      border-radius: 50%;
+      border: 3px solid #fbbf24;
+      box-shadow: 0 0 16px rgba(251, 191, 36, 0.8);
+      pointer-events: none;
+      z-index: 1;
+    "></div>
+  ` : '';
+
+  // 3D bus model rendered by Three.js from public/bus.obj
+  const content = dataUrl ? `
+    <img 
+      src="${dataUrl}" 
+      alt="${bus?.number || 'Bus'}" 
+      style="
+        width: 66px; 
+        height: 66px; 
+        object-fit: contain; 
+        display: block; 
+        filter: drop-shadow(0 6px 12px rgba(0,0,0,0.5));
+        transition: transform 0.25s ease-out;
+        transform: ${isSelected ? 'scale(1.12)' : 'scale(1)'};
+        pointer-events: none;
+        position: relative;
+        z-index: 2;
+      " 
+    />
+  ` : `
+    <div style="
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background-color: ${color};
       display: flex;
       align-items: center;
       justify-content: center;
       color: #ffffff;
-      transform: ${scale};
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      z-index: ${zIndex};
+      transform: rotate(${normBearing}deg);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
     ">
-      <span style="font-size: 20px; line-height: 1;">🚌</span>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5"><path d="M12 2L19 21L12 17L5 21L12 2Z" fill="#ffffff" fill-opacity="0.9"/></svg>
+    </div>
+  `;
+
+  const badgeHtml = `
+    <div style="
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(6px);
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 999px;
+      white-space: nowrap;
+      border: 1.5px solid ${color};
+      box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      z-index: 10;
+      letter-spacing: 0.02em;
+      pointer-events: none;
+    ">
+      <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: ${color}; box-shadow: 0 0 6px ${color};"></span>
+      <span>${busNumberText}</span>
+      ${speedText ? `<span style="opacity: 0.9; font-weight: 700; font-size: 9px; color: ${bus?.speed > 0 ? '#38bdf8' : '#94a3b8'};">${speedText}</span>` : ''}
+    </div>
+  `;
+
+  const html = `
+    <div style="
+      position: relative;
+      width: 68px;
+      height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    ">
+      ${selectionRing}
+      ${content}
+      ${badgeHtml}
     </div>
   `;
 
   return L.divIcon({
     html: html,
-    className: 'custom-bus-marker',
-    iconSize: [38, 38],
-    iconAnchor: [19, 19],
-    popupAnchor: [0, -20]
+    className: 'custom-3d-bus-marker',
+    iconSize: [68, 68],
+    iconAnchor: [34, 34],
+    popupAnchor: [0, -34]
   });
+}
+
+/**
+ * Default Leaflet DivIcon generator
+ */
+export function defaultCreateMarkerIcon(colorOrBus, isSelected, isSearchMatch, bearingOverride) {
+  if (typeof colorOrBus === 'object' && colorOrBus !== null) {
+    const bus = colorOrBus;
+    const color = defaultGetMarkerColor(bus.status, isSelected);
+    return create3DBusMarkerIcon(bus, color, isSelected, isSearchMatch, bearingOverride || bus.bearing || 0);
+  }
+  const color = colorOrBus || '#10b981';
+  return create3DBusMarkerIcon(null, color, isSelected, isSearchMatch, bearingOverride || 0);
 }
 
 /**
@@ -221,8 +370,12 @@ export function createSearchedPlaceIcon(name) {
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         margin-bottom: 4px;
         border: 1px solid rgba(255,255,255,0.6);
+        display: flex;
+        align-items: center;
+        gap: 4px;
       ">
-        📍 ${name}
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+        ${name}
       </div>
       <div style="
         width: 14px;
@@ -380,6 +533,431 @@ function MapClickHandler({ isPickingStops, onMapClick }) {
 }
 
 /**
+ * Smooth Bus Movement Helpers:
+ * Traces route path geometry and smoothly interpolates bus positions & bearings at 60 FPS
+ */
+function getPathWaypoints(fromPos, toPos, routePath) {
+  if (!routePath || !Array.isArray(routePath) || routePath.length < 2) {
+    return [fromPos, toPos];
+  }
+
+  const dLat = toPos.lat - fromPos.lat;
+  const dLng = toPos.lng - fromPos.lng;
+  const moveDist = Math.hypot(dLat, dLng);
+
+  // If stationary or micro-shift (< ~1 meter), direct line
+  if (moveDist < 0.00001) {
+    return [fromPos, toPos];
+  }
+
+  let idx1 = -1;
+  let minDist1 = Infinity;
+  let idx2 = -1;
+  let minDist2 = Infinity;
+
+  for (let i = 0; i < routePath.length; i++) {
+    const pt = routePath[i];
+    const d1 = (pt.lat - fromPos.lat) ** 2 + (pt.lng - fromPos.lng) ** 2;
+    if (d1 < minDist1) {
+      minDist1 = d1;
+      idx1 = i;
+    }
+    const d2 = (pt.lat - toPos.lat) ** 2 + (pt.lng - toPos.lng) ** 2;
+    if (d2 < minDist2) {
+      minDist2 = d2;
+      idx2 = i;
+    }
+  }
+
+  // If both points are reasonably close to route (~400m) and within a valid index span
+  if (minDist1 < 0.0012 && minDist2 < 0.0012 && idx1 !== -1 && idx2 !== -1) {
+    const span = Math.abs(idx2 - idx1);
+    if (span >= 1 && span <= 30) {
+      // CRITICAL: verify that the path direction from idx1 to idx2 matches motion vector (dLat, dLng)
+      const pathDLat = routePath[idx2].lat - routePath[idx1].lat;
+      const pathDLng = routePath[idx2].lng - routePath[idx1].lng;
+      const dot = dLat * pathDLat + dLng * pathDLng;
+
+      // Only follow road indices if they move in forward direction of travel (prevents 180° flips)
+      if (dot > 0) {
+        const step = idx2 > idx1 ? 1 : -1;
+        const pts = [fromPos];
+        for (let i = idx1; step > 0 ? i <= idx2 : i >= idx2; i += step) {
+          pts.push({ lat: routePath[i].lat, lng: routePath[i].lng });
+        }
+        pts.push(toPos);
+        return pts;
+      }
+    }
+  }
+
+  return [fromPos, toPos];
+}
+
+function computeSegmentDistances(waypoints) {
+  const distances = [0];
+  let total = 0;
+  for (let i = 1; i < waypoints.length; i++) {
+    const p1 = waypoints[i - 1];
+    const p2 = waypoints[i];
+    const d = Math.hypot(p2.lat - p1.lat, p2.lng - p1.lng);
+    total += d;
+    distances.push(total);
+  }
+  return { distances, total };
+}
+
+function getPosAtDistance(waypoints, distances, targetD) {
+  const d = Math.max(0, Math.min(targetD, distances[distances.length - 1]));
+  let segIdx = 0;
+  for (let i = 0; i < distances.length - 1; i++) {
+    if (d >= distances[i] && d <= distances[i + 1]) {
+      segIdx = i;
+      break;
+    }
+  }
+  const p1 = waypoints[segIdx];
+  const p2 = waypoints[segIdx + 1] || p1;
+  const segLen = distances[segIdx + 1] - distances[segIdx];
+  const segT = segLen > 0 ? (d - distances[segIdx]) / segLen : 0;
+  return {
+    lat: p1.lat + (p2.lat - p1.lat) * segT,
+    lng: p1.lng + (p2.lng - p1.lng) * segT
+  };
+}
+
+function interpolateAtDistance(waypoints, distances, totalDist, progress, lookaheadMeters = 40) {
+  if (totalDist === 0 || waypoints.length <= 1) {
+    return { pos: waypoints[0], bearing: null };
+  }
+  const d = Math.min(Math.max(progress * totalDist, 0), totalDist);
+  const pos = getPosAtDistance(waypoints, distances, d);
+
+  // Look ahead along path by lookaheadMeters (approx: 1 deg ~ 111000m) to calculate true forward travel direction
+  const lookaheadDeg = lookaheadMeters / 111000;
+  const aheadPos = getPosAtDistance(waypoints, distances, Math.min(d + lookaheadDeg, totalDist));
+
+  let bearing = null;
+  const distToAhead = Math.hypot(aheadPos.lat - pos.lat, aheadPos.lng - pos.lng);
+  if (distToAhead > 0.00003) { // > ~3.5 meters
+    bearing = calculateBearing(pos.lat, pos.lng, aheadPos.lat, aheadPos.lng);
+  } else if (d > 0.00003) {
+    const behindPos = getPosAtDistance(waypoints, distances, Math.max(0, d - lookaheadDeg));
+    bearing = calculateBearing(behindPos.lat, behindPos.lng, pos.lat, pos.lng);
+  } else if (waypoints.length >= 2) {
+    bearing = calculateBearing(waypoints[0].lat, waypoints[0].lng, waypoints[1].lat, waypoints[1].lng);
+  }
+
+  return { pos, bearing };
+}
+
+/**
+ * SmoothBusMarker:
+ * Buffers incoming telemetry coordinates and smoothly animates the 3D bus marker along the path
+ * at 60 FPS directly via Leaflet setLatLng (preventing React re-render bottlenecks).
+ * Features zoom-dependent lookahead and deadband filtering so the bus never twitches or twists when zoomed out.
+ */
+export function SmoothBusMarker({
+  bus,
+  route,
+  isSelected,
+  isSearchMatch,
+  getMarkerColor = defaultGetMarkerColor,
+  renderMarkerIcon,
+  renderMarkerPopup,
+  onMarkerClick
+}) {
+  const markerRef = useRef(null);
+  const color = getMarkerColor(bus.status, isSelected);
+  const map = useMap();
+  const zoomRef = useRef(map ? map.getZoom() : 13);
+
+  useMapEvents({
+    zoomend: () => {
+      if (map) zoomRef.current = map.getZoom();
+    }
+  });
+
+  // We store animated mutable state in a ref to allow 60 FPS RAF updates without React re-render lag
+  const animStateRef = useRef({
+    currentPos: bus?.location ? { lat: bus.location.lat, lng: bus.location.lng } : null,
+    currentBearing: bus?.bearing || 0,
+    targetBusBearing: bus?.bearing || 0,
+    renderedIconBearing: Math.round(((bus?.bearing || 0) % 360) / 4) * 4,
+    lastTargetPos: bus?.location ? { lat: bus.location.lat, lng: bus.location.lng } : null,
+    lastUpdateTime: performance.now(),
+    waypoints: [],
+    distances: [],
+    totalDist: 0,
+    startTime: 0,
+    duration: 1000
+  });
+
+  const [iconBearing, setIconBearing] = useState(() => Math.round(((bus?.bearing || 0) % 360) / 4) * 4);
+
+  // React to new incoming bus location / bearing from WebSocket or polling
+  useEffect(() => {
+    if (!bus?.location || typeof bus.location.lat !== 'number' || typeof bus.location.lng !== 'number') return;
+
+    const state = animStateRef.current;
+    const newTarget = { lat: bus.location.lat, lng: bus.location.lng };
+    const now = performance.now();
+
+    // Initial state
+    if (!state.currentPos || !state.lastTargetPos) {
+      state.currentPos = { ...newTarget };
+      state.lastTargetPos = { ...newTarget };
+      state.currentBearing = bus.bearing || 0;
+      state.targetBusBearing = bus.bearing || 0;
+      state.lastUpdateTime = now;
+      if (markerRef.current) {
+        markerRef.current.setLatLng([newTarget.lat, newTarget.lng]);
+      }
+      return;
+    }
+
+    const distFromLastTarget = Math.hypot(newTarget.lat - state.lastTargetPos.lat, newTarget.lng - state.lastTargetPos.lng);
+    // If stationary, no animation segment needed (stops twisting when parked or dwelling)
+    if (distFromLastTarget < 0.000005) {
+      state.waypoints = [];
+      state.totalDist = 0;
+      return;
+    }
+
+    const elapsed = Math.max(now - state.lastUpdateTime, 400);
+    state.lastUpdateTime = now;
+
+    // Buffer duration by ~8% so motion connects continuously into the next tick
+    const duration = Math.min(Math.max(elapsed * 1.08, 850), 2200);
+
+    // Build intermediate route waypoints from currentPos to newTarget along road
+    const fromPos = state.currentPos || state.lastTargetPos;
+    const waypoints = getPathWaypoints(fromPos, newTarget, route?.path);
+    const { distances, total } = computeSegmentDistances(waypoints);
+
+    state.waypoints = waypoints;
+    state.distances = distances;
+    state.totalDist = total;
+    state.startTime = now;
+    state.duration = duration;
+    state.lastTargetPos = { ...newTarget };
+    if (bus.bearing !== undefined && bus.bearing !== null) {
+      state.targetBusBearing = bus.bearing;
+    }
+  }, [bus?.location?.lat, bus?.location?.lng, bus?.bearing, route]);
+
+  // Silky 60 FPS animation loop with zoom-dependent damping
+  useEffect(() => {
+    let animId;
+
+    function step(now) {
+      const state = animStateRef.current;
+      if (state.waypoints && state.waypoints.length >= 2 && state.totalDist > 0) {
+        const elapsed = now - state.startTime;
+        const progress = Math.min(Math.max(elapsed / state.duration, 0), 1.0);
+
+        const zoom = zoomRef.current || 13;
+        // Dynamic lookahead and angular filtering based on map zoom:
+        // Zoom <= 12 (regional view): 120m lookahead, gentle lerp, wide deadband (no twisting on micro-curves)
+        // Zoom 13-14 (suburb view): 75m lookahead, steady turning
+        // Zoom >= 15 (street view): 35m lookahead, responsive cornering
+        let lookaheadMeters = 35;
+        let lerpFactor = 0.08;
+        let deadbandDeg = 3.5;
+        let quantizeDeg = 2;
+
+        if (zoom <= 12) {
+          lookaheadMeters = 120;
+          lerpFactor = 0.04;
+          deadbandDeg = 8.0;
+          quantizeDeg = 6;
+        } else if (zoom <= 14) {
+          lookaheadMeters = 75;
+          lerpFactor = 0.06;
+          deadbandDeg = 5.0;
+          quantizeDeg = 4;
+        }
+
+        const { pos, bearing: pathBearing } = interpolateAtDistance(
+          state.waypoints,
+          state.distances,
+          state.totalDist,
+          progress,
+          lookaheadMeters
+        );
+
+        state.currentPos = pos;
+
+        // Choose target bearing: lookahead path bearing or fallback to server baseline
+        const targetHeading = pathBearing !== null ? pathBearing : state.targetBusBearing;
+        if (targetHeading !== undefined && targetHeading !== null) {
+          const diff = ((targetHeading - state.currentBearing + 540) % 360) - 180;
+          // Apply deadband to prevent oscillation and twisting on straight/minor-wiggle roads
+          if (Math.abs(diff) >= deadbandDeg) {
+            state.currentBearing = (state.currentBearing + diff * lerpFactor + 360) % 360;
+          }
+        }
+
+        // Directly move Leaflet marker at 60 FPS
+        if (markerRef.current) {
+          markerRef.current.setLatLng([pos.lat, pos.lng]);
+        }
+
+        // Quantize bearing and only trigger React state update when threshold is exceeded
+        const qBearing = Math.round(state.currentBearing / quantizeDeg) * quantizeDeg;
+        if (Math.abs(qBearing - state.renderedIconBearing) >= quantizeDeg) {
+          state.renderedIconBearing = qBearing;
+          setIconBearing(qBearing);
+        }
+
+        // Mark segment finished at 100% progress
+        if (progress >= 1.0) {
+          state.totalDist = 0;
+        }
+      }
+
+      animId = requestAnimationFrame(step);
+    }
+
+    animId = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animId);
+  }, []);
+
+  const markerIcon = useMemo(() => {
+    if (renderMarkerIcon) {
+      return renderMarkerIcon(bus, isSelected, isSearchMatch, iconBearing);
+    }
+    return create3DBusMarkerIcon(bus, color, isSelected, isSearchMatch, iconBearing);
+  }, [bus, color, isSelected, isSearchMatch, iconBearing, renderMarkerIcon]);
+
+  if (!bus?.location) return null;
+
+  const [initialPosition] = useState(() => [bus.location.lat, bus.location.lng]);
+
+  return (
+    <Marker
+      ref={markerRef}
+      position={initialPosition}
+      icon={markerIcon}
+      eventHandlers={{
+        click: () => {
+          if (onMarkerClick) onMarkerClick(bus.id);
+        }
+      }}
+    >
+      <Popup>
+        {renderMarkerPopup ? (
+          renderMarkerPopup(bus, isSelected)
+        ) : (
+          <DefaultMarkerPopup bus={bus} />
+        )}
+      </Popup>
+    </Marker>
+  );
+}
+
+/**
+ * StaticRouteLayers:
+ * Memoized route polylines and stop dots. Prevents rebuilding hundreds of Leaflet SVG
+ * paths on every 1-second bus telemetry update.
+ */
+const StaticRouteLayers = React.memo(function StaticRouteLayers({
+  validRoutes,
+  assignedRouteId,
+  selectedBusNumber
+}) {
+  return (
+    <>
+      {validRoutes.map(route => {
+        const isAssigned = assignedRouteId && assignedRouteId === route.id;
+        const isDimmed = assignedRouteId && assignedRouteId !== route.id;
+        const positions = route.path.map(pt => [pt.lat, pt.lng]);
+        const routeColor = route.color || '#7c3aed';
+        const cleanStops = Array.from(new Set((route.stops || []).map(s => String(s).trim()).filter(Boolean)));
+
+        return (
+          <React.Fragment key={route.id}>
+            <Polyline
+              positions={positions}
+              pathOptions={{
+                color: routeColor,
+                weight: isAssigned ? 7 : 4,
+                opacity: isDimmed ? 0.35 : isAssigned ? 1.0 : 0.75,
+                lineCap: 'round',
+                lineJoin: 'round'
+              }}
+            >
+              <Popup>
+                <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.2rem' }}>
+                  <strong style={{ color: routeColor, fontSize: '0.9rem' }}>{route.name}</strong>
+                  {isAssigned && (
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#7c3aed', marginTop: '0.15rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <Check size={12} /> Assigned to {selectedBusNumber || 'Bus'}
+                    </div>
+                  )}
+                  {cleanStops.length > 0 && (
+                    <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.25rem' }}>
+                      {cleanStops.length} stops: {cleanStops.join(' → ')}
+                    </div>
+                  )}
+                </div>
+              </Popup>
+            </Polyline>
+
+            {(isAssigned || !assignedRouteId) && (
+              Array.isArray(route.stopCoordinates) && route.stopCoordinates.length > 0 ? (
+                route.stopCoordinates.map((stop, sIdx) => {
+                  const isCollege = sIdx === route.stopCoordinates.length - 1;
+                  if (isCollege) return null;
+                  return (
+                    <Marker
+                      key={`route-stop-${route.id}-${sIdx}`}
+                      position={[stop.lat, stop.lng]}
+                      icon={createRouteStopIcon(stop.name || `Stop ${sIdx + 1}`, routeColor, isAssigned)}
+                    >
+                      <Popup>
+                        <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.2rem' }}>
+                          <strong style={{ color: routeColor }}>{route.name}</strong>
+                          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1e293b', marginTop: '0.15rem' }}>
+                            Stop #{sIdx + 1}: {stop.name || `Stop ${sIdx + 1}`}
+                          </div>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  );
+                })
+              ) : (
+                route.path.length <= 8 ? (
+                  route.path.map((pt, ptIdx) => {
+                    const stopLabel = cleanStops[ptIdx] || `Point ${ptIdx + 1}`;
+                    return (
+                      <Marker
+                        key={`route-pt-${route.id}-${ptIdx}`}
+                        position={[pt.lat, pt.lng]}
+                        icon={createRouteStopIcon(stopLabel, routeColor, isAssigned)}
+                      >
+                        <Popup>
+                          <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.2rem' }}>
+                            <strong style={{ color: routeColor }}>{route.name}</strong>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1e293b', marginTop: '0.15rem' }}>
+                              Stop: {stopLabel}
+                            </div>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    );
+                  })
+                ) : null
+              )
+            )}
+          </React.Fragment>
+        );
+      })}
+    </>
+  );
+});
+
+/**
  * Generic, Reusable FleetMap Component
  */
 export default function FleetMap({
@@ -426,8 +1004,15 @@ export default function FleetMap({
   const [placeSuggestions, setPlaceSuggestions] = useState([]);
   const [isSearchingPlaces, setIsSearchingPlaces] = useState(false);
   const [searchedPlaceMarker, setSearchedPlaceMarker] = useState(null);
-
   const searchContainerRef = useRef(null);
+
+  // Re-render markers as soon as bus.obj finishes loading in Three.js
+  const [, setModelLoadedTick] = useState(0);
+  useEffect(() => {
+    return bus3dManager.subscribe(() => {
+      setModelLoadedTick(t => t + 1);
+    });
+  }, []);
 
   // Close search dropdown on click outside
   useEffect(() => {
@@ -568,6 +1153,16 @@ export default function FleetMap({
     if (!activeSelectedId) return null;
     return selectedBus?.location || null;
   }, [selectedBus, activeSelectedId]);
+
+  // When a bus is selected, smoothly fly the map to center on it
+  useEffect(() => {
+    if (mapInstance && selectedBus?.location?.lat && selectedBus?.location?.lng) {
+      mapInstance.flyTo([selectedBus.location.lat, selectedBus.location.lng], Math.max(mapInstance.getZoom(), 15), {
+        animate: true,
+        duration: 0.8
+      });
+    }
+  }, [activeSelectedId, mapInstance]);
 
   // Initial center position
   const resolvedCenter = useMemo(() => {
@@ -892,10 +1487,13 @@ export default function FleetMap({
             fontWeight: 700,
             border: '1px solid #f87171',
             pointerEvents: 'none',
-            whiteSpace: 'nowrap'
+            whiteSpace: 'nowrap',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem'
           }}
         >
-          ⚠️ Route preview unavailable
+          <AlertTriangle size={14} /> Route preview unavailable
         </div>
       )}
 
@@ -949,6 +1547,9 @@ export default function FleetMap({
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          maxZoom={19}
+          keepBuffer={8}
+          updateInterval={100}
         />
 
         <MapViewController
@@ -960,95 +1561,12 @@ export default function FleetMap({
         />
         <MapClickHandler isPickingStops={isPickingStops} onMapClick={onMapClick} />
 
-        {/* 1. Render Route Polylines & Stop Indicators */}
-        {validRoutes.map(route => {
-          const isAssigned = assignedRoute && assignedRoute.id === route.id;
-          const isDimmed = assignedRoute && assignedRoute.id !== route.id;
-          const positions = route.path.map(pt => [pt.lat, pt.lng]);
-          const routeColor = route.color || '#7c3aed';
-
-          // Clean, deduplicated list of configured stop names
-          const cleanStops = Array.from(new Set((route.stops || []).map(s => String(s).trim()).filter(Boolean)));
-
-          return (
-            <React.Fragment key={route.id}>
-              <Polyline
-                positions={positions}
-                pathOptions={{
-                  color: routeColor,
-                  weight: isAssigned ? 7 : 4,
-                  opacity: isDimmed ? 0.35 : isAssigned ? 1.0 : 0.75,
-                  lineCap: 'round',
-                  lineJoin: 'round'
-                }}
-              >
-                <Popup>
-                  <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.2rem' }}>
-                    <strong style={{ color: routeColor, fontSize: '0.9rem' }}>{route.name}</strong>
-                    {isAssigned && (
-                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#7c3aed', marginTop: '0.15rem' }}>
-                        ✓ Assigned to {selectedBus?.number || `Bus #${selectedBus?.id}`}
-                      </div>
-                    )}
-                    {cleanStops.length > 0 && (
-                      <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.25rem' }}>
-                        {cleanStops.length} stops: {cleanStops.join(' → ')}
-                      </div>
-                    )}
-                  </div>
-                </Popup>
-              </Polyline>
-
-              {/* Render Stop Dots on Route Points for Assigned or Focused Route */}
-              {(isAssigned || !assignedRoute) && (
-                Array.isArray(route.stopCoordinates) && route.stopCoordinates.length > 0 ? (
-                  route.stopCoordinates.map((stop, sIdx) => {
-                    const isCollege = sIdx === route.stopCoordinates.length - 1;
-                    if (isCollege) return null; // College has dedicated permanent marker
-                    return (
-                      <Marker
-                        key={`route-stop-${route.id}-${sIdx}`}
-                        position={[stop.lat, stop.lng]}
-                        icon={createRouteStopIcon(stop.name || `Stop ${sIdx + 1}`, routeColor, isAssigned)}
-                      >
-                        <Popup>
-                          <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.2rem' }}>
-                            <strong style={{ color: routeColor }}>{route.name}</strong>
-                            <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1e293b', marginTop: '0.15rem' }}>
-                              Stop #{sIdx + 1}: {stop.name || `Stop ${sIdx + 1}`}
-                            </div>
-                          </div>
-                        </Popup>
-                      </Marker>
-                    );
-                  })
-                ) : (
-                  route.path.length <= 8 ? (
-                    route.path.map((pt, ptIdx) => {
-                      const stopLabel = cleanStops[ptIdx] || `Point ${ptIdx + 1}`;
-                      return (
-                        <Marker
-                          key={`route-pt-${route.id}-${ptIdx}`}
-                          position={[pt.lat, pt.lng]}
-                          icon={createRouteStopIcon(stopLabel, routeColor, isAssigned)}
-                        >
-                          <Popup>
-                            <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.2rem' }}>
-                              <strong style={{ color: routeColor }}>{route.name}</strong>
-                              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1e293b', marginTop: '0.15rem' }}>
-                                Stop: {stopLabel}
-                              </div>
-                            </div>
-                          </Popup>
-                        </Marker>
-                      );
-                    })
-                  ) : null
-                )
-              )}
-            </React.Fragment>
-          );
-        })}
+        {/* 1. Render Route Polylines & Stop Indicators (Memoized) */}
+        <StaticRouteLayers
+          validRoutes={validRoutes}
+          assignedRouteId={assignedRoute?.id}
+          selectedBusNumber={selectedBus?.number || (selectedBus ? `Bus #${selectedBus.id}` : null)}
+        />
 
         {/* 2. Permanent College Destination Marker (College of Engineering Poonjar) */}
         <Marker
@@ -1058,8 +1576,8 @@ export default function FleetMap({
         >
           <Popup>
             <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.25rem', textAlign: 'center', minWidth: '190px' }}>
-              <div style={{ color: '#15803d', fontWeight: 800, fontSize: '0.92rem' }}>
-                🏫 {COLLEGE_DESTINATION.name}
+              <div style={{ color: '#15803d', fontWeight: 800, fontSize: '0.92rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
+                <GraduationCap size={16} /> {COLLEGE_DESTINATION.name}
               </div>
               <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 700, marginTop: '0.2rem' }}>
                 Fixed Final Destination
@@ -1112,7 +1630,9 @@ export default function FleetMap({
               <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.2rem', maxWidth: '230px' }}>
                 {searchedPlaceMarker.isCollege || (searchedPlaceMarker.shortName || '').toLowerCase().includes('college of engineering poonjar') ? (
                   <div>
-                    <strong style={{ color: '#15803d' }}>🏫 {COLLEGE_DESTINATION.name}</strong>
+                    <strong style={{ color: '#15803d', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <GraduationCap size={15} /> {COLLEGE_DESTINATION.name}
+                    </strong>
                     <div style={{ fontSize: '0.76rem', color: '#16a34a', fontWeight: 700, marginTop: '0.2rem' }}>
                       Fixed Final Destination
                     </div>
@@ -1122,7 +1642,9 @@ export default function FleetMap({
                   </div>
                 ) : (
                   <div>
-                    <strong style={{ color: '#0284c7' }}>📍 {searchedPlaceMarker.shortName}</strong>
+                    <strong style={{ color: '#0284c7', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <MapPin size={15} /> {searchedPlaceMarker.shortName}
+                    </strong>
                     <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.2rem', lineHeight: '1.3' }}>
                       {searchedPlaceMarker.displayName}
                     </div>
@@ -1188,7 +1710,9 @@ export default function FleetMap({
           >
             <Popup>
               <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.2rem', textAlign: 'center' }}>
-                <strong style={{ color: '#1e40af', fontSize: '0.9rem' }}>📍 Your Location</strong>
+                <strong style={{ color: '#1e40af', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
+                  <MapPin size={15} /> Your Location
+                </strong>
                 <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.2rem' }}>
                   {studentLocation.lat.toFixed(5)}°, {studentLocation.lng.toFixed(5)}°
                 </div>
@@ -1197,34 +1721,24 @@ export default function FleetMap({
           </Marker>
         )}
 
-        {/* 5. Render Generic Bus/Vehicle Markers */}
+        {/* 5. Render Smooth 3D Moving Bus Markers */}
         {validBuses.map(bus => {
           const isSelected = bus.id === activeSelectedId;
           const isSearchMatch = searchQuery.trim().length > 0 && matchingBusIds.has(bus.id);
-          const markerColor = getMarkerColor(bus.status, isSelected);
-          const markerIcon = renderMarkerIcon
-            ? renderMarkerIcon(bus, isSelected, isSearchMatch)
-            : defaultCreateMarkerIcon(markerColor, isSelected, isSearchMatch);
+          const busRoute = routes.find(r => r.id === bus.routeId);
 
           return (
-            <Marker
+            <SmoothBusMarker
               key={bus.id}
-              position={[bus.location.lat, bus.location.lng]}
-              icon={markerIcon}
-              eventHandlers={{
-                click: () => {
-                  if (activeOnMarkerClick) activeOnMarkerClick(bus.id);
-                }
-              }}
-            >
-              <Popup>
-                {renderMarkerPopup ? (
-                  renderMarkerPopup(bus, isSelected)
-                ) : (
-                  <DefaultMarkerPopup bus={bus} />
-                )}
-              </Popup>
-            </Marker>
+              bus={bus}
+              route={busRoute}
+              isSelected={isSelected}
+              isSearchMatch={isSearchMatch}
+              getMarkerColor={getMarkerColor}
+              renderMarkerIcon={renderMarkerIcon}
+              renderMarkerPopup={renderMarkerPopup}
+              onMarkerClick={activeOnMarkerClick}
+            />
           );
         })}
       </MapContainer>

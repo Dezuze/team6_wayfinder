@@ -24,7 +24,7 @@ function AppContent() {
     <div className="app-container">
       {showNavbar && <Navbar activeRole={activeRole} setActiveRole={setActiveRole} />}
       
-      <main className={activeRole === 'admin' ? "main-content admin-layout-main" : "main-content"}>
+      <main className={!user ? "main-content login-layout-main" : activeRole === 'admin' ? "main-content admin-layout-main" : "main-content"}>
         {!user ? (
           <LoginView />
         ) : (

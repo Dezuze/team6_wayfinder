@@ -23,12 +23,12 @@ export default function LoginView() {
 
   return (
     <div style={{
-      minHeight: '80vh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '1rem',
-      width: '100%'
+      width: '100%',
+      margin: 'auto',
+      padding: '1rem 0'
     }}>
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
