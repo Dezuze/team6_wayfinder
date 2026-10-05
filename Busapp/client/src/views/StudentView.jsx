@@ -537,13 +537,17 @@ export default function StudentView() {
                 />
               </div>
 
-              {/* Empty State - Compact */}
+              {/* Empty State - Informative */}
               {nearbyBuses.length === 0 && (
-                <div className="clean-card" style={{ textAlign: 'center', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                  <Bus size={20} color="var(--text-muted)" style={{ marginBottom: '0.4rem' }} />
-                  <h3 style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.1rem', margin: 0 }}>No Buses Nearby</h3>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.7rem', margin: 0 }}>
-                    Buses within {NEARBY_RADIUS_KM} km will appear here
+                <div className="clean-card" style={{ textAlign: 'center', padding: '1.25rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                  <Bus size={22} color="var(--text-muted)" style={{ marginBottom: '0.4rem' }} />
+                  <h3 style={{ fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.2rem', margin: 0 }}>
+                    {activeBuses.length === 0 ? 'No Drivers Currently Broadcasting' : 'No Buses In Range'}
+                  </h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.72rem', margin: 0, maxWidth: '280px', lineHeight: 1.35 }}>
+                    {activeBuses.length === 0 
+                      ? 'Live campus shuttles will appear on this radar map as soon as drivers sign in and broadcast their real GPS coordinates.' 
+                      : `Buses within ${NEARBY_RADIUS_KM} km of your real location will appear here.`}
                   </p>
                 </div>
               )}

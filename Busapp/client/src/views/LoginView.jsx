@@ -5,20 +5,13 @@ import { Bus, Lock, User, ArrowRight } from 'lucide-react';
 
 export default function LoginView() {
   const { login, error, isLoading } = useAuth();
-  const [roleTab, setRoleTab] = useState('driver'); // driver, student, admin
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!username) return;
-    await login(username, password, roleTab);
-  };
-
-  const handleRoleChange = (role) => {
-    setRoleTab(role);
-    setUsername('');
-    setPassword('');
+    if (!username.trim() || !password.trim()) return;
+    await login(username, password);
   };
 
   return (
@@ -59,36 +52,8 @@ export default function LoginView() {
             Sign in to CampusBus
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-            Enter your credentials to access your portal
+            Sign in with your driver, student, or admin account
           </p>
-        </div>
-
-        {/* Role Selector Tabs */}
-        <div className="role-tabs" style={{ width: '100%', marginBottom: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr' }}>
-          <button
-            type="button"
-            onClick={() => handleRoleChange('driver')}
-            className={`role-tab ${roleTab === 'driver' ? 'active' : ''}`}
-            style={{ textAlign: 'center' }}
-          >
-            Driver
-          </button>
-          <button
-            type="button"
-            onClick={() => handleRoleChange('student')}
-            className={`role-tab ${roleTab === 'student' ? 'active' : ''}`}
-            style={{ textAlign: 'center' }}
-          >
-            Student
-          </button>
-          <button
-            type="button"
-            onClick={() => handleRoleChange('admin')}
-            className={`role-tab ${roleTab === 'admin' ? 'active' : ''}`}
-            style={{ textAlign: 'center' }}
-          >
-            Admin
-          </button>
         </div>
 
         {/* Login Form */}

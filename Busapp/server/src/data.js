@@ -13588,12 +13588,14 @@ export const db = {
       "number": "BUS #101 (KL-07-AB-1234)",
       "routeId": "route-1",
       "driverName": "John Doe",
-      "status": "Active",
+      "status": "Off Duty",
       "location": {
         "lat": 9.701275,
         "lng": 76.655871
       },
-      "speed": 32,
+      "bearing": 0,
+      "speed": 0,
+      "isLive": false,
       "lastUpdated": "2026-08-29T08:57:31.366Z"
     },
     {
@@ -13601,12 +13603,14 @@ export const db = {
       "number": "BUS #102 (KL-07-CD-5678)",
       "routeId": "route-2",
       "driverName": "Sarah Jenkins",
-      "status": "Active",
+      "status": "Off Duty",
       "location": {
         "lat": 9.600081,
         "lng": 76.779064
       },
-      "speed": 28,
+      "bearing": 0,
+      "speed": 0,
+      "isLive": false,
       "lastUpdated": "2026-08-29T08:57:31.368Z"
     },
     {
@@ -13619,7 +13623,9 @@ export const db = {
         "lat": 9.93,
         "lng": 76.26
       },
+      "bearing": 0,
       "speed": 0,
+      "isLive": false,
       "lastUpdated": "2026-08-29T08:57:31.368Z"
     },
     {
@@ -13627,12 +13633,14 @@ export const db = {
       "number": "BUS #104 (KL-05-XY-7777)",
       "routeId": "route-3",
       "driverName": "Ram Kumar",
-      "status": "Active",
+      "status": "Off Duty",
       "location": {
         "lat": 9.706471,
         "lng": 76.716999
       },
-      "speed": 45,
+      "bearing": 0,
+      "speed": 0,
+      "isLive": false,
       "lastUpdated": "2026-08-29T08:57:31.368Z"
     }
   ],

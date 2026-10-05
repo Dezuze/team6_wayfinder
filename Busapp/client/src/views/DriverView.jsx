@@ -1,27 +1,33 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWebSocket } from '../context/WebSocketContext';
 import { useAuth } from '../context/AuthContext';
-import { Radio, Play, Square, Compass, Gauge, AlertTriangle, RefreshCw, MapPin, CheckCircle, LogOut, ArrowRightLeft } from 'lucide-react';
+import { 
+  Radio, Play, Square, Compass, Gauge, AlertTriangle, 
+  MapPin, CheckCircle, LogOut, UserCheck, Activity, Wifi, WifiOff 
+} from 'lucide-react';
 
 export default function DriverView({ activeRole, setActiveRole }) {
   const { buses, routes, streamDriverLocation, streamDriverSOS } = useWebSocket();
   const { user, logout } = useAuth();
 
-  const defaultBusId = user?.assignedBusId || 'bus-101';
+  const defaultBusId = user?.assignedBusId || (buses[0] ? buses[0].id : 'bus-101');
   const [selectedBusId, setSelectedBusId] = useState(defaultBusId);
   const [gpsPermission, setGpsPermission] = useState('prompt');
 
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [currentSpeed, setCurrentSpeed] = useState(0);
+  const [gpsAccuracy, setGpsAccuracy] = useState(null);
   const [driverStatus, setDriverStatus] = useState('Active');
-  const [coords, setCoords] = useState({ lat: 9.9312, lng: 76.2673 });
+  const [coords, setCoords] = useState({ lat: 9.67416, lng: 76.82573 });
+  const [lastTxTime, setLastTxTime] = useState(null);
 
   const [showSosModal, setShowSosModal] = useState(false);
   const [sosReason, setSosReason] = useState('Mechanical Breakdown');
   const [sosTriggered, setSosTriggered] = useState(false);
 
   const geoWatchRef = useRef(null);
+  const lastPosRef = useRef(null);
 
   const currentBus = buses.find(b => b.id === selectedBusId) || buses[0] || {};
   const currentRoute = routes.find(r => r.id === currentBus.routeId) || routes[0] || {};
@@ -49,6 +55,7 @@ export default function DriverView({ activeRole, setActiveRole }) {
       (pos) => {
         setGpsPermission('granted');
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        if (pos.coords.accuracy) setGpsAccuracy(Math.round(pos.coords.accuracy));
         localStorage.setItem('campusbus-gps-perm', 'granted');
       },
       (err) => {
@@ -58,6 +65,33 @@ export default function DriverView({ activeRole, setActiveRole }) {
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
+  };
+
+  // Gracefully stop broadcasting and inform backend that bus is now stationary/Off Duty
+  const stopBroadcasting = useCallback(() => {
+    if (geoWatchRef.current !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(geoWatchRef.current);
+      geoWatchRef.current = null;
+    }
+    setIsBroadcasting(false);
+    setCurrentSpeed(0);
+
+    // Send real Off Duty signal so students/admin see vehicle as stationary
+    streamDriverLocation(
+      selectedBusId, 
+      coords.lat, 
+      coords.lng, 
+      0, 
+      'Off Duty', 
+      user?.name || user?.username
+    );
+  }, [selectedBusId, coords, streamDriverLocation, user]);
+
+  const handleLogout = () => {
+    if (isBroadcasting) {
+      stopBroadcasting();
+    }
+    logout();
   };
 
   useEffect(() => {
@@ -72,23 +106,55 @@ export default function DriverView({ activeRole, setActiveRole }) {
     if (navigator.geolocation) {
       geoWatchRef.current = navigator.geolocation.watchPosition(
         (position) => {
-          const { latitude, longitude, speed } = position.coords;
-          const calcSpeed = speed != null && !isNaN(speed) ? Math.round(speed * 3.6) : 0;
+          const { latitude, longitude, speed, heading, accuracy } = position.coords;
+          
+          let calcSpeed = 0;
+          if (speed != null && !isNaN(speed) && speed > 0) {
+            calcSpeed = Math.round(speed * 3.6);
+          } else if (lastPosRef.current && lastPosRef.current.timestamp) {
+            const timeDeltaSec = (position.timestamp - lastPosRef.current.timestamp) / 1000;
+            if (timeDeltaSec > 0.5 && timeDeltaSec < 15) {
+              const R = 6371000;
+              const dLat = (latitude - lastPosRef.current.lat) * (Math.PI / 180);
+              const dLng = (longitude - lastPosRef.current.lng) * (Math.PI / 180);
+              const a = Math.sin(dLat / 2) ** 2 + 
+                        Math.cos(lastPosRef.current.lat * (Math.PI / 180)) * 
+                        Math.cos(latitude * (Math.PI / 180)) * 
+                        Math.sin(dLng / 2) ** 2;
+              const distM = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+              calcSpeed = Math.round((distM / timeDeltaSec) * 3.6);
+            }
+          }
+
+          const validBearing = (heading != null && !isNaN(heading)) ? Math.round(heading) : undefined;
+          lastPosRef.current = { lat: latitude, lng: longitude, timestamp: position.timestamp };
 
           setCoords({ lat: latitude, lng: longitude });
           setCurrentSpeed(calcSpeed);
+          if (accuracy) setGpsAccuracy(Math.round(accuracy));
+          setLastTxTime(new Date().toLocaleTimeString());
 
-          streamDriverLocation(selectedBusId, latitude, longitude, calcSpeed, driverStatus);
+          // Broadcast real location to server
+          streamDriverLocation(
+            selectedBusId, 
+            latitude, 
+            longitude, 
+            calcSpeed, 
+            driverStatus,
+            user?.name || user?.username,
+            validBearing
+          );
         },
         (error) => {
-          console.error("GPS Watch Error:", error);
+          console.error("Real GPS Watch Error:", error);
           alert("Real GPS signal lost: " + (error.message || 'Position unavailable'));
           setIsBroadcasting(false);
+          setCurrentSpeed(0);
         },
         { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }
       );
     } else {
-      alert('Geolocation is not supported by your browser.');
+      alert('Geolocation hardware is not supported by your browser.');
       setIsBroadcasting(false);
     }
 
@@ -98,10 +164,14 @@ export default function DriverView({ activeRole, setActiveRole }) {
         geoWatchRef.current = null;
       }
     };
-  }, [isBroadcasting, selectedBusId, driverStatus, streamDriverLocation]);
+  }, [isBroadcasting, selectedBusId, driverStatus, streamDriverLocation, user]);
 
   const toggleBroadcast = () => {
-    setIsBroadcasting(!isBroadcasting);
+    if (isBroadcasting) {
+      stopBroadcasting();
+    } else {
+      setIsBroadcasting(true);
+    }
     if (sosTriggered) setSosTriggered(false);
   };
 
@@ -156,28 +226,32 @@ export default function DriverView({ activeRole, setActiveRole }) {
 
   return (
     <div className="mobile-view-wrapper" style={{ paddingTop: '0.5rem', maxWidth: '100%', boxSizing: 'border-box', overflowX: 'hidden', paddingBottom: '1rem' }}>
-      <div className="clean-card" style={{ marginBottom: '1rem', padding: '1rem 1rem 0.9rem', maxWidth: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
-        <div className="flex-between" style={{ alignItems: 'flex-start', gap: '0.5rem', minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem', minWidth: 0, flex: 1 }}>
+      
+      {/* Driver Account & Vehicle Card */}
+      <div className="clean-card" style={{ marginBottom: '1rem', padding: '1.1rem', maxWidth: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
+        
+        {/* Top Header Row */}
+        <div className="flex-between" style={{ alignItems: 'center', gap: '0.5rem', minWidth: 0, marginBottom: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0 }}>
             <div style={{
-              width: '2.1rem',
-              height: '2.1rem',
-              borderRadius: '0.8rem',
-              backgroundColor: 'var(--primary-light)',
-              color: 'var(--primary)',
+              width: '2.2rem',
+              height: '2.2rem',
+              borderRadius: '0.65rem',
+              backgroundColor: 'rgba(124, 58, 237, 0.12)',
+              color: '#7c3aed',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0
             }}>
-              <Radio size={16} />
+              <UserCheck size={18} />
             </div>
-            <div style={{ minWidth: 0, overflow: 'hidden' }}>
-              <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.15, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                Bus #{currentBus.number}
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 }}>
+                {user?.name || user?.username || 'Verified Driver'}
               </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '0.15rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {currentRoute.name}
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                Account: @{user?.username || 'driver'} • Real GPS Broadcasting
               </div>
             </div>
           </div>
@@ -188,43 +262,78 @@ export default function DriverView({ activeRole, setActiveRole }) {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.4rem',
-              padding: '0.35rem 0.7rem',
+              padding: '0.35rem 0.75rem',
               borderRadius: '999px',
-              backgroundColor: isBroadcasting ? 'var(--success-light)' : 'var(--bg-secondary)',
-              color: isBroadcasting ? 'var(--success)' : 'var(--text-secondary)',
-              fontSize: '0.8rem',
+              backgroundColor: isBroadcasting ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-secondary)',
+              color: isBroadcasting ? '#059669' : 'var(--text-secondary)',
+              fontSize: '0.78rem',
               fontWeight: 700,
-              border: '1px solid transparent',
+              border: isBroadcasting ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid var(--border-color)',
               flexShrink: 0
             }}
           >
-            <span
-              style={{
-                width: '0.45rem',
-                height: '0.45rem',
-                borderRadius: '50%',
-                backgroundColor: isBroadcasting ? 'var(--success)' : 'var(--text-muted)',
-                display: 'inline-block'
-              }}
-            />
-            {isBroadcasting ? 'Online' : 'Offline'}
+            {isBroadcasting ? (
+              <>
+                <Wifi size={13} className="spin-animation" style={{ animationDuration: '3s' }} />
+                <span>Broadcasting Live</span>
+              </>
+            ) : (
+              <>
+                <WifiOff size={13} />
+                <span>Stationary</span>
+              </>
+            )}
           </div>
         </div>
 
-        <div style={{ height: '1px', backgroundColor: 'var(--border-color)', marginTop: '0.85rem', marginBottom: '0.75rem' }} />
+        {/* Vehicle Selection */}
+        <div style={{ backgroundColor: 'var(--bg-subtle)', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '0.75rem' }}>
+          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Assigned Vehicle for this Shift
+          </label>
+          <select
+            value={selectedBusId}
+            disabled={isBroadcasting}
+            onChange={(e) => setSelectedBusId(e.target.value)}
+            className="form-select"
+            style={{
+              width: '100%',
+              padding: '0.55rem 0.75rem',
+              borderRadius: '8px',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              backgroundColor: isBroadcasting ? '#f1f5f9' : '#ffffff',
+              cursor: isBroadcasting ? 'not-allowed' : 'pointer',
+              border: '1px solid var(--border-color)'
+            }}
+          >
+            {buses.map(b => (
+              <option key={b.id} value={b.id}>
+                {b.number} {b.routeId ? `(${routes.find(r => r.id === b.routeId)?.name || b.routeId})` : '(No Route Assigned)'}
+              </option>
+            ))}
+          </select>
+          {isBroadcasting && (
+            <div style={{ fontSize: '0.7rem', color: '#059669', marginTop: '0.35rem', fontWeight: 600 }}>
+              ● Real hardware GPS coordinates are being streamed live for {currentBus.number}
+            </div>
+          )}
+        </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap', gap: '0.5rem' }}>
+        {/* Driver Sign Out Action */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
           <button
             type="button"
-            onClick={logout}
+            onClick={handleLogout}
             className="btn"
             style={{
-              padding: '0.35rem 0.65rem',
+              padding: '0.35rem 0.75rem',
               fontSize: '0.75rem',
               fontWeight: 600,
               backgroundColor: '#fee2e2',
               color: '#dc2626',
-              borderColor: '#fca5a5',
+              border: '1px solid #fca5a5',
+              borderRadius: '6px',
               display: 'flex',
               alignItems: 'center',
               gap: '0.35rem'
@@ -236,17 +345,46 @@ export default function DriverView({ activeRole, setActiveRole }) {
         </div>
       </div>
 
-      <div className="clean-card" style={{ marginBottom: '1rem', padding: '0.9rem 1rem', backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)', maxWidth: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-          <div style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-            <MapPin size={16} />
+      {/* Real-time Hardware Telemetry Display */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '1rem' }}>
+        <div className="clean-card" style={{ padding: '0.85rem', textAlign: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', color: 'var(--text-muted)', marginBottom: '0.2rem', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase' }}>
+            <Gauge size={14} color="#7c3aed" />
+            <span>Real Speed</span>
           </div>
-          <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.4, wordBreak: 'break-word' }}>
-            Geofence Active: Tracking will automatically stop at College Campus.
-          </span>
+          <div style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
+            {currentSpeed} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>km/h</span>
+          </div>
+        </div>
+
+        <div className="clean-card" style={{ padding: '0.85rem', textAlign: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', color: 'var(--text-muted)', marginBottom: '0.2rem', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase' }}>
+            <MapPin size={14} color="#10b981" />
+            <span>GPS Accuracy</span>
+          </div>
+          <div style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
+            {gpsAccuracy !== null ? `±${gpsAccuracy}` : '–'} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>m</span>
+          </div>
         </div>
       </div>
 
+      {/* Current Real Location Coordinates Card */}
+      <div className="clean-card" style={{ marginBottom: '1rem', padding: '0.75rem 1rem', backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)', maxWidth: '100%', boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem' }}>
+          <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Device Coordinates:</span>
+          <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--text-primary)' }}>
+            {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
+          </span>
+        </div>
+        {lastTxTime && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.7rem', marginTop: '0.25rem', color: 'var(--text-muted)' }}>
+            <span>Last Transmission:</span>
+            <span>{lastTxTime}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Big Broadcast Toggle Button */}
       <div className="clean-card" style={{ flex: 1, marginBottom: '1rem', padding: '0', overflow: 'hidden', borderRadius: 'var(--radius-lg)', maxWidth: '100%', boxSizing: 'border-box', display: 'flex' }}>
         <motion.button
           whileHover={{ scale: 1.02 }}
@@ -279,11 +417,17 @@ export default function DriverView({ activeRole, setActiveRole }) {
             <motion.div key="stop" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.6rem' }}>
               <Square fill="#ffffff" size={28} />
               <span>STOP TRACKING</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 500, textTransform: 'none', opacity: 0.9 }}>
+                Tap to stop streaming real GPS for {currentBus.number || selectedBusId}
+              </span>
             </motion.div>
           ) : (
             <motion.div key="start" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.6rem' }}>
               <Play fill="#ffffff" size={28} />
               <span>START TRACKING</span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 500, textTransform: 'none', opacity: 0.9 }}>
+                Broadcast real hardware GPS for {currentBus.number || selectedBusId}
+              </span>
             </motion.div>
           )}
           </AnimatePresence>

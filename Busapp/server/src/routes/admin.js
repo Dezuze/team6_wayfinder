@@ -268,38 +268,61 @@ export default async function adminRoutes(fastify, options) {
     return { success: true, message: 'Student pass deleted successfully' };
   });
 
-  // --- AUTH / LOGIN ---
+  // --- AUTH / LOGIN (Auto-detect role from credentials) ---
   fastify.post('/api/login', async (request, reply) => {
-    const { username, password, role } = request.body;
+    const { username, password, role } = request.body || {};
 
-    if (role === 'driver' || !role) {
-      const driver = db.drivers.find(d => d.username === username && d.password === password);
+    const cleanUsername = (username || '').trim().toLowerCase();
+    const cleanPassword = (password || '').trim();
+
+    if (!cleanUsername || !cleanPassword) {
+      return reply.status(400).send({ success: false, error: 'Please enter both username and password' });
+    }
+
+    // 1. Check Driver Accounts
+    if (!role || role === 'driver') {
+      const driver = db.drivers.find(d => 
+        d.username && d.username.toLowerCase() === cleanUsername && d.password === cleanPassword
+      );
       if (driver) {
         return { success: true, user: { ...driver, role: 'driver' } };
       }
     }
     
-    if (role === 'admin' || !role) {
-      const admin = db.admins.find(a => a.username === username && a.password === password);
+    // 2. Check Admin Accounts
+    if (!role || role === 'admin') {
+      const admin = db.admins.find(a => 
+        a.username && a.username.toLowerCase() === cleanUsername && a.password === cleanPassword
+      );
       if (admin) {
         return { success: true, user: { ...admin, role: 'admin' } };
       }
     }
 
-    if (role === 'student' || !role) {
-      // Find pass matching username, student ID, email, or exact name
-      const exactStudent = db.studentPasses.find(s => 
-        (s.username && s.username.toLowerCase() === username.toLowerCase()) ||
-        (s.id && s.id.toLowerCase() === username.toLowerCase()) || 
-        (s.email && s.email.toLowerCase() === username.toLowerCase()) || 
-        (s.name && s.name.toLowerCase() === username.toLowerCase())
+    // 3. Check Student Accounts (by username, student ID, email, or full name)
+    if (!role || role === 'student') {
+      const student = db.studentPasses.find(s => 
+        (s.username && s.username.toLowerCase() === cleanUsername) ||
+        (s.id && s.id.toLowerCase() === cleanUsername) || 
+        (s.email && s.email.toLowerCase() === cleanUsername) || 
+        (s.name && s.name.toLowerCase() === cleanUsername)
       );
-      if (exactStudent) {
-        // If password is set on student and provided, verify match
-        if (exactStudent.password && password && exactStudent.password !== password) {
+      if (student) {
+        if (student.password && student.password !== cleanPassword) {
           return reply.status(401).send({ success: false, error: 'Invalid password' });
         }
-        return { success: true, user: { id: exactStudent.id, username: exactStudent.username || exactStudent.id, name: exactStudent.name, role: 'student', email: exactStudent.email } };
+        return { 
+          success: true, 
+          user: { 
+            id: student.id, 
+            username: student.username || student.id, 
+            name: student.name, 
+            role: 'student', 
+            email: student.email,
+            passStatus: student.passStatus,
+            routeEntitlement: student.routeEntitlement
+          } 
+        };
       }
     }
 

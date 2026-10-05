@@ -23,10 +23,12 @@ export function AuthProvider({ children }) {
     setError(null);
     try {
       const baseUrl = import.meta.env.VITE_API_URL || '';
+      const payload = { username: (username || '').trim(), password: (password || '').trim() };
+      if (role) payload.role = role;
       const res = await fetch(`${baseUrl}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, role })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (data.success) {

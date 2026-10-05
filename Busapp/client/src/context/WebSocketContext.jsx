@@ -115,7 +115,7 @@ export function WebSocketProvider({ children }) {
   }, [connect]);
 
   // Method called by Driver View to send location stream
-  const streamDriverLocation = useCallback((busId, lat, lng, speed, status) => {
+  const streamDriverLocation = useCallback((busId, lat, lng, speed, status, driverName, bearing) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({
         type: 'DRIVER_LOCATION',
@@ -123,7 +123,9 @@ export function WebSocketProvider({ children }) {
         lat,
         lng,
         speed,
-        status
+        status,
+        driverName,
+        bearing
       }));
     }
   }, []);
