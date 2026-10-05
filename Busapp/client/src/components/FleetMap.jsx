@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents, ZoomControl } from 'react-leaflet';
 import L from 'leaflet';
 import { Users, Clock, AlertTriangle, Zap, MapPin, Search, X, Bus, Locate, Check, GraduationCap, Building2 } from 'lucide-react';
 import { COLLEGE_DESTINATION, KOTTAYAM_POONJAR_BOUNDS } from '../constants/college';
@@ -76,7 +76,10 @@ export function defaultGetMarkerColor(status, _isSelected) {
 /**
  * Helper to calculate geographic bearing between two coordinates
  */
-export function calculateBearing(lat1, lng1, lat2, lng2) {
+export function calculateBearing(lat1, lng1, lat2, lng2, fallbackBearing = null) {
+  if (Math.hypot(lat2 - lat1, lng2 - lng1) < 0.000005) {
+    return fallbackBearing !== null ? fallbackBearing : 0;
+  }
   const dLng = (lng2 - lng1) * (Math.PI / 180);
   const phi1 = lat1 * (Math.PI / 180);
   const phi2 = lat2 * (Math.PI / 180);
@@ -537,16 +540,16 @@ function MapClickHandler({ isPickingStops, onMapClick }) {
  * Traces route path geometry and smoothly interpolates bus positions & bearings at 60 FPS
  */
 function getPathWaypoints(fromPos, toPos, routePath) {
-  if (!routePath || !Array.isArray(routePath) || routePath.length < 2) {
-    return [fromPos, toPos];
+  if (!fromPos || !toPos) {
+    return fromPos ? [fromPos] : (toPos ? [toPos] : []);
   }
 
   const dLat = toPos.lat - fromPos.lat;
   const dLng = toPos.lng - fromPos.lng;
   const moveDist = Math.hypot(dLat, dLng);
 
-  // If stationary or micro-shift (< ~1 meter), direct line
-  if (moveDist < 0.00001) {
+  // If stationary, micro-shift (< ~1 meter), or no path, direct forward line
+  if (moveDist < 0.00001 || !routePath || !Array.isArray(routePath) || routePath.length < 2) {
     return [fromPos, toPos];
   }
 
@@ -573,18 +576,41 @@ function getPathWaypoints(fromPos, toPos, routePath) {
   if (minDist1 < 0.0012 && minDist2 < 0.0012 && idx1 !== -1 && idx2 !== -1) {
     const span = Math.abs(idx2 - idx1);
     if (span >= 1 && span <= 30) {
-      // CRITICAL: verify that the path direction from idx1 to idx2 matches motion vector (dLat, dLng)
-      const pathDLat = routePath[idx2].lat - routePath[idx1].lat;
-      const pathDLng = routePath[idx2].lng - routePath[idx1].lng;
-      const dot = dLat * pathDLat + dLng * pathDLng;
+      const step = idx2 > idx1 ? 1 : -1;
+      const pts = [fromPos];
+      let lastPt = fromPos;
 
-      // Only follow road indices if they move in forward direction of travel (prevents 180° flips)
-      if (dot > 0) {
-        const step = idx2 > idx1 ? 1 : -1;
-        const pts = [fromPos];
-        for (let i = idx1; step > 0 ? i <= idx2 : i >= idx2; i += step) {
-          pts.push({ lat: routePath[i].lat, lng: routePath[i].lng });
+      for (let i = idx1; step > 0 ? i <= idx2 : i >= idx2; i += step) {
+        const cand = routePath[i];
+
+        // 1. Must be strictly forward from fromPos along travel vector
+        const projStart = (cand.lat - fromPos.lat) * dLat + (cand.lng - fromPos.lng) * dLng;
+        // 2. Must be strictly before toPos along travel vector
+        const projEnd = (toPos.lat - cand.lat) * dLat + (toPos.lng - cand.lng) * dLng;
+        // 3. Must move forward from the last accepted waypoint
+        const projFromLast = (cand.lat - lastPt.lat) * dLat + (cand.lng - lastPt.lng) * dLng;
+        // 4. Must not be a micro-duplicate (avoid 0-length step jitter)
+        const distFromLast = Math.hypot(cand.lat - lastPt.lat, cand.lng - lastPt.lng);
+        const distToTarget = Math.hypot(toPos.lat - cand.lat, toPos.lng - cand.lng);
+
+        // Strict forward progression: eliminates any reverse displacement or 180° flip
+        if (
+          projStart > 1e-9 &&
+          projEnd > 1e-9 &&
+          projFromLast > 1e-9 &&
+          distFromLast >= 0.000025 &&
+          distToTarget >= 0.000025
+        ) {
+          pts.push({ lat: cand.lat, lng: cand.lng });
+          lastPt = cand;
         }
+      }
+
+      // Ensure final segment to toPos also moves forward
+      const finalProj = (toPos.lat - lastPt.lat) * dLat + (toPos.lng - lastPt.lng) * dLng;
+      const finalDist = Math.hypot(toPos.lat - lastPt.lat, toPos.lng - lastPt.lng);
+
+      if (finalProj > 0 && finalDist >= 0.00001) {
         pts.push(toPos);
         return pts;
       }
@@ -633,6 +659,12 @@ function interpolateAtDistance(waypoints, distances, totalDist, progress, lookah
   const d = Math.min(Math.max(progress * totalDist, 0), totalDist);
   const pos = getPosAtDistance(waypoints, distances, d);
 
+  // Overall forward travel bearing for this trajectory segment
+  const overallBearing = calculateBearing(
+    waypoints[0].lat, waypoints[0].lng,
+    waypoints[waypoints.length - 1].lat, waypoints[waypoints.length - 1].lng
+  );
+
   // Look ahead along path by lookaheadMeters (approx: 1 deg ~ 111000m) to calculate true forward travel direction
   const lookaheadDeg = lookaheadMeters / 111000;
   const aheadPos = getPosAtDistance(waypoints, distances, Math.min(d + lookaheadDeg, totalDist));
@@ -640,12 +672,22 @@ function interpolateAtDistance(waypoints, distances, totalDist, progress, lookah
   let bearing = null;
   const distToAhead = Math.hypot(aheadPos.lat - pos.lat, aheadPos.lng - pos.lng);
   if (distToAhead > 0.00003) { // > ~3.5 meters
-    bearing = calculateBearing(pos.lat, pos.lng, aheadPos.lat, aheadPos.lng);
+    bearing = calculateBearing(pos.lat, pos.lng, aheadPos.lat, aheadPos.lng, overallBearing);
   } else if (d > 0.00003) {
     const behindPos = getPosAtDistance(waypoints, distances, Math.max(0, d - lookaheadDeg));
-    bearing = calculateBearing(behindPos.lat, behindPos.lng, pos.lat, pos.lng);
+    bearing = calculateBearing(behindPos.lat, behindPos.lng, pos.lat, pos.lng, overallBearing);
   } else if (waypoints.length >= 2) {
-    bearing = calculateBearing(waypoints[0].lat, waypoints[0].lng, waypoints[1].lat, waypoints[1].lng);
+    bearing = overallBearing;
+  }
+
+  // Validate bearing: a forward-moving bus heading cannot diverge > 85° from net travel vector
+  if (bearing !== null && waypoints.length >= 2) {
+    const diffFromOverall = Math.abs(((bearing - overallBearing + 540) % 360) - 180);
+    if (diffFromOverall > 85) {
+      bearing = overallBearing;
+    }
+  } else if (bearing === null && waypoints.length >= 2) {
+    bearing = overallBearing;
   }
 
   return { pos, bearing };
@@ -731,7 +773,19 @@ export function SmoothBusMarker({
     const duration = Math.min(Math.max(elapsed * 1.08, 850), 2200);
 
     // Build intermediate route waypoints from currentPos to newTarget along road
-    const fromPos = state.currentPos || state.lastTargetPos;
+    let fromPos = state.currentPos || state.lastTargetPos;
+    // Check if fromPos somehow overshot newTarget along the travel line
+    const dTargetLat = newTarget.lat - state.lastTargetPos.lat;
+    const dTargetLng = newTarget.lng - state.lastTargetPos.lng;
+    const dFromLat = fromPos.lat - state.lastTargetPos.lat;
+    const dFromLng = fromPos.lng - state.lastTargetPos.lng;
+    const targetDistSq = dTargetLat * dTargetLat + dTargetLng * dTargetLng;
+    const fromProj = dFromLat * dTargetLat + dFromLng * dTargetLng;
+
+    if (targetDistSq > 1e-12 && fromProj > targetDistSq) {
+      fromPos = state.lastTargetPos;
+    }
+
     const waypoints = getPathWaypoints(fromPos, newTarget, route?.path);
     const { distances, total } = computeSegmentDistances(waypoints);
 
@@ -794,7 +848,11 @@ export function SmoothBusMarker({
           const diff = ((targetHeading - state.currentBearing + 540) % 360) - 180;
           // Apply deadband to prevent oscillation and twisting on straight/minor-wiggle roads
           if (Math.abs(diff) >= deadbandDeg) {
-            state.currentBearing = (state.currentBearing + diff * lerpFactor + 360) % 360;
+            // Clamp maximum angular turn rate to 2.5 deg per frame (~150 deg/sec at 60 FPS)
+            // Completely eliminates sudden snap 180° flips and 360° spins
+            const maxTurnPerFrame = 2.5;
+            const turnStep = Math.sign(diff) * Math.min(Math.abs(diff * lerpFactor), maxTurnPerFrame);
+            state.currentBearing = (state.currentBearing + turnStep + 360) % 360;
           }
         }
 
@@ -1535,6 +1593,7 @@ export default function FleetMap({
       <MapContainer
         center={resolvedCenter}
         zoom={activeInitialZoom}
+        zoomControl={false}
         scrollWheelZoom={true}
         style={{
           width: '100%',
@@ -1544,6 +1603,7 @@ export default function FleetMap({
           borderRadius: '16px'
         }}
       >
+        <ZoomControl position="bottomright" />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

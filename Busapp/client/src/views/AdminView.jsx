@@ -781,27 +781,9 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
         color: 'var(--text-primary)',
         fontFamily: "'Inter', sans-serif"
       }}
-      onClick={() => {
-        if (showProfileDropdown) setShowProfileDropdown(false);
-      }}
     >
-      {/* 1. LEFT SIDEBAR - Hidden on Mobile */}
-      <aside
-        style={{
-          width: '235px',
-          backgroundColor: 'var(--bg-secondary)',
-          borderRight: '1px solid var(--border-color)',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          padding: '1.5rem 1.15rem',
-          flexShrink: 0,
-          zIndex: 20,
-          '@media (max-width: 768px)': {
-            display: 'none'
-          }
-        }}
-      >
+      {/* 1. LEFT SIDEBAR */}
+      <aside className="admin-sidebar">
         <div>
           {/* Brand Logo */}
           <div style={{ marginBottom: '2rem', paddingLeft: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -931,241 +913,119 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
           </nav>
         </div>
 
-        {/* Bottom Sidebar: System Health */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        {/* Bottom Sidebar: System Health & Admin Profile / Sign Out / Theme */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+
+          {/* Admin Profile, Theme Change & Sign Out Block */}
           <div
             style={{
-              backgroundColor: 'var(--bg-hover, #e2e8f0)',
-              borderRadius: '14px',
-              padding: '0.85rem 1rem',
+              backgroundColor: 'var(--bg-card, #ffffff)',
+              border: '1px solid var(--border-color, #e2e8f0)',
+              borderRadius: '12px',
+              padding: '0.75rem',
               display: 'flex',
               flexDirection: 'column',
-              gap: '0.45rem'
+              gap: '0.65rem',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-secondary, #475569)', letterSpacing: '0.06em' }}>
-                SYSTEM HEALTH
-              </span>
-              <span
+            {/* Top row: Avatar + Name + Theme Change Button */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', minWidth: 0 }}>
+                <div
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    backgroundColor: '#7c3aed',
+                    color: '#ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 700,
+                    fontSize: '0.76rem',
+                    flexShrink: 0
+                  }}
+                >
+                  {user?.name ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'AD'}
+                </div>
+                <div style={{ minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: '0.8rem',
+                      fontWeight: 700,
+                      color: 'var(--text-primary)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}
+                    title={user?.name || 'Administrator'}
+                  >
+                    {user?.name || 'Administrator'}
+                  </div>
+                  <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary, #64748b)' }}>
+                    Admin
+                  </div>
+                </div>
+              </div>
+
+              {/* Theme Change Button */}
+              <button
+                type="button"
+                onClick={cycleTheme}
                 style={{
-                  width: '7px',
-                  height: '7px',
-                  borderRadius: '50%',
-                  backgroundColor: '#10b981',
-                  boxShadow: '0 0 0 2px rgba(16, 185, 129, 0.2)'
+                  background: 'none',
+                  border: '1px solid var(--border-color, #cbd5e1)',
+                  borderRadius: '8px',
+                  width: '30px',
+                  height: '30px',
+                  cursor: 'pointer',
+                  color: 'var(--text-secondary, #475569)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  transition: 'all 0.15s ease'
                 }}
-              />
+                title={`Theme: ${themeMode} (${effectiveTheme}). Click to cycle.`}
+              >
+                {effectiveTheme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+              </button>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary, #1e293b)' }}>
-              <Cloud size={15} color="var(--text-secondary, #475569)" />
-              <span>All Nodes Syncing</span>
-            </div>
+
+            {/* Bottom row: Sign Out Button */}
+            <button
+              type="button"
+              onClick={logout}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.45rem',
+                padding: '0.45rem 0.65rem',
+                borderRadius: '8px',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                backgroundColor: 'rgba(239, 68, 68, 0.06)',
+                color: '#dc2626',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.14)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.06)'; }}
+            >
+              <LogOut size={13} />
+              <span>Sign Out</span>
+            </button>
           </div>
         </div>
       </aside>
 
-      {/* 2. RIGHT MAIN CONTENT AREA */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', width: '100%' }}>
-        {/* TOP BAR - Responsive */}
-        <header
-          style={{
-            height: '68px',
-            backgroundColor: 'var(--bg-secondary)',
-            borderBottom: '1px solid var(--border-color)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '0 1.75rem',
-            flexShrink: 0,
-            zIndex: 10,
-            gap: '1rem',
-            overflow: 'visible'
-          }}
-        >
-          {/* Left Title - Responsive */}
-          <div style={{ color: 'var(--primary, #7c3aed)', fontSize: 'clamp(0.9rem, 2vw, 1.1rem)', fontWeight: 800, letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>
-            Fleet Ops
-          </div>
-
-          {/* Center Search Bar - Hidden on Mobile */}
-          <div style={{ position: 'relative', width: '420px', display: 'none' }}>
-            <Search
-              size={16}
-              color="var(--text-muted, #94a3b8)"
-              style={{
-                position: 'absolute',
-                left: '1rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                pointerEvents: 'none'
-              }}
-            />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search vehicle, driver, or route ID..."
-              style={{
-                width: '100%',
-                padding: '0.5rem 1rem 0.5rem 2.5rem',
-                backgroundColor: 'var(--bg-card)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '9999px',
-                fontSize: '0.85rem',
-                color: 'var(--text-primary)',
-                outline: 'none',
-                transition: 'border-color 0.15s'
-              }}
-            />
-          </div>
-
-          {/* Right User & Profile Block with Dropdown & Theme Toggle */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', position: 'relative' }}>
-            {/* Theme Toggle Button */}
-            <button
-              type="button"
-              onClick={cycleTheme}
-              style={{
-                background: 'none',
-                border: '1px solid var(--border-color, #cbd5e1)',
-                borderRadius: '10px',
-                padding: '0.45rem 0.65rem',
-                cursor: 'pointer',
-                color: 'var(--text-secondary, #475569)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.15s ease'
-              }}
-              title={`Theme: ${themeMode}`}
-            >
-              {effectiveTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowProfileDropdown(!showProfileDropdown);
-              }}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.85rem',
-                cursor: 'pointer',
-                padding: '0.35rem 0.5rem',
-                borderRadius: '12px',
-                transition: 'background-color 0.15s'
-              }}
-            >
-              <div style={{ textAlign: 'right', lineHeight: 1.25, display: 'none' }}>
-                <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                  {user?.name || 'Alex Rivera'}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Fleet Manager</div>
-              </div>
-
-              {/* Help / Diamond Icon - Hidden on Mobile */}
-              <div
-                style={{
-                  color: 'var(--text-secondary)',
-                  display: 'none',
-                  alignItems: 'center'
-                }}
-                title="System Help"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2L2 12l10 10 10-10L12 2z" />
-                  <path d="M12 8v4" />
-                  <path d="M12 16h.01" />
-                </svg>
-              </div>
-
-              {/* Profile Avatar AR */}
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '50%',
-                  backgroundColor: '#7c3aed',
-                  color: '#ffffff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
-                  letterSpacing: '0.02em',
-                  flexShrink: 0
-                }}
-              >
-                AR
-              </div>
-            </div>
-
-            {/* Profile Dropdown Menu */}
-            <AnimatePresence>
-              {showProfileDropdown && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  transition={{ duration: 0.2, type: 'spring', stiffness: 300, damping: 20 }}
-                  onClick={(e) => e.stopPropagation()}
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    right: 0,
-                    marginTop: '0.5rem',
-                    backgroundColor: 'var(--bg-card)',
-                    borderRadius: '14px',
-                    boxShadow: 'var(--shadow-lg, 0 10px 25px rgba(0, 0, 0, 0.15))',
-                    border: '1px solid var(--border-color)',
-                    width: '220px',
-                    padding: '0.5rem',
-                    zIndex: 100
-                  }}
-                >
-                  <div style={{ padding: '0.6rem 0.75rem', borderBottom: '1px solid var(--border-color)' }}>
-                    <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)' }}>{user?.name || 'Alex Rivera'}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Administrator Account</div>
-                  </div>
-
-                  <div style={{ paddingTop: '0.35rem' }}>
-                    <motion.button
-                      whileHover={{ scale: 1.02, backgroundColor: 'rgba(220, 38, 38, 0.05)' }}
-                      whileTap={{ scale: 0.98 }}
-                      type="button"
-                      onClick={() => {
-                        setShowProfileDropdown(false);
-                        logout();
-                      }}
-                      style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.6rem',
-                        padding: '0.55rem 0.75rem',
-                        border: 'none',
-                        backgroundColor: 'transparent',
-                        color: '#dc2626',
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        borderRadius: '8px',
-                        textAlign: 'left'
-                      }}
-                    >
-                      <LogOut size={16} />
-                      <span>Log Out</span>
-                    </motion.button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </header>
-
-        {/* 3. CENTER VIEWPORT + RIGHT LIVE STATUS */}
+      {/* 2. RIGHT MAIN CONTENT AREA - Extends all the way to top */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', width: '100%', height: '100vh' }}>
+        {/* CENTER VIEWPORT + RIGHT LIVE STATUS */}
         <AnimatePresence mode="wait">
         {activeSection === 'buses' && (
           <motion.div 
