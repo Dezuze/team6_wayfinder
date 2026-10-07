@@ -4,7 +4,7 @@ import { useWebSocket } from '../context/WebSocketContext';
 import { useAuth } from '../context/AuthContext';
 import { 
   Radio, Play, Square, Compass, Gauge, AlertTriangle, 
-  MapPin, CheckCircle, LogOut, UserCheck, Activity, Wifi, WifiOff 
+  MapPin, CheckCircle, LogOut, UserCheck, Activity, Wifi, WifiOff, Bus 
 } from 'lucide-react';
 
 export default function DriverView({ activeRole, setActiveRole }) {
@@ -226,18 +226,16 @@ export default function DriverView({ activeRole, setActiveRole }) {
   }
 
   return (
-    <div className="mobile-view-wrapper" style={{ paddingTop: '0.5rem', maxWidth: '100%', boxSizing: 'border-box', overflowX: 'hidden', paddingBottom: '1rem' }}>
+    <div style={{ maxWidth: '440px', margin: '0 auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.85rem', boxSizing: 'border-box' }}>
       
-      {/* Driver Account & Vehicle Card */}
-      <div className="clean-card" style={{ marginBottom: '1rem', padding: '1.1rem', maxWidth: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
-        
-        {/* Top Header Row */}
-        <div className="flex-between" style={{ alignItems: 'center', gap: '0.5rem', minWidth: 0, marginBottom: '0.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', minWidth: 0 }}>
+      {/* 1. Driver Profile & Shift Card */}
+      <div className="clean-card" style={{ padding: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             <div style={{
-              width: '2.2rem',
-              height: '2.2rem',
-              borderRadius: '0.65rem',
+              width: '38px',
+              height: '38px',
+              borderRadius: '10px',
               backgroundColor: 'var(--primary-light)',
               color: 'var(--primary)',
               display: 'flex',
@@ -245,226 +243,209 @@ export default function DriverView({ activeRole, setActiveRole }) {
               justifyContent: 'center',
               flexShrink: 0
             }}>
-              <UserCheck size={18} />
+              <UserCheck size={19} />
             </div>
-            <div style={{ minWidth: 0 }}>
+            <div>
               <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 }}>
                 {user?.name || user?.username || 'Verified Driver'}
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                Account: @{user?.username || 'driver'} • Real GPS Broadcasting
+              <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                {currentRoute.name || 'Campus Shuttle Service'}
               </div>
             </div>
           </div>
 
-          <div
-            className="badge"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.35rem 0.75rem',
-              borderRadius: '999px',
-              backgroundColor: isBroadcasting ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-secondary)',
-              color: isBroadcasting ? '#059669' : 'var(--text-secondary)',
-              fontSize: '0.78rem',
-              fontWeight: 700,
-              border: isBroadcasting ? '1px solid rgba(16, 185, 129, 0.3)' : '1px solid var(--border-color)',
-              flexShrink: 0
-            }}
-          >
-            {isBroadcasting ? (
-              <>
-                <Wifi size={13} className="spin-animation" style={{ animationDuration: '3s' }} />
-                <span>Broadcasting Live</span>
-              </>
-            ) : (
-              <>
-                <WifiOff size={13} />
-                <span>Stationary</span>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Vehicle Selection */}
-        <div style={{ backgroundColor: 'var(--bg-subtle)', padding: '0.75rem', borderRadius: 'var(--radius-md)', marginBottom: '0.75rem' }}>
-          <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-secondary)', display: 'block', marginBottom: '0.35rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Assigned Vehicle for this Shift
-          </label>
-          <select
-            value={selectedBusId}
-            disabled={isBroadcasting}
-            onChange={(e) => setSelectedBusId(e.target.value)}
-            className="form-select"
-            style={{
-              width: '100%',
-              padding: '0.55rem 0.75rem',
-              borderRadius: '8px',
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              backgroundColor: isBroadcasting ? '#f1f5f9' : '#ffffff',
-              cursor: isBroadcasting ? 'not-allowed' : 'pointer',
-              border: '1px solid var(--border-color)'
-            }}
-          >
-            {buses.map(b => (
-              <option key={b.id} value={b.id}>
-                {b.number} {b.routeId ? `(${routes.find(r => r.id === b.routeId)?.name || b.routeId})` : '(No Route Assigned)'}
-              </option>
-            ))}
-          </select>
-          {isBroadcasting && (
-            <div style={{ fontSize: '0.7rem', color: '#059669', marginTop: '0.35rem', fontWeight: 600 }}>
-              ● Real hardware GPS coordinates are being streamed live for {currentBus.number}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.25rem 0.6rem',
+                borderRadius: '999px',
+                backgroundColor: isBroadcasting ? 'rgba(16, 185, 129, 0.12)' : 'var(--bg-secondary)',
+                color: isBroadcasting ? '#10b981' : 'var(--text-muted)',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                border: isBroadcasting ? '1px solid rgba(16, 185, 129, 0.25)' : '1px solid var(--border-color)'
+              }}
+            >
+              <span style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                backgroundColor: isBroadcasting ? '#10b981' : 'var(--text-muted)',
+                display: 'inline-block'
+              }} />
+              {isBroadcasting ? 'LIVE' : 'OFF DUTY'}
             </div>
-          )}
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Sign Out"
+              style={{
+                background: 'none',
+                border: '1px solid var(--border-color)',
+                borderRadius: '8px',
+                padding: '0.35rem 0.5rem',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.15s ease'
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--danger)'; e.currentTarget.style.borderColor = 'var(--danger)'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+            >
+              <LogOut size={15} />
+            </button>
+          </div>
         </div>
 
-        {/* Driver Sign Out Action */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="btn"
-            style={{
-              padding: '0.35rem 0.75rem',
-              fontSize: '0.75rem',
-              fontWeight: 600,
-              backgroundColor: '#fee2e2',
-              color: '#dc2626',
-              border: '1px solid #fca5a5',
-              borderRadius: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.35rem'
-            }}
-          >
-            <LogOut size={13} />
-            Sign Out
-          </button>
+        {/* Vehicle Selection Row */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.6rem',
+          backgroundColor: 'var(--bg-secondary)',
+          padding: '0.55rem 0.75rem',
+          borderRadius: '8px',
+          border: '1px solid var(--border-color)'
+        }}>
+          <Bus size={17} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <select
+              value={selectedBusId}
+              disabled={isBroadcasting}
+              onChange={(e) => setSelectedBusId(e.target.value)}
+              style={{
+                width: '100%',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--text-primary)',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                outline: 'none',
+                cursor: isBroadcasting ? 'not-allowed' : 'pointer',
+                padding: 0
+              }}
+            >
+              {buses.map(b => (
+                <option key={b.id} value={b.id} style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+                  {b.number} {b.routeId ? `(${routes.find(r => r.id === b.routeId)?.name || b.routeId})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Real-time Hardware Telemetry Display */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '1rem' }}>
-        <div className="clean-card" style={{ padding: '0.85rem', textAlign: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', color: 'var(--text-muted)', marginBottom: '0.2rem', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase' }}>
-            <Gauge size={14} color="var(--primary)" />
-            <span>Real Speed</span>
-          </div>
-          <div style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
-            {currentSpeed} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>km/h</span>
-          </div>
+      {/* 2. Simplified Telemetry Dashboard (Speed & GPS) */}
+      <div className="clean-card" style={{ padding: '1.25rem', textAlign: 'center' }}>
+        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.25rem' }}>
+          Real-Time Speed
         </div>
-
-        <div className="clean-card" style={{ padding: '0.85rem', textAlign: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', color: 'var(--text-muted)', marginBottom: '0.2rem', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase' }}>
-            <MapPin size={14} color="#10b981" />
-            <span>GPS Accuracy</span>
-          </div>
-          <div style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>
-            {gpsAccuracy !== null ? `±${gpsAccuracy}` : '–'} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>m</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Current Real Location Coordinates Card */}
-      <div className="clean-card" style={{ marginBottom: '1rem', padding: '0.75rem 1rem', backgroundColor: 'var(--bg-secondary)', borderColor: 'var(--border-color)', maxWidth: '100%', boxSizing: 'border-box' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem' }}>
-          <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>Device Coordinates:</span>
-          <span style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--text-primary)' }}>
-            {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: '0.35rem', margin: '0.2rem 0' }}>
+          <span style={{ fontSize: '3rem', fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1, letterSpacing: '-0.03em' }}>
+            {currentSpeed}
+          </span>
+          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+            km/h
           </span>
         </div>
-        {lastTxTime && (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.7rem', marginTop: '0.25rem', color: 'var(--text-muted)' }}>
-            <span>Last Transmission:</span>
-            <span>{lastTxTime}</span>
+
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '1rem',
+          marginTop: '0.75rem',
+          paddingTop: '0.75rem',
+          borderTop: '1px solid var(--border-color)',
+          fontSize: '0.78rem',
+          color: 'var(--text-secondary)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <MapPin size={14} color="var(--primary)" />
+            <span>GPS: {gpsAccuracy !== null ? `±${gpsAccuracy}m` : 'Connected'}</span>
           </div>
+          <span style={{ color: 'var(--border-color)' }}>•</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <Activity size={14} color="#10b981" />
+            <span>{isBroadcasting ? 'Broadcasting Live' : 'Standby'}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Hero Toggle Action Button */}
+      <motion.button
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={toggleBroadcast}
+        style={{
+          width: '100%',
+          padding: '1.15rem 1rem',
+          borderRadius: '12px',
+          border: 'none',
+          backgroundColor: isBroadcasting ? 'var(--danger)' : 'var(--primary)',
+          color: '#ffffff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.6rem',
+          fontSize: '1rem',
+          fontWeight: 700,
+          cursor: 'pointer',
+          boxShadow: isBroadcasting 
+            ? '0 4px 14px rgba(239, 68, 68, 0.25)' 
+            : '0 4px 14px rgba(2, 132, 199, 0.25)',
+          transition: 'background-color 0.2s ease, box-shadow 0.2s ease'
+        }}
+      >
+        {isBroadcasting ? (
+          <>
+            <Square size={20} fill="#ffffff" />
+            <span>Stop Tracking</span>
+          </>
+        ) : (
+          <>
+            <Play size={20} fill="#ffffff" />
+            <span>Start Tracking</span>
+          </>
         )}
-      </div>
+      </motion.button>
 
-      {/* Big Broadcast Toggle Button */}
-      <div className="clean-card" style={{ flex: 1, marginBottom: '1rem', padding: '0', overflow: 'hidden', borderRadius: 'var(--radius-lg)', maxWidth: '100%', boxSizing: 'border-box', display: 'flex' }}>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={toggleBroadcast}
-          className={`btn ${isBroadcasting ? 'btn-danger' : 'btn-primary'}`}
-          style={{
-            flex: 1,
-            width: '100%',
-            maxWidth: '100%',
-            boxSizing: 'border-box',
-            padding: '1.5rem 1rem',
-            borderRadius: 'var(--radius-lg)',
-            border: 'none',
-            backgroundColor: isBroadcasting ? 'var(--danger)' : 'var(--primary)',
-            color: '#ffffff',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.6rem',
-            fontSize: '1.1rem',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.03em'
-          }}
-        >
-          <AnimatePresence mode="wait">
-          {isBroadcasting ? (
-            <motion.div key="stop" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.6rem' }}>
-              <Square fill="#ffffff" size={28} />
-              <span>STOP TRACKING</span>
-              <span style={{ fontSize: '0.75rem', fontWeight: 500, textTransform: 'none', opacity: 0.9 }}>
-                Tap to stop streaming real GPS for {currentBus.number || selectedBusId}
-              </span>
-            </motion.div>
-          ) : (
-            <motion.div key="start" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.6rem' }}>
-              <Play fill="#ffffff" size={28} />
-              <span>START TRACKING</span>
-              <span style={{ fontSize: '0.75rem', fontWeight: 500, textTransform: 'none', opacity: 0.9 }}>
-                Broadcast real hardware GPS for {currentBus.number || selectedBusId}
-              </span>
-            </motion.div>
-          )}
-          </AnimatePresence>
-        </motion.button>
-      </div>
+      {/* 4. SOS Emergency Button */}
+      <motion.button
+        whileTap={{ scale: 0.98 }}
+        onClick={() => setShowSosModal(true)}
+        style={{
+          width: '100%',
+          padding: '0.75rem 1rem',
+          borderRadius: '10px',
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+          backgroundColor: 'rgba(239, 68, 68, 0.08)',
+          color: '#ef4444',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.5rem',
+          fontSize: '0.85rem',
+          fontWeight: 700,
+          cursor: 'pointer',
+          transition: 'all 0.15s ease'
+        }}
+      >
+        <AlertTriangle size={16} />
+        <span>Emergency SOS</span>
+      </motion.button>
 
-      <div style={{ marginBottom: '0', width: '100%', maxWidth: '100%', boxSizing: 'border-box', flexShrink: 0 }}>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setShowSosModal(true)}
-          className="btn btn-danger"
-          style={{
-            width: '100%',
-            maxWidth: '100%',
-            boxSizing: 'border-box',
-            padding: '1rem 1.25rem',
-            borderRadius: 'var(--radius-md)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.3rem',
-            fontWeight: 700,
-            textTransform: 'uppercase',
-            letterSpacing: '0.02em'
-          }}
-        >
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <AlertTriangle size={18} />
-            <span>SOS / EMERGENCY</span>
-          </span>
-          <small style={{ fontSize: '0.72rem', fontWeight: 500, opacity: 0.9, textTransform: 'none', letterSpacing: '0' }}>
-            Tap for immediate breakdown or accident alerts
-          </small>
-        </motion.button>
+      {/* 5. Minimal footer */}
+      <div style={{ textAlign: 'center', fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+        Device GPS: {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
+        {lastTxTime && ` • Synced at ${lastTxTime}`}
       </div>
 
       {/* SOS Modal */}

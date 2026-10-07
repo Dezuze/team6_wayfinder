@@ -1,17 +1,332 @@
 {
-  "routes": [],
+  "routes": [
+    {
+      "id": "route-1791362876442-502",
+      "name": "poonjar to cep",
+      "stops": [
+        "Poonjar",
+        "College of Engineering Poonjar"
+      ],
+      "color": "#0284c7",
+      "path": [
+        {
+          "lat": 9.67343,
+          "lng": 76.813602
+        },
+        {
+          "lat": 9.673207,
+          "lng": 76.813302
+        },
+        {
+          "lat": 9.673159,
+          "lng": 76.813351
+        },
+        {
+          "lat": 9.673058,
+          "lng": 76.813526
+        },
+        {
+          "lat": 9.672874,
+          "lng": 76.813991
+        },
+        {
+          "lat": 9.672652,
+          "lng": 76.814259
+        },
+        {
+          "lat": 9.672433,
+          "lng": 76.814359
+        },
+        {
+          "lat": 9.672192,
+          "lng": 76.814468
+        },
+        {
+          "lat": 9.671407,
+          "lng": 76.814826
+        },
+        {
+          "lat": 9.6709,
+          "lng": 76.815065
+        },
+        {
+          "lat": 9.670693,
+          "lng": 76.815167
+        },
+        {
+          "lat": 9.670628,
+          "lng": 76.8152
+        },
+        {
+          "lat": 9.670568,
+          "lng": 76.815332
+        },
+        {
+          "lat": 9.67041,
+          "lng": 76.815815
+        },
+        {
+          "lat": 9.670219,
+          "lng": 76.816061
+        },
+        {
+          "lat": 9.66913,
+          "lng": 76.816394
+        },
+        {
+          "lat": 9.669035,
+          "lng": 76.816533
+        },
+        {
+          "lat": 9.66895,
+          "lng": 76.81692
+        },
+        {
+          "lat": 9.668337,
+          "lng": 76.817799
+        },
+        {
+          "lat": 9.668054,
+          "lng": 76.818362
+        },
+        {
+          "lat": 9.667834,
+          "lng": 76.818658
+        },
+        {
+          "lat": 9.667811,
+          "lng": 76.819296
+        },
+        {
+          "lat": 9.667827,
+          "lng": 76.819692
+        },
+        {
+          "lat": 9.667917,
+          "lng": 76.820016
+        },
+        {
+          "lat": 9.668004,
+          "lng": 76.820398
+        },
+        {
+          "lat": 9.668012,
+          "lng": 76.820435
+        },
+        {
+          "lat": 9.668241,
+          "lng": 76.82173
+        },
+        {
+          "lat": 9.668228,
+          "lng": 76.822149
+        },
+        {
+          "lat": 9.668179,
+          "lng": 76.822513
+        },
+        {
+          "lat": 9.667558,
+          "lng": 76.82346
+        },
+        {
+          "lat": 9.667431,
+          "lng": 76.824072
+        },
+        {
+          "lat": 9.667293,
+          "lng": 76.825548
+        },
+        {
+          "lat": 9.667314,
+          "lng": 76.825873
+        },
+        {
+          "lat": 9.667359,
+          "lng": 76.826575
+        },
+        {
+          "lat": 9.667837,
+          "lng": 76.827377
+        },
+        {
+          "lat": 9.668329,
+          "lng": 76.827704
+        },
+        {
+          "lat": 9.668594,
+          "lng": 76.828011
+        },
+        {
+          "lat": 9.668859,
+          "lng": 76.828073
+        },
+        {
+          "lat": 9.669423,
+          "lng": 76.827689
+        },
+        {
+          "lat": 9.669565,
+          "lng": 76.827262
+        },
+        {
+          "lat": 9.670095,
+          "lng": 76.826892
+        },
+        {
+          "lat": 9.67044,
+          "lng": 76.826782
+        },
+        {
+          "lat": 9.670606,
+          "lng": 76.826844
+        },
+        {
+          "lat": 9.670568,
+          "lng": 76.827012
+        },
+        {
+          "lat": 9.670545,
+          "lng": 76.827256
+        },
+        {
+          "lat": 9.670473,
+          "lng": 76.82803
+        },
+        {
+          "lat": 9.670327,
+          "lng": 76.828649
+        },
+        {
+          "lat": 9.670336,
+          "lng": 76.829019
+        },
+        {
+          "lat": 9.67053,
+          "lng": 76.829667
+        },
+        {
+          "lat": 9.670781,
+          "lng": 76.829869
+        },
+        {
+          "lat": 9.671657,
+          "lng": 76.829917
+        },
+        {
+          "lat": 9.671997,
+          "lng": 76.830037
+        },
+        {
+          "lat": 9.672452,
+          "lng": 76.830296
+        },
+        {
+          "lat": 9.672537,
+          "lng": 76.830512
+        },
+        {
+          "lat": 9.672537,
+          "lng": 76.830839
+        },
+        {
+          "lat": 9.672719,
+          "lng": 76.830568
+        },
+        {
+          "lat": 9.672846,
+          "lng": 76.830358
+        },
+        {
+          "lat": 9.673105,
+          "lng": 76.829876
+        },
+        {
+          "lat": 9.673502,
+          "lng": 76.829318
+        },
+        {
+          "lat": 9.67393,
+          "lng": 76.828701
+        },
+        {
+          "lat": 9.674327,
+          "lng": 76.82803
+        },
+        {
+          "lat": 9.674602,
+          "lng": 76.827612
+        },
+        {
+          "lat": 9.674745,
+          "lng": 76.827177
+        },
+        {
+          "lat": 9.674792,
+          "lng": 76.82663
+        },
+        {
+          "lat": 9.674766,
+          "lng": 76.826319
+        },
+        {
+          "lat": 9.674745,
+          "lng": 76.825981
+        },
+        {
+          "lat": 9.674692,
+          "lng": 76.825627
+        },
+        {
+          "lat": 9.674602,
+          "lng": 76.825289
+        },
+        {
+          "lat": 9.674448,
+          "lng": 76.825257
+        },
+        {
+          "lat": 9.67429,
+          "lng": 76.825423
+        },
+        {
+          "lat": 9.674171,
+          "lng": 76.825734
+        }
+      ],
+      "stopCoordinates": [
+        {
+          "name": "Poonjar",
+          "lat": 9.673712457401566,
+          "lng": 76.81338688287941,
+          "number": 1
+        },
+        {
+          "name": "College of Engineering Poonjar",
+          "lat": 9.67416,
+          "lng": 76.82573,
+          "number": 2
+        }
+      ],
+      "distanceKm": 3.7,
+      "durationMin": 7
+    }
+  ],
   "buses": [
     {
       "id": "bus-101",
       "number": "BUS #101 (KL-07-AB-1234)",
       "routeId": null,
-      "driverName": "Unassigned",
+      "driverName": "Rahul Nair",
       "status": "Off Duty",
-      "location": null,
-      "bearing": 0,
+      "location": {
+        "lat": 9.67416,
+        "lng": 76.82573
+      },
+      "bearing": 69,
       "speed": 0,
       "isLive": false,
-      "lastUpdated": "2026-10-07T04:58:58.152Z"
+      "lastUpdated": "2026-10-07T08:54:19.365Z"
     },
     {
       "id": "bus-102",
@@ -48,77 +363,44 @@
       "speed": 0,
       "isLive": false,
       "lastUpdated": null
+    },
+    {
+      "id": "bus-3146772",
+      "number": "BUS #101",
+      "routeId": "route-1791362876442-502",
+      "driverName": "Rahul",
+      "status": "Active",
+      "location": {
+        "lat": 9.67416,
+        "lng": 76.82573
+      },
+      "speed": 0,
+      "lastUpdated": "2026-10-07T08:49:13.146Z"
     }
   ],
   "studentPasses": [
     {
-      "id": "S1001",
-      "name": "Alex Mercer",
-      "email": "alex.mercer@student.edu",
-      "passStatus": "Active",
+      "id": "3468/24",
+      "username": "3468/24",
+      "password": "scrypt:455e74a5048d69f173d5b8e6acdd5346:d8f44f7398730d667a97e23890c7bfb7706d1c1b0693812d18237a96d235f9f40639e0a42db045d155d54801e3c30eaff5bc13ba37c4a95439f221c858e4a046",
+      "name": "Wesly Philip Jacob",
+      "studentName": "Wesly Philip Jacob",
+      "email": "weslyphilipj@gmail.com",
+      "routeEntitlement": "All Routes",
       "validUntil": "2026-12-31",
-      "routeEntitlement": "All Routes"
-    },
-    {
-      "id": "S1002",
-      "name": "Elena Rostova",
-      "email": "elena.r@student.edu",
-      "passStatus": "Expired",
-      "validUntil": "2026-05-30",
-      "routeEntitlement": "Route 1 Only"
-    },
-    {
-      "id": "S1003",
-      "name": "David Kim",
-      "email": "david.kim@student.edu",
-      "passStatus": "Pending Approval",
-      "validUntil": "2026-12-31",
-      "routeEntitlement": "Route 2 Only"
-    },
-    {
-      "id": "S9999",
-      "name": "Test Student",
-      "email": "teststudent",
-      "passStatus": "Active",
-      "validUntil": "2030-12-31",
-      "routeEntitlement": "All Routes"
-    },
-    {
-      "id": "S1000",
-      "name": "Student",
-      "email": "student@edu.com",
-      "passStatus": "Active",
-      "validUntil": "2030-12-31",
-      "routeEntitlement": "All Routes"
+      "passStatus": "Valid",
+      "qrCodeString": "HOPSPOT:3468/24:73440d70d7643074"
     }
   ],
   "drivers": [
     {
       "id": "driver-1",
       "username": "driver.rahul",
-      "password": "password123",
+      "password": "scrypt:4d9fa78d00584641695314ff03207998:18893096c796f89bcc2c01d50ed6e54d3a896896f024926e9bae361c75fe88ab5f7f2b91638544758d0cc94e58eb8307dcb2a092c2cca93b676fe6a2bd2f96b7",
       "name": "Rahul Nair",
       "phone": "+91-9847123456",
       "assignedBusId": "bus-101",
       "status": "Active"
-    },
-    {
-      "id": "driver-2",
-      "username": "driver.suresh",
-      "password": "password123",
-      "name": "Suresh Kumar",
-      "phone": "+91-9847654321",
-      "assignedBusId": "bus-102",
-      "status": "Active"
-    },
-    {
-      "id": "driver-3",
-      "username": "driver.biju",
-      "password": "password123",
-      "name": "Biju Kurian",
-      "phone": "+91-9847998877",
-      "assignedBusId": "bus-103",
-      "status": "Off Duty"
     }
   ],
   "admins": [
