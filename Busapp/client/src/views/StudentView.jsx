@@ -453,12 +453,12 @@ export default function StudentView() {
                 width: '48px',
                 height: '48px',
                 borderRadius: '50%',
-                backgroundColor: 'rgba(124, 58, 237, 0.1)',
+                backgroundColor: 'var(--primary-light)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <MapPin size={24} color="#7c3aed" className="spin-animation" />
+                <MapPin size={24} color="var(--primary)" className="spin-animation" />
               </div>
               <div>
                 <h2 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 0.2rem', color: 'var(--text-primary)' }}>
@@ -504,14 +504,14 @@ export default function StudentView() {
                   onClick={requestLocation}
                   style={{
                     padding: '0.6rem 1.25rem',
-                    backgroundColor: '#7c3aed',
+                    backgroundColor: 'var(--primary)',
                     color: '#ffffff',
                     border: 'none',
                     borderRadius: '8px',
                     fontWeight: 600,
                     fontSize: '0.8rem',
                     cursor: 'pointer',
-                    boxShadow: '0 4px 14px rgba(124, 58, 237, 0.35)',
+                    boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)',
                     marginTop: '0.25rem'
                   }}
                 >
@@ -631,12 +631,12 @@ export default function StudentView() {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.3rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', minWidth: 0 }}>
-                      <MapPin size={11} color="var(--primary, #7c3aed)" style={{ flexShrink: 0 }} />
+                      <MapPin size={11} color="var(--primary)" style={{ flexShrink: 0 }} />
                       <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayStopName || 'No stop'}</span>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       {displayEta !== null && displayEta !== undefined ? (
-                        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: displayEta <= 5 ? 'var(--success, #10b981)' : 'var(--primary, #7c3aed)' }}>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 700, color: displayEta <= 5 ? 'var(--success, #10b981)' : 'var(--primary)' }}>
                           {displayEta}m
                         </span>
                       ) : (
@@ -695,7 +695,7 @@ export default function StudentView() {
                       backgroundColor: isAlertTriggered
                         ? 'rgba(245, 158, 11, 0.1)'
                         : isAlertOn
-                          ? 'rgba(124, 58, 237, 0.08)'
+                          ? 'var(--primary-light)'
                           : 'var(--bg-subtle)',
                       cursor: 'pointer',
                       transition: 'background-color 0.2s ease',
@@ -703,7 +703,7 @@ export default function StudentView() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', flex: 1 }}>
-                      {isAlertOn ? <Bell size={12} color="var(--primary, #7c3aed)" /> : <BellOff size={12} color="var(--text-muted)" />}
+                      {isAlertOn ? <Bell size={12} color="var(--primary)" /> : <BellOff size={12} color="var(--text-muted)" />}
                       <span style={{ fontWeight: 500, color: isAlertTriggered ? '#f59e0b' : isAlertOn ? 'var(--primary)' : 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {isAlertTriggered ? 'Triggered!' : `Alert ${ALERT_THRESHOLD_MIN}m`}
                       </span>

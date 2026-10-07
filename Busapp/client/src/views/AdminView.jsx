@@ -45,7 +45,6 @@ import {
   UserPlus,
   CheckSquare,
   Square,
-  Sparkles,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -56,7 +55,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
   const { themeMode, cycleTheme, effectiveTheme } = useTheme();
   const [activeSection, setActiveSection] = useState('buses'); // buses, routes, passes
   const [newRouteName, setNewRouteName] = useState('');
-  const [newRouteColor, setNewRouteColor] = useState('#7c3aed');
+  const [newRouteColor, setNewRouteColor] = useState('#0284c7');
   
   // New Pass State
   const [newStudentName, setNewStudentName] = useState('');
@@ -131,7 +130,6 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
   // ── Scalability (500 Students & 10 Drivers) ──
   const [passPage, setPassPage] = useState(1);
   const [passesPerPage, setPassPerPage] = useState(20);
-  const [scaleStatus, setScaleStatus] = useState(null);
 
   // ── Built-in UI Confirmation / Deletion Modal ──
   const [confirmModal, setConfirmModal] = useState({
@@ -172,7 +170,9 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
 
   const fetchDrivers = async () => {
     try {
-      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/drivers');
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/drivers', {
+        headers: getAuthHeaders()
+      });
       const data = await res.json();
       if (data.success && data.drivers) {
         setDriversDirectory(data.drivers);
@@ -274,11 +274,17 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
       onConfirm: async () => {
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
         try {
-          await fetch((import.meta.env.VITE_API_URL || '') + `/api/buses/${busId}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
+          await fetch((import.meta.env.VITE_API_URL || '') + '/api/buses/bulk-delete', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ ids: [busId] })
           });
           setSelectedBusId(null);
+          setSelectedBusIds(prev => {
+            const next = new Set(prev);
+            next.delete(busId);
+            return next;
+          });
           await refreshData();
         } catch (err) {
           console.error('Error deleting bus:', err);
@@ -298,9 +304,10 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
       onConfirm: async () => {
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
         try {
-          await fetch((import.meta.env.VITE_API_URL || '') + `/api/passes/${passId}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
+          await fetch((import.meta.env.VITE_API_URL || '') + '/api/passes/bulk-delete', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ ids: [passId] })
           });
           setSelectedPassIds(prev => {
             const next = new Set(prev);
@@ -361,42 +368,6 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
           await refreshData();
         } catch (err) {
           console.error('Bulk delete passes failed:', err);
-        }
-      }
-    });
-  };
-
-  // Scale Seeding: 10 Drivers & 500 Students
-  const handleSeedScale = async () => {
-    setConfirmModal({
-      isOpen: true,
-      title: 'Scale Transit Dataset',
-      message: 'This will seed 10 verified campus drivers and 500 active student transit passes across all registered routes for high-capacity testing. Proceed?',
-      confirmText: 'Seed 10 Drivers & 500 Students',
-      isDanger: false,
-      onConfirm: async () => {
-        setConfirmModal(prev => ({ ...prev, isOpen: false }));
-        setIsSubmitting(true);
-        try {
-          const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/seed/scale', {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({})
-          });
-          const data = await res.json();
-          if (data.success) {
-            setScaleStatus('Dataset scaled successfully: 10 verified drivers & 500 students active!');
-            await fetchDrivers();
-            await refreshData();
-            setTimeout(() => setScaleStatus(null), 6000);
-          } else {
-            setScaleStatus(`Scaling failed: ${data.error || 'Server error'}`);
-          }
-        } catch (err) {
-          console.error('Scale dataset failed:', err);
-          setScaleStatus(`Error: ${err.message}`);
-        } finally {
-          setIsSubmitting(false);
         }
       }
     });
@@ -470,7 +441,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     try {
       const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/passes/${editingStudent.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           name: editStudentName.trim(),
           username: (editStudentUsername || '').trim(),
@@ -503,9 +474,9 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     if (!newStudentName || !newStudentEmail) return;
     setIsSubmitting(true);
     try {
-      await fetch((import.meta.env.VITE_API_URL || '') + '/api/passes', {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/passes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ 
           name: newStudentName.trim(), 
           username: (newStudentUsername || '').trim(),
@@ -516,17 +487,23 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
           validUntil: newStudentValidUntil || '2026-12-31'
         })
       });
-      setNewStudentName('');
-      setNewStudentUsername('');
-      setNewStudentPassword('');
-      setNewStudentEmail('');
-      setNewStudentRoute('All Routes');
-      setNewStudentStatus('Valid');
-      setNewStudentValidUntil('2026-12-31');
-      setIsAddStudentModalOpen(false);
-      await refreshData();
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success !== false) {
+        setNewStudentName('');
+        setNewStudentUsername('');
+        setNewStudentPassword('');
+        setNewStudentEmail('');
+        setNewStudentRoute('All Routes');
+        setNewStudentStatus('Valid');
+        setNewStudentValidUntil('2026-12-31');
+        setIsAddStudentModalOpen(false);
+        await refreshData();
+      } else {
+        alert(data.error || 'Failed to create student pass');
+      }
     } catch (err) {
       console.error('Error creating pass:', err);
+      alert('Error creating pass: ' + err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -552,7 +529,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     try {
       const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/drivers/${editingDriver.id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           name: editDriverName.trim(),
           username: editDriverUsername.trim(),
@@ -583,9 +560,9 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     if (!newDriverName || !newDriverUsername) return;
     setIsSubmitting(true);
     try {
-      await fetch((import.meta.env.VITE_API_URL || '') + '/api/drivers', {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/drivers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           name: newDriverName.trim(),
           username: newDriverUsername.trim(),
@@ -595,16 +572,23 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
           status: newDriverStatus || 'Active'
         })
       });
-      setNewDriverName('');
-      setNewDriverUsername('');
-      setNewDriverPassword('');
-      setNewDriverPhone('');
-      setNewDriverBusId('');
-      setNewDriverStatus('Active');
-      setIsAddDriverModalOpen(false);
-      await fetchDrivers();
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success !== false) {
+        setNewDriverName('');
+        setNewDriverUsername('');
+        setNewDriverPassword('');
+        setNewDriverPhone('');
+        setNewDriverBusId('');
+        setNewDriverStatus('Active');
+        setIsAddDriverModalOpen(false);
+        await fetchDrivers();
+        await refreshData();
+      } else {
+        alert(data.error || 'Failed to create driver');
+      }
     } catch (err) {
       console.error('Error creating driver:', err);
+      alert('Error creating driver: ' + err.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -621,9 +605,10 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
       onConfirm: async () => {
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
         try {
-          await fetch((import.meta.env.VITE_API_URL || '') + `/api/drivers/${driverId}`, {
-            method: 'DELETE',
-            headers: getAuthHeaders()
+          await fetch((import.meta.env.VITE_API_URL || '') + '/api/drivers/bulk-delete', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ ids: [driverId] })
           });
           setSelectedDriverIds(prev => {
             const next = new Set(prev);
@@ -631,6 +616,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
             return next;
           });
           await fetchDrivers();
+          await refreshData();
         } catch (err) {
           console.error('Error deleting driver:', err);
         }
@@ -770,7 +756,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     try {
       const routesToCreate = rows.map((r, i) => ({
         name: r.name || r.routename || `Route ${Date.now()}`,
-        color: r.color || '#7c3aed',
+        color: r.color || '#0284c7',
         stops: r.stops ? (typeof r.stops === 'string' ? r.stops.split(',').map(s => s.trim()) : r.stops) : ['Kottayam', COLLEGE_DESTINATION.shortName]
       }));
       await fetch((import.meta.env.VITE_API_URL || '') + '/api/routes/bulk', {
@@ -934,20 +920,20 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
       onConfirm: async () => {
         setConfirmModal(prev => ({ ...prev, isOpen: false }));
         try {
+          await fetch((import.meta.env.VITE_API_URL || '') + '/api/routes/bulk-delete', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ ids: [routeId] })
+          });
           if (deleteRoute) {
-            await deleteRoute(routeId);
-          } else {
-            await fetch((import.meta.env.VITE_API_URL || '') + `/api/routes/${routeId}`, {
-              method: 'DELETE',
-              headers: getAuthHeaders()
-            });
-            await refreshData();
+            try { await deleteRoute(routeId); } catch (_) {}
           }
           setSelectedRouteIds(prev => {
             const next = new Set(prev);
             next.delete(routeId);
             return next;
           });
+          await refreshData();
         } catch (err) {
           console.error('Error deleting route:', err);
         }
@@ -1068,7 +1054,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
             <img src="/logo.png" alt="HopSpot Logo" style={{ width: '36px', height: '36px', borderRadius: '50%' }} />
             <span
               style={{
-                color: '#7c3aed',
+                color: 'var(--primary)',
                 fontSize: '1.25rem',
                 fontWeight: 900,
                 letterSpacing: '-0.03em',
@@ -1094,12 +1080,12 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                 padding: '0.75rem 1rem',
                 borderRadius: '12px',
                 border: 'none',
-                backgroundColor: activeSection === 'buses' ? '#7c3aed' : 'transparent',
+                backgroundColor: activeSection === 'buses' ? 'var(--primary)' : 'transparent',
                 color: activeSection === 'buses' ? '#ffffff' : 'var(--text-secondary, #64748b)',
                 fontWeight: activeSection === 'buses' ? 600 : 500,
                 fontSize: '0.9rem',
                 cursor: 'pointer',
-                boxShadow: activeSection === 'buses' ? '0 4px 14px rgba(124, 58, 237, 0.3)' : 'none',
+                boxShadow: activeSection === 'buses' ? 'var(--shadow-sm)' : 'none',
                 transition: 'all 0.15s ease',
                 textAlign: 'left'
               }}
@@ -1121,12 +1107,12 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                 padding: '0.75rem 1rem',
                 borderRadius: '12px',
                 border: 'none',
-                backgroundColor: activeSection === 'drivers' ? '#7c3aed' : 'transparent',
+                backgroundColor: activeSection === 'drivers' ? 'var(--primary)' : 'transparent',
                 color: activeSection === 'drivers' ? '#ffffff' : 'var(--text-secondary, #64748b)',
                 fontWeight: activeSection === 'drivers' ? 600 : 500,
                 fontSize: '0.9rem',
                 cursor: 'pointer',
-                boxShadow: activeSection === 'drivers' ? '0 4px 14px rgba(124, 58, 237, 0.3)' : 'none',
+                boxShadow: activeSection === 'drivers' ? 'var(--shadow-sm)' : 'none',
                 transition: 'all 0.15s ease',
                 textAlign: 'left'
               }}
@@ -1148,12 +1134,12 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                 padding: '0.75rem 1rem',
                 borderRadius: '12px',
                 border: 'none',
-                backgroundColor: activeSection === 'routes' ? '#7c3aed' : 'transparent',
+                backgroundColor: activeSection === 'routes' ? 'var(--primary)' : 'transparent',
                 color: activeSection === 'routes' ? '#ffffff' : 'var(--text-secondary, #64748b)',
                 fontWeight: activeSection === 'routes' ? 600 : 500,
                 fontSize: '0.9rem',
                 cursor: 'pointer',
-                boxShadow: activeSection === 'routes' ? '0 4px 14px rgba(124, 58, 237, 0.3)' : 'none',
+                boxShadow: activeSection === 'routes' ? 'var(--shadow-sm)' : 'none',
                 transition: 'all 0.15s ease',
                 textAlign: 'left'
               }}
@@ -1175,12 +1161,12 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                 padding: '0.75rem 1rem',
                 borderRadius: '12px',
                 border: 'none',
-                backgroundColor: activeSection === 'passes' ? '#7c3aed' : 'transparent',
+                backgroundColor: activeSection === 'passes' ? 'var(--primary)' : 'transparent',
                 color: activeSection === 'passes' ? '#ffffff' : 'var(--text-secondary, #64748b)',
                 fontWeight: activeSection === 'passes' ? 600 : 500,
                 fontSize: '0.9rem',
                 cursor: 'pointer',
-                boxShadow: activeSection === 'passes' ? '0 4px 14px rgba(124, 58, 237, 0.3)' : 'none',
+                boxShadow: activeSection === 'passes' ? 'var(--shadow-sm)' : 'none',
                 transition: 'all 0.15s ease',
                 textAlign: 'left'
               }}
@@ -1215,7 +1201,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     width: '32px',
                     height: '32px',
                     borderRadius: '50%',
-                    backgroundColor: '#7c3aed',
+                    backgroundColor: 'var(--primary)',
                     color: '#ffffff',
                     display: 'flex',
                     alignItems: 'center',
@@ -1377,7 +1363,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                       borderRadius: '14px',
                       padding: '1rem',
                       marginBottom: '1rem',
-                      boxShadow: '0 4px 14px rgba(124, 58, 237, 0.12)'
+                      boxShadow: 'var(--shadow-sm)'
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
@@ -1490,7 +1476,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                       padding: '0.35rem 0.85rem',
                       borderRadius: '9999px',
                       border: 'none',
-                      backgroundColor: fleetFilter === filter ? '#7c3aed' : 'var(--bg-subtle)',
+                      backgroundColor: fleetFilter === filter ? 'var(--primary)' : 'var(--bg-subtle)',
                       color: fleetFilter === filter ? '#ffffff' : 'var(--text-secondary)',
                       fontSize: '0.8rem',
                       fontWeight: 600,
@@ -1527,7 +1513,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                       onClick={() => setSelectedBusId(bus.id)}
                       style={{
                         backgroundColor: 'var(--bg-card)',
-                        border: selectedBusId === bus.id ? '2px solid #7c3aed' : '1px solid var(--border-color)',
+                        border: selectedBusId === bus.id ? '2px solid var(--primary)' : '1px solid var(--border-color)',
                         borderLeft: bus.isDelayed
                           ? '4px solid #ef4444'
                           : bus.isIdle
@@ -1538,7 +1524,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                         display: 'flex',
                         flexDirection: 'column',
                         gap: '0.65rem',
-                        boxShadow: selectedBusId === bus.id ? '0 4px 12px rgba(124, 58, 237, 0.15)' : '0 1px 3px rgba(0,0,0,0.03)',
+                        boxShadow: selectedBusId === bus.id ? '0 2px 8px rgba(2, 132, 199, 0.15)' : '0 1px 3px rgba(0,0,0,0.03)',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease'
                       }}
@@ -1631,7 +1617,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                       {/* Metrics: Speed and Live Status */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                          <Gauge size={13} color="#7c3aed" />
+                          <Gauge size={13} color="var(--primary)" />
                           <span>Speed: <strong>{bus.speed || '0 km/h'}</strong></span>
                         </div>
                         <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
@@ -1662,7 +1648,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                    <GitFork size={20} color="#7c3aed" />
+                    <GitFork size={20} color="var(--primary)" />
                     <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
                       Transit Route Creator
                     </h2>
@@ -1682,7 +1668,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                       fontWeight: 600,
                       borderRadius: '6px',
                       border: 'none',
-                      backgroundColor: routeAddMode === 'builder' ? '#7c3aed' : 'transparent',
+                      backgroundColor: routeAddMode === 'builder' ? 'var(--primary)' : 'transparent',
                       color: routeAddMode === 'builder' ? '#ffffff' : 'var(--text-secondary)',
                       cursor: 'pointer'
                     }}
@@ -1698,7 +1684,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                       fontWeight: 600,
                       borderRadius: '6px',
                       border: 'none',
-                      backgroundColor: routeAddMode === 'bulk' ? '#7c3aed' : 'transparent',
+                      backgroundColor: routeAddMode === 'bulk' ? 'var(--primary)' : 'transparent',
                       color: routeAddMode === 'bulk' ? '#ffffff' : 'var(--text-secondary)',
                       cursor: 'pointer'
                     }}
@@ -1782,7 +1768,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
 
                     {/* Road Routing Live Status / Metrics */}
                     {isCalculatingRoute && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: '#7c3aed', padding: '0.2rem 0' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem', color: 'var(--primary)', padding: '0.2rem 0' }}>
                         <Loader size={13} className="spin-animation" />
                         <span>Calculating real road geometry...</span>
                       </div>
@@ -1806,16 +1792,16 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                       <div
                         style={{
                           padding: '0.75rem',
-                          backgroundColor: candidatePlace.isCollege || (candidatePlace.shortName || '').toLowerCase().includes('college of engineering poonjar') ? '#f0fdf4' : '#f5f3ff',
+                          backgroundColor: candidatePlace.isCollege || (candidatePlace.shortName || '').toLowerCase().includes('college of engineering poonjar') ? '#f0fdf4' : 'var(--primary-light)',
                           borderRadius: '10px',
-                          border: candidatePlace.isCollege || (candidatePlace.shortName || '').toLowerCase().includes('college of engineering poonjar') ? '1px solid #16a34a' : '1px solid #7c3aed',
+                          border: candidatePlace.isCollege || (candidatePlace.shortName || '').toLowerCase().includes('college of engineering poonjar') ? '1px solid #16a34a' : '1px solid var(--primary)',
                           display: 'flex',
                           flexDirection: 'column',
                           gap: '0.4rem'
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: candidatePlace.isCollege || (candidatePlace.shortName || '').toLowerCase().includes('college of engineering poonjar') ? '#15803d' : '#7c3aed', letterSpacing: '0.04em' }}>
+                          <span style={{ fontSize: '0.68rem', fontWeight: 800, color: candidatePlace.isCollege || (candidatePlace.shortName || '').toLowerCase().includes('college of engineering poonjar') ? '#15803d' : 'var(--primary)', letterSpacing: '0.04em' }}>
                             {candidatePlace.isCollege || (candidatePlace.shortName || '').toLowerCase().includes('college of engineering poonjar') ? 'COLLEGE DESTINATION' : 'SELECTED LOCATION'}
                           </span>
                           <button
@@ -1827,7 +1813,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                           </button>
                         </div>
                         <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                          <MapPin size={14} color="#7c3aed" /> {candidatePlace.shortName || candidatePlace.name}
+                          <MapPin size={14} color="var(--primary)" /> {candidatePlace.shortName || candidatePlace.name}
                         </div>
                         <div style={{ fontSize: '0.72rem', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {candidatePlace.displayName}
@@ -1844,14 +1830,14 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                             style={{
                               marginTop: '0.2rem',
                               padding: '0.45rem 0.75rem',
-                              backgroundColor: '#7c3aed',
+                              backgroundColor: 'var(--primary)',
                               color: '#ffffff',
                               border: 'none',
                               borderRadius: '8px',
                               fontSize: '0.8rem',
                               fontWeight: 700,
                               cursor: 'pointer',
-                              boxShadow: '0 2px 8px rgba(124, 58, 237, 0.35)'
+                              boxShadow: '0 2px 6px rgba(2, 132, 199, 0.2)'
                             }}
                           >
                             + Add as Pickup Stop #{pickedStops.length + 1}
@@ -1925,7 +1911,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                                       width: '20px',
                                       height: '20px',
                                       borderRadius: '50%',
-                                      backgroundColor: '#7c3aed',
+                                      backgroundColor: 'var(--primary)',
                                       color: '#ffffff',
                                       fontSize: '0.72rem',
                                       fontWeight: 800,
@@ -2013,14 +1999,14 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                       style={{
                         width: '100%',
                         padding: '0.75rem',
-                        backgroundColor: pickedStops.length === 0 ? 'var(--border-color, #cbd5e1)' : '#7c3aed',
+                        backgroundColor: pickedStops.length === 0 ? 'var(--border-color, #cbd5e1)' : 'var(--primary)',
                         color: '#ffffff',
                         border: 'none',
                         borderRadius: '10px',
                         fontWeight: 700,
                         fontSize: '0.9rem',
                         cursor: pickedStops.length === 0 ? 'not-allowed' : 'pointer',
-                        boxShadow: pickedStops.length === 0 ? 'none' : '0 4px 14px rgba(124, 58, 237, 0.35)',
+                        boxShadow: pickedStops.length === 0 ? 'none' : '0 2px 8px rgba(2, 132, 199, 0.25)',
                         transition: 'all 0.15s ease'
                       }}
                     >
@@ -2106,8 +2092,8 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                           padding: '1.15rem',
                           borderRadius: '12px',
                           border: '1px solid var(--border-color)',
-                          borderLeft: `4px solid ${route.color || '#7c3aed'}`,
-                          backgroundColor: selectedRouteIds.has(route.id) ? 'rgba(124, 58, 237, 0.05)' : 'var(--bg-card)',
+                          borderLeft: `4px solid ${route.color || '#0284c7'}`,
+                          backgroundColor: selectedRouteIds.has(route.id) ? 'var(--primary-light)' : 'var(--bg-card)',
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'space-between',
@@ -2121,7 +2107,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                                 type="checkbox"
                                 checked={selectedRouteIds.has(route.id)}
                                 onChange={() => toggleSelectRoute(route.id)}
-                                style={{ cursor: 'pointer', accentColor: '#7c3aed', width: '16px', height: '16px' }}
+                                style={{ cursor: 'pointer', accentColor: 'var(--primary)', width: '16px', height: '16px' }}
                                 title="Select route for bulk action"
                               />
                               <strong style={{ fontSize: '0.98rem', color: 'var(--text-primary)' }}>{route.name}</strong>
@@ -2154,7 +2140,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                               {pickupStops.map((stop, sIdx) => (
                                 <div key={sIdx} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-primary)' }}>
-                                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: route.color || '#7c3aed' }}>{sIdx + 1}.</span>
+                                  <span style={{ fontSize: '0.72rem', fontWeight: 800, color: route.color || '#0284c7' }}>{sIdx + 1}.</span>
                                   <span>{stop}</span>
                                 </div>
                               ))}
@@ -2328,7 +2314,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                             );
                             toggleSelectAllDrivers(filtered);
                           }}
-                          style={{ cursor: 'pointer', accentColor: '#7c3aed', width: '15px', height: '15px' }}
+                          style={{ cursor: 'pointer', accentColor: 'var(--primary)', width: '15px', height: '15px' }}
                           title="Select all filtered drivers"
                         />
                       </th>
@@ -2359,17 +2345,17 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                           const assignedBus = buses.find(b => b.id === driver.assignedBusId);
                           const isOffDuty = driver.status === 'Off Duty';
                           return (
-                            <tr key={driver.id} style={{ backgroundColor: selectedDriverIds.has(driver.id) ? 'rgba(124, 58, 237, 0.05)' : undefined }}>
+                            <tr key={driver.id} style={{ backgroundColor: selectedDriverIds.has(driver.id) ? 'var(--primary-light)' : undefined }}>
                               <td style={{ textAlign: 'center' }}>
                                 <input
                                   type="checkbox"
                                   checked={selectedDriverIds.has(driver.id)}
                                   onChange={() => toggleSelectDriver(driver.id)}
-                                  style={{ cursor: 'pointer', accentColor: '#7c3aed', width: '15px', height: '15px' }}
+                                  style={{ cursor: 'pointer', accentColor: 'var(--primary)', width: '15px', height: '15px' }}
                                 />
                               </td>
                               <td style={{ fontWeight: 600 }}>{driver.name}</td>
-                              <td style={{ fontFamily: 'monospace', fontSize: '0.84rem', fontWeight: 600, color: '#7c3aed' }}>{driver.username}</td>
+                              <td style={{ fontFamily: 'monospace', fontSize: '0.84rem', fontWeight: 600, color: 'var(--primary)' }}>{driver.username}</td>
                               <td style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', backgroundColor: 'var(--bg-subtle)', padding: '0.2rem 0.5rem', borderRadius: '5px' }}>
                                   <Lock size={11} color="var(--text-muted)" />
@@ -2409,7 +2395,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                                       gap: '0.35rem',
                                       borderRadius: '6px',
                                       border: '1px solid var(--border-color)',
-                                      color: '#7c3aed',
+                                      color: 'var(--primary)',
                                       cursor: 'pointer'
                                     }}
                                     title="Edit Driver Credentials"
@@ -2494,30 +2480,6 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                   </button>
                   <button
                     type="button"
-                    onClick={handleSeedScale}
-                    disabled={isSubmitting}
-                    className="btn btn-secondary"
-                    style={{
-                      height: '36px',
-                      padding: '0 0.85rem',
-                      borderRadius: '8px',
-                      border: '1px solid rgba(0, 229, 255, 0.4)',
-                      backgroundColor: 'rgba(0, 229, 255, 0.08)',
-                      color: '#00e5ff',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.4rem',
-                      fontSize: '0.8rem',
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
-                    title="Scale dataset to 10 verified drivers and 500 enrolled students"
-                  >
-                    <Sparkles size={14} />
-                    <span>Scale (10 Drivers, 500 Students)</span>
-                  </button>
-                  <button
-                    type="button"
                     onClick={() => {
                       setPassAddMode('single');
                       setIsAddStudentModalOpen(true);
@@ -2540,22 +2502,6 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                   </button>
                 </div>
               </div>
-
-              {/* Scale Status Banner */}
-              {scaleStatus && (
-                <div style={{
-                  padding: '0.65rem 1rem',
-                  marginBottom: '1rem',
-                  borderRadius: '8px',
-                  backgroundColor: 'rgba(0, 229, 255, 0.1)',
-                  border: '1px solid rgba(0, 229, 255, 0.3)',
-                  color: '#00e5ff',
-                  fontSize: '0.82rem',
-                  fontWeight: 600
-                }}>
-                  {scaleStatus}
-                </div>
-              )}
 
               {/* Bulk Selection Bar for Passes */}
               {selectedPassIds.size > 0 && (
@@ -2633,7 +2579,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                                 type="checkbox"
                                 checked={allOnPageSelected}
                                 onChange={() => toggleSelectAllPasses(paginatedList)}
-                                style={{ cursor: 'pointer', accentColor: '#7c3aed', width: '15px', height: '15px' }}
+                                style={{ cursor: 'pointer', accentColor: 'var(--primary)', width: '15px', height: '15px' }}
                                 title="Select all passes on current page"
                               />
                             </th>
@@ -2671,17 +2617,17 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                               }
 
                               return (
-                                <tr key={pass.id} style={{ backgroundColor: selectedPassIds.has(pass.id) ? 'rgba(124, 58, 237, 0.05)' : undefined }}>
+                                <tr key={pass.id} style={{ backgroundColor: selectedPassIds.has(pass.id) ? 'var(--primary-light)' : undefined }}>
                                   <td style={{ textAlign: 'center' }}>
                                     <input
                                       type="checkbox"
                                       checked={selectedPassIds.has(pass.id)}
                                       onChange={() => toggleSelectPass(pass.id)}
-                                      style={{ cursor: 'pointer', accentColor: '#7c3aed', width: '15px', height: '15px' }}
+                                      style={{ cursor: 'pointer', accentColor: 'var(--primary)', width: '15px', height: '15px' }}
                                     />
                                   </td>
                                   <td style={{ fontWeight: 600 }}>{pass.name || pass.studentName || 'Student Pass'}</td>
-                                  <td style={{ fontFamily: 'monospace', fontSize: '0.84rem', fontWeight: 600, color: '#7c3aed' }}>
+                                  <td style={{ fontFamily: 'monospace', fontSize: '0.84rem', fontWeight: 600, color: 'var(--primary)' }}>
                                     {pass.username || pass.id}
                                   </td>
                                   <td style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: 'var(--text-muted)' }}>{pass.id}</td>
@@ -2725,7 +2671,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                                           gap: '0.3rem',
                                           borderRadius: '6px',
                                           border: '1px solid var(--border-color)',
-                                          color: '#7c3aed',
+                                          color: 'var(--primary)',
                                           cursor: 'pointer'
                                         }}
                                         title="Edit Student Credentials"
@@ -2874,7 +2820,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
             {/* Modal Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <MapPin size={20} color="#7c3aed" />
+                <MapPin size={20} color="var(--primary)" />
                 <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-primary, #1e293b)' }}>
                   Add Pickup Stop
                 </h3>
@@ -2902,7 +2848,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                 {modalStopData.isSearch ? 'Selected Location' : 'Selected Coordinates'}
               </span>
               <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-primary, #1e293b)', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <MapPin size={15} color="#7c3aed" /> {modalStopData.name || modalStopData.address}
+                <MapPin size={15} color="var(--primary)" /> {modalStopData.name || modalStopData.address}
               </div>
               {modalStopData.isSearch && modalStopData.address && (
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #64748b)', marginTop: '0.2rem', lineHeight: '1.3' }}>
@@ -2927,7 +2873,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                   style={{ width: '100%', fontSize: '0.9rem', padding: '0.65rem 0.85rem' }}
                   required
                 />
-                <div style={{ fontSize: '0.78rem', color: '#7c3aed', fontWeight: 600, marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <div style={{ fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600, marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                   <Check size={14} /> This will become <strong>Pickup Stop #{pickedStops.length + 1}</strong> in the route sequence
                 </div>
               </div>
@@ -2956,12 +2902,12 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     padding: '0.6rem 1.25rem',
                     borderRadius: '8px',
                     border: 'none',
-                    backgroundColor: '#7c3aed',
+                    backgroundColor: 'var(--primary)',
                     color: '#ffffff',
                     fontWeight: 700,
                     fontSize: '0.85rem',
                     cursor: 'pointer',
-                    boxShadow: '0 3px 10px rgba(124, 58, 237, 0.35)'
+                    boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)'
                   }}
                 >
                   Add Pickup Stop
@@ -3013,8 +2959,8 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     width: '40px',
                     height: '40px',
                     borderRadius: '10px',
-                    backgroundColor: 'rgba(124, 58, 237, 0.12)',
-                    color: '#7c3aed',
+                    backgroundColor: 'var(--primary-light)',
+                    color: 'var(--primary)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
@@ -3043,7 +2989,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     fontWeight: 600,
                     borderRadius: '6px',
                     border: 'none',
-                    backgroundColor: busAddMode === 'single' ? '#7c3aed' : 'transparent',
+                    backgroundColor: busAddMode === 'single' ? 'var(--primary)' : 'transparent',
                     color: busAddMode === 'single' ? '#ffffff' : 'var(--text-secondary)',
                     cursor: 'pointer'
                   }}
@@ -3059,7 +3005,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     fontWeight: 600,
                     borderRadius: '6px',
                     border: 'none',
-                    backgroundColor: busAddMode === 'bulk' ? '#7c3aed' : 'transparent',
+                    backgroundColor: busAddMode === 'bulk' ? 'var(--primary)' : 'transparent',
                     color: busAddMode === 'bulk' ? '#ffffff' : 'var(--text-secondary)',
                     cursor: 'pointer'
                   }}
@@ -3151,12 +3097,12 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                       padding: '0.6rem 1.25rem',
                       borderRadius: '8px',
                       border: 'none',
-                      backgroundColor: '#7c3aed',
+                      backgroundColor: 'var(--primary)',
                       color: '#ffffff',
                       fontWeight: 700,
                       fontSize: '0.85rem',
                       cursor: 'pointer',
-                      boxShadow: '0 3px 10px rgba(124, 58, 237, 0.35)'
+                      boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)'
                     }}
                   >
                     {isSubmitting ? 'Saving...' : 'Create Bus'}
@@ -3247,8 +3193,8 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     width: '40px',
                     height: '40px',
                     borderRadius: '10px',
-                    backgroundColor: 'rgba(124, 58, 237, 0.12)',
-                    color: '#7c3aed',
+                    backgroundColor: 'var(--primary-light)',
+                    color: 'var(--primary)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
@@ -3277,7 +3223,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     fontWeight: 600,
                     borderRadius: '6px',
                     border: 'none',
-                    backgroundColor: driverAddMode === 'single' ? '#7c3aed' : 'transparent',
+                    backgroundColor: driverAddMode === 'single' ? 'var(--primary)' : 'transparent',
                     color: driverAddMode === 'single' ? '#ffffff' : 'var(--text-secondary)',
                     cursor: 'pointer'
                   }}
@@ -3293,7 +3239,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     fontWeight: 600,
                     borderRadius: '6px',
                     border: 'none',
-                    backgroundColor: driverAddMode === 'bulk' ? '#7c3aed' : 'transparent',
+                    backgroundColor: driverAddMode === 'bulk' ? 'var(--primary)' : 'transparent',
                     color: driverAddMode === 'bulk' ? '#ffffff' : 'var(--text-secondary)',
                     cursor: 'pointer'
                   }}
@@ -3434,12 +3380,12 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                       padding: '0.6rem 1.25rem',
                       borderRadius: '8px',
                       border: 'none',
-                      backgroundColor: '#7c3aed',
+                      backgroundColor: 'var(--primary)',
                       color: '#ffffff',
                       fontWeight: 700,
                       fontSize: '0.85rem',
                       cursor: 'pointer',
-                      boxShadow: '0 3px 10px rgba(124, 58, 237, 0.35)'
+                      boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)'
                     }}
                   >
                     {isSubmitting ? 'Saving...' : 'Add Driver'}
@@ -3531,8 +3477,8 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                   width: '40px',
                   height: '40px',
                   borderRadius: '10px',
-                  backgroundColor: 'rgba(124, 58, 237, 0.12)',
-                  color: '#7c3aed',
+                  backgroundColor: 'var(--primary-light)',
+                  color: 'var(--primary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
@@ -3676,12 +3622,12 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     padding: '0.6rem 1.25rem',
                     borderRadius: '8px',
                     border: 'none',
-                    backgroundColor: '#7c3aed',
+                    backgroundColor: 'var(--primary)',
                     color: '#ffffff',
                     fontWeight: 700,
                     fontSize: '0.85rem',
                     cursor: 'pointer',
-                    boxShadow: '0 3px 10px rgba(124, 58, 237, 0.35)'
+                    boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)'
                   }}
                 >
                   {isSubmitting ? 'Saving...' : 'Save Changes'}
@@ -3736,8 +3682,8 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     width: '40px',
                     height: '40px',
                     borderRadius: '10px',
-                    backgroundColor: 'rgba(124, 58, 237, 0.12)',
-                    color: '#7c3aed',
+                    backgroundColor: 'var(--primary-light)',
+                    color: 'var(--primary)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center'
@@ -3766,7 +3712,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     fontWeight: 600,
                     borderRadius: '6px',
                     border: 'none',
-                    backgroundColor: passAddMode === 'single' ? '#7c3aed' : 'transparent',
+                    backgroundColor: passAddMode === 'single' ? 'var(--primary)' : 'transparent',
                     color: passAddMode === 'single' ? '#ffffff' : 'var(--text-secondary)',
                     cursor: 'pointer'
                   }}
@@ -3782,7 +3728,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     fontWeight: 600,
                     borderRadius: '6px',
                     border: 'none',
-                    backgroundColor: passAddMode === 'bulk' ? '#7c3aed' : 'transparent',
+                    backgroundColor: passAddMode === 'bulk' ? 'var(--primary)' : 'transparent',
                     color: passAddMode === 'bulk' ? '#ffffff' : 'var(--text-secondary)',
                     cursor: 'pointer'
                   }}
@@ -3931,12 +3877,12 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                       padding: '0.6rem 1.25rem',
                       borderRadius: '8px',
                       border: 'none',
-                      backgroundColor: '#7c3aed',
+                      backgroundColor: 'var(--primary)',
                       color: '#ffffff',
                       fontWeight: 700,
                       fontSize: '0.85rem',
                       cursor: 'pointer',
-                      boxShadow: '0 3px 10px rgba(124, 58, 237, 0.35)'
+                      boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)'
                     }}
                   >
                     {isSubmitting ? 'Saving...' : 'Issue Pass'}
@@ -4029,8 +3975,8 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                   width: '40px',
                   height: '40px',
                   borderRadius: '10px',
-                  backgroundColor: 'rgba(124, 58, 237, 0.12)',
-                  color: '#7c3aed',
+                  backgroundColor: 'var(--primary-light)',
+                  color: 'var(--primary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center'
@@ -4197,12 +4143,12 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     padding: '0.6rem 1.25rem',
                     borderRadius: '8px',
                     border: 'none',
-                    backgroundColor: '#7c3aed',
+                    backgroundColor: 'var(--primary)',
                     color: '#ffffff',
                     fontWeight: 700,
                     fontSize: '0.85rem',
                     cursor: 'pointer',
-                    boxShadow: '0 3px 10px rgba(124, 58, 237, 0.35)'
+                    boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)'
                   }}
                 >
                   {isSubmitting ? 'Saving...' : 'Save Changes'}

@@ -46,56 +46,37 @@ export default function SplashScreen({ onFinish }) {
             pointerEvents: 'none'
           }}
         >
-          {/* Ambient Glowing Orbs according to logo palette */}
+          {/* Subtle Ambient Backdrop */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 0.25, scale: 1.1 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 0.2, scale: 1.05 }}
             transition={{ duration: 0.8, ease: 'easeOut' }}
             style={{
               position: 'absolute',
-              width: '380px',
-              height: '380px',
+              width: '360px',
+              height: '360px',
               borderRadius: '50%',
-              background: 'radial-gradient(circle, rgba(0, 229, 255, 0.3) 0%, rgba(124, 58, 237, 0.2) 45%, transparent 70%)',
-              filter: 'blur(50px)',
+              background: 'radial-gradient(circle, rgba(2, 132, 199, 0.15) 0%, rgba(16, 185, 129, 0.06) 45%, transparent 70%)',
+              filter: 'blur(60px)',
               pointerEvents: 'none'
             }}
           />
 
-          {/* Logo with pulsing aura */}
+          {/* Logo */}
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
-            <motion.div
-              animate={{
-                scale: [1, 1.25, 1],
-                opacity: [0.4, 0.75, 0.4]
-              }}
-              transition={{
-                duration: 1.8,
-                repeat: Infinity,
-                ease: 'easeInOut'
-              }}
-              style={{
-                position: 'absolute',
-                width: '150px',
-                height: '150px',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(0, 229, 255, 0.4) 0%, rgba(124, 58, 237, 0.3) 50%, transparent 70%)',
-                filter: 'blur(20px)'
-              }}
-            />
             <motion.img
-              initial={{ scale: 0.85, opacity: 0 }}
+              initial={{ scale: 0.88, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.4, type: 'spring', stiffness: 280, damping: 22 }}
               src="/logo.png"
               alt="HopSpot Logo"
               style={{
-                width: '110px',
-                height: '110px',
+                width: '105px',
+                height: '105px',
                 borderRadius: '50%',
                 position: 'relative',
                 zIndex: 2,
-                boxShadow: '0 12px 35px rgba(0, 229, 255, 0.35)',
+                boxShadow: '0 8px 25px rgba(0, 0, 0, 0.28)',
                 objectFit: 'contain'
               }}
             />
@@ -107,14 +88,12 @@ export default function SplashScreen({ onFinish }) {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1, duration: 0.35 }}
             style={{
-              fontSize: '2.5rem',
+              fontSize: '2.4rem',
               fontWeight: 900,
               letterSpacing: '-0.04em',
               margin: 0,
               textAlign: 'center',
-              background: 'linear-gradient(135deg, #00e5ff 0%, #ffffff 50%, #76ff03 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
+              color: '#ffffff',
               fontFamily: "'Outfit', 'Inter', sans-serif"
             }}
           >
@@ -129,7 +108,7 @@ export default function SplashScreen({ onFinish }) {
             style={{
               fontSize: '0.82rem',
               color: '#94a3b8',
-              margin: '0.5rem 0 1.6rem',
+              margin: '0.45rem 0 1.5rem',
               fontWeight: 600,
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
@@ -143,7 +122,7 @@ export default function SplashScreen({ onFinish }) {
           <div style={{
             width: '140px',
             height: '3px',
-            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            backgroundColor: 'rgba(255, 255, 255, 0.12)',
             borderRadius: '999px',
             overflow: 'hidden',
             position: 'relative'
@@ -154,9 +133,8 @@ export default function SplashScreen({ onFinish }) {
               transition={{ duration: 1.0, ease: [0.25, 0.1, 0.25, 1] }}
               style={{
                 height: '100%',
-                background: 'linear-gradient(90deg, #00e5ff, #76ff03, #7c3aed)',
-                borderRadius: '999px',
-                boxShadow: '0 0 8px rgba(0, 229, 255, 0.7)'
+                background: 'linear-gradient(90deg, #0284c7, #10b981)',
+                borderRadius: '999px'
               }}
             />
           </div>

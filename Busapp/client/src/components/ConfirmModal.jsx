@@ -60,10 +60,10 @@ export default function ConfirmModal({
               width: '100%',
               maxWidth: '440px',
               backgroundColor: 'var(--bg-secondary, #111827)',
-              border: '1px solid rgba(239, 68, 68, 0.25)',
+              border: '1px solid var(--border-color)',
               borderRadius: '20px',
               padding: '1.75rem',
-              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(239, 68, 68, 0.15)',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
               color: 'var(--text-primary, #f9fafb)',
               zIndex: 10
             }}
@@ -155,7 +155,7 @@ export default function ConfirmModal({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem',
-                  boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)'
+                  boxShadow: '0 2px 8px rgba(239, 68, 68, 0.25)'
                 }}
               >
                 <Trash2 size={16} />

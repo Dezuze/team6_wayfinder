@@ -13681,7 +13681,35 @@ export const initialDb = {
       "routeEntitlement": "All Routes"
     }
   ],
-  "drivers": [],
+  "drivers": [
+    {
+      "id": "driver-1",
+      "username": "driver.rahul",
+      "password": "password123",
+      "name": "Rahul Nair",
+      "phone": "+91-9847123456",
+      "assignedBusId": "bus-101",
+      "status": "Active"
+    },
+    {
+      "id": "driver-2",
+      "username": "driver.suresh",
+      "password": "password123",
+      "name": "Suresh Kumar",
+      "phone": "+91-9847654321",
+      "assignedBusId": "bus-102",
+      "status": "Active"
+    },
+    {
+      "id": "driver-3",
+      "username": "driver.biju",
+      "password": "password123",
+      "name": "Biju Kurian",
+      "phone": "+91-9847998877",
+      "assignedBusId": "bus-103",
+      "status": "Off Duty"
+    }
+  ],
   "admins": [
     {
       "id": "admin-default",
@@ -13702,7 +13730,7 @@ function loadDb() {
         const routes = Array.isArray(parsed.routes) ? parsed.routes : initialDb.routes;
         const buses = Array.isArray(parsed.buses) ? parsed.buses : initialDb.buses;
         const studentPasses = Array.isArray(parsed.studentPasses) ? parsed.studentPasses : initialDb.studentPasses;
-        const drivers = Array.isArray(parsed.drivers) ? parsed.drivers : initialDb.drivers;
+        const drivers = Array.isArray(parsed.drivers) && parsed.drivers.length > 0 ? parsed.drivers : initialDb.drivers;
         const admins = Array.isArray(parsed.admins) ? parsed.admins : initialDb.admins;
 
         // Reset transient live GPS status on boot
@@ -13744,12 +13772,13 @@ function loadDb() {
 
 export const db = loadDb();
 
-export function saveDb() {
+export function saveDb(dataToSave) {
   try {
     if (!fs.existsSync(DATA_DIR)) {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
-    fs.writeFileSync(STORE_PATH, JSON.stringify(db, null, 2), 'utf-8');
+    const payload = dataToSave || db;
+    fs.writeFileSync(STORE_PATH, JSON.stringify(payload, null, 2), 'utf-8');
   } catch (err) {
     console.error('Failed to persist database to store.json:', err);
   }

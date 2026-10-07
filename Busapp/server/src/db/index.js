@@ -15,14 +15,8 @@ const hasExplicitSSL = process.env.PGSSL === 'true' || (connectionString && conn
 let pool = null;
 let isPgConnected = false;
 
-// Synchronized in-memory cache for ultra-fast WebSocket broadcasting
-export const db = {
-  routes: [...(fallbackDb.routes || [])],
-  buses: [...(fallbackDb.buses || [])],
-  studentPasses: [...(fallbackDb.studentPasses || [])],
-  drivers: [...(fallbackDb.drivers || [])],
-  admins: [...(fallbackDb.admins || [])]
-};
+// Synchronized in-memory cache for ultra-fast WebSocket broadcasting and fallback persistence
+export const db = fallbackDb;
 
 // Initialize PostgreSQL Pool
 export function getPool() {

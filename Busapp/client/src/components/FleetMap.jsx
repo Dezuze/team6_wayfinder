@@ -27,7 +27,7 @@ export function createCollegeMarkerIcon() {
         padding: 4px 9px;
         border-radius: 8px;
         white-space: nowrap;
-        box-shadow: 0 4px 14px rgba(21, 128, 61, 0.45);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
         margin-bottom: 4px;
         border: 2px solid #ffffff;
         display: flex;
@@ -47,7 +47,7 @@ export function createCollegeMarkerIcon() {
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.5);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
       ">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
       </div>
@@ -137,12 +137,11 @@ export function create3DBusMarkerIcon(bus, color, isSelected, isSearchMatch, bea
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 78px;
-      height: 78px;
+      width: 76px;
+      height: 76px;
       border-radius: 50%;
-      border: 3px solid ${color};
-      box-shadow: 0 0 20px ${color}, inset 0 0 10px ${color};
-      animation: pulse3d 2s infinite ease-in-out;
+      border: 2.5px solid ${color};
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
       pointer-events: none;
       z-index: 1;
     "></div>
@@ -155,8 +154,8 @@ export function create3DBusMarkerIcon(bus, color, isSelected, isSearchMatch, bea
       width: 74px;
       height: 74px;
       border-radius: 50%;
-      border: 3px solid #fbbf24;
-      box-shadow: 0 0 16px rgba(251, 191, 36, 0.8);
+      border: 2px solid #f59e0b;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
       pointer-events: none;
       z-index: 1;
     "></div>
@@ -220,7 +219,7 @@ export function create3DBusMarkerIcon(bus, color, isSelected, isSearchMatch, bea
       letter-spacing: 0.02em;
       pointer-events: none;
     ">
-      <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: ${color}; box-shadow: 0 0 6px ${color};"></span>
+      <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: ${color};"></span>
       <span>${busNumberText}</span>
       ${speedText ? `<span style="opacity: 0.9; font-weight: 700; font-size: 9px; color: ${bus?.speed > 0 ? '#38bdf8' : '#94a3b8'};">${speedText}</span>` : ''}
     </div>
@@ -295,7 +294,7 @@ export function createPickedStopIcon(stopNumber, name) {
       <div style="
         width: 26px;
         height: 26px;
-        background-color: #7c3aed;
+        background-color: #0284c7;
         border: 2px solid #ffffff;
         border-radius: 50%;
         color: #ffffff;
@@ -304,7 +303,7 @@ export function createPickedStopIcon(stopNumber, name) {
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 3px 10px rgba(124, 58, 237, 0.6);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
       ">
         ${stopNumber}
       </div>
@@ -322,7 +321,7 @@ export function createPickedStopIcon(stopNumber, name) {
 /**
  * Custom Leaflet DivIcon generator for configured route stops
  */
-export function createRouteStopIcon(stopName, color = '#7c3aed', isHighlighted = false) {
+export function createRouteStopIcon(stopName, color = '#0284c7', isHighlighted = false) {
   const html = `
     <div style="
       position: relative;
@@ -930,7 +929,7 @@ const StaticRouteLayers = React.memo(function StaticRouteLayers({
         const isAssigned = assignedRouteId && assignedRouteId === route.id;
         const isDimmed = assignedRouteId && assignedRouteId !== route.id;
         const positions = route.path.map(pt => [pt.lat, pt.lng]);
-        const routeColor = route.color || '#7c3aed';
+        const routeColor = route.color || '#0284c7';
         const cleanStops = Array.from(new Set((route.stops || []).map(s => String(s).trim()).filter(Boolean)));
 
         return (
@@ -949,7 +948,7 @@ const StaticRouteLayers = React.memo(function StaticRouteLayers({
                 <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.2rem' }}>
                   <strong style={{ color: routeColor, fontSize: '0.9rem' }}>{route.name}</strong>
                   {isAssigned && (
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#7c3aed', marginTop: '0.15rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0284c7', marginTop: '0.15rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                       <Check size={12} /> Assigned to {selectedBusNumber || 'Bus'}
                     </div>
                   )}
@@ -1038,7 +1037,7 @@ export default function FleetMap({
   onCandidateSelect = null,
   pickedStops = [],
   roadGeometry = null,
-  previewColor = '#7c3aed',
+  previewColor = '#0284c7',
   routeCalcError = null,
   _isCalculatingRoute = false,
   hideStatCards = false,
@@ -1416,7 +1415,7 @@ export default function FleetMap({
                         gap: '0.65rem',
                         transition: 'background 0.15s ease',
                         borderBottom: '1px solid rgba(0,0,0,0.04)',
-                        backgroundColor: activeSelectedId === bus.id ? 'var(--bg-subtle, #ede9fe)' : 'transparent'
+                        backgroundColor: activeSelectedId === bus.id ? 'var(--bg-subtle, rgba(2, 132, 199, 0.08))' : 'transparent'
                       }}
                       onMouseEnter={e => {
                         if (activeSelectedId !== bus.id) e.currentTarget.style.backgroundColor = 'var(--bg-subtle, #f8fafc)';
@@ -1425,7 +1424,7 @@ export default function FleetMap({
                         if (activeSelectedId !== bus.id) e.currentTarget.style.backgroundColor = 'transparent';
                       }}
                     >
-                      <div style={{ color: '#7c3aed', flexShrink: 0 }}>
+                      <div style={{ color: 'var(--primary)', flexShrink: 0 }}>
                         <Bus size={16} />
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
@@ -1663,7 +1662,7 @@ export default function FleetMap({
           <Polyline
             positions={roadGeometry}
             pathOptions={{
-              color: previewColor || '#7c3aed',
+              color: previewColor || '#0284c7',
               weight: 5,
               opacity: 0.95,
               lineCap: 'round',
@@ -1680,7 +1679,7 @@ export default function FleetMap({
           >
             <Popup>
               <div style={{ fontFamily: 'system-ui, sans-serif', padding: '0.2rem' }}>
-                <strong style={{ color: '#7c3aed' }}>Stop #{stop.number || idx + 1}</strong>: {stop.name}
+                <strong style={{ color: '#0284c7' }}>Stop #{stop.number || idx + 1}</strong>: {stop.name}
                 <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.2rem' }}>
                   Lat: {stop.lat.toFixed(4)}, Lng: {stop.lng.toFixed(4)}
                 </div>
@@ -1726,7 +1725,7 @@ export default function FleetMap({
                         }}
                         style={{
                           marginTop: '0.5rem',
-                          backgroundColor: '#7c3aed',
+                          backgroundColor: '#0284c7',
                           color: '#ffffff',
                           border: 'none',
                           borderRadius: '6px',
@@ -1735,7 +1734,7 @@ export default function FleetMap({
                           fontWeight: 700,
                           cursor: 'pointer',
                           width: '100%',
-                          boxShadow: '0 2px 6px rgba(124, 58, 237, 0.4)'
+                          boxShadow: '0 2px 6px rgba(2, 132, 199, 0.25)'
                         }}
                       >
                         + Add as Pickup Stop
@@ -1749,7 +1748,7 @@ export default function FleetMap({
                         }}
                         style={{
                           marginTop: '0.5rem',
-                          backgroundColor: '#7c3aed',
+                          backgroundColor: '#0284c7',
                           color: '#ffffff',
                           border: 'none',
                           borderRadius: '6px',
@@ -1849,8 +1848,8 @@ export default function FleetMap({
                   width: '36px',
                   height: '36px',
                   borderRadius: '10px',
-                  backgroundColor: '#f3e8ff',
-                  color: '#7c3aed',
+                  backgroundColor: 'var(--primary-light)',
+                  color: 'var(--primary)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',

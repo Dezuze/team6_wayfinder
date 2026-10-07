@@ -130,8 +130,8 @@ export default function BulkCsvUploader({
           onDrop={handleDrop}
           onClick={() => fileInputRef.current?.click()}
           style={{
-            border: `2px dashed ${isDragOver ? '#7c3aed' : 'var(--border-color, #cbd5e1)'}`,
-            backgroundColor: isDragOver ? 'rgba(124, 58, 237, 0.05)' : 'var(--bg-card, #ffffff)',
+            border: `2px dashed ${isDragOver ? 'var(--primary)' : 'var(--border-color, #cbd5e1)'}`,
+            backgroundColor: isDragOver ? 'var(--primary-light)' : 'var(--bg-card, #ffffff)',
             borderRadius: '10px',
             padding: '2rem 1.5rem',
             textAlign: 'center',
@@ -148,8 +148,8 @@ export default function BulkCsvUploader({
             width: '44px',
             height: '44px',
             borderRadius: '50%',
-            backgroundColor: 'rgba(124, 58, 237, 0.1)',
-            color: '#7c3aed',
+            backgroundColor: 'var(--primary-light)',
+            color: 'var(--primary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
@@ -185,7 +185,7 @@ export default function BulkCsvUploader({
             borderRadius: '8px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <FileText size={18} color="#7c3aed" />
+              <FileText size={18} color="var(--primary)" />
               <div>
                 <span style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', color: 'var(--text-primary)' }}>
                   {file.name}
@@ -288,10 +288,11 @@ export default function BulkCsvUploader({
                 fontWeight: 600,
                 padding: '0.5rem 1.25rem',
                 borderRadius: '8px',
-                backgroundColor: '#7c3aed',
+                backgroundColor: 'var(--primary)',
                 color: '#ffffff',
                 border: 'none',
                 cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)',
                 opacity: isSubmitting || parsedRows.length === 0 ? 0.6 : 1
               }}
             >

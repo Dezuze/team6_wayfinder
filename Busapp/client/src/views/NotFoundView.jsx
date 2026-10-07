@@ -27,41 +27,42 @@ export default function NotFoundView({ onGoHome }) {
       overflow: 'hidden'
     }}>
       {/* Background Glowing Ambient Orbs */}
+      {/* Subtle Background Ambience */}
       <motion.div
         animate={{
-          scale: [1, 1.25, 1],
-          x: [-20, 20, -20],
-          y: [-15, 15, -15]
+          scale: [1, 1.15, 1],
+          x: [-15, 15, -15],
+          y: [-10, 10, -10]
         }}
-        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
         style={{
           position: 'absolute',
-          top: '15%',
+          top: '18%',
           left: '18%',
           width: '320px',
           height: '320px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(0, 229, 255, 0.18) 0%, transparent 70%)',
-          filter: 'blur(70px)',
+          background: 'radial-gradient(circle, rgba(2, 132, 199, 0.1) 0%, transparent 70%)',
+          filter: 'blur(80px)',
           pointerEvents: 'none'
         }}
       />
       <motion.div
         animate={{
-          scale: [1.1, 0.9, 1.1],
-          x: [20, -20, 20],
-          y: [15, -15, 15]
+          scale: [1.1, 0.95, 1.1],
+          x: [15, -15, 15],
+          y: [10, -10, 10]
         }}
-        transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
         style={{
           position: 'absolute',
-          bottom: '15%',
+          bottom: '18%',
           right: '18%',
-          width: '340px',
-          height: '340px',
+          width: '320px',
+          height: '320px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(118, 255, 3, 0.16) 0%, transparent 70%)',
-          filter: 'blur(75px)',
+          background: 'radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%)',
+          filter: 'blur(80px)',
           pointerEvents: 'none'
         }}
       />
@@ -77,11 +78,11 @@ export default function NotFoundView({ onGoHome }) {
           textAlign: 'center',
           padding: '3rem 2.25rem',
           borderRadius: '28px',
-          background: 'rgba(15, 23, 42, 0.75)',
+          background: 'rgba(15, 23, 42, 0.82)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
-          boxShadow: '0 30px 70px rgba(0, 0, 0, 0.6), 0 0 40px rgba(0, 229, 255, 0.1)',
+          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(255, 255, 255, 0.08)',
           zIndex: 10
         }}
       >
@@ -95,21 +96,21 @@ export default function NotFoundView({ onGoHome }) {
               width: '120px',
               height: '120px',
               borderRadius: '50%',
-              border: '2px dashed rgba(0, 229, 255, 0.35)'
+              border: '2px dashed rgba(2, 132, 199, 0.3)'
             }}
           />
           <div style={{
             width: '84px',
             height: '84px',
             borderRadius: '24px',
-            background: 'linear-gradient(135deg, rgba(0, 229, 255, 0.2) 0%, rgba(118, 255, 3, 0.2) 100%)',
-            border: '1px solid rgba(0, 229, 255, 0.4)',
+            background: 'rgba(2, 132, 199, 0.12)',
+            border: '1px solid rgba(2, 132, 199, 0.3)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 10px 30px rgba(0, 229, 255, 0.3)'
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)'
           }}>
-            <Compass size={42} color="#00e5ff" />
+            <Compass size={40} color="#38bdf8" />
           </div>
         </div>
 
@@ -120,9 +121,7 @@ export default function NotFoundView({ onGoHome }) {
           margin: 0,
           lineHeight: 1,
           letterSpacing: '-0.05em',
-          background: 'linear-gradient(135deg, #00e5ff 0%, #ffffff 50%, #76ff03 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent'
+          color: '#ffffff'
         }}>
           404
         </h1>
@@ -149,8 +148,8 @@ export default function NotFoundView({ onGoHome }) {
         {/* Action Button */}
         <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           <motion.button
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             type="button"
             onClick={handleHome}
             style={{
@@ -158,14 +157,14 @@ export default function NotFoundView({ onGoHome }) {
               borderRadius: '14px',
               fontWeight: 700,
               fontSize: '0.92rem',
-              background: 'linear-gradient(135deg, #00e5ff 0%, #0284c7 100%)',
-              color: '#04101e',
+              background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+              color: '#ffffff',
               border: 'none',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '0.6rem',
-              boxShadow: '0 8px 25px rgba(0, 229, 255, 0.4)'
+              boxShadow: '0 4px 14px rgba(2, 132, 199, 0.25)'
             }}
           >
             <Home size={18} />

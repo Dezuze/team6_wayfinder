@@ -37,37 +37,12 @@ export default function LoginView({ onOpenLegal }) {
       position: 'relative',
       overflow: 'hidden'
     }}>
-      {/* Animated Glowing Blur Background (Logo Palette: Cyan #00e5ff & Lime #76ff03 & Indigo #7c3aed) */}
+      {/* Subtle Ambient Background (Uniform HopSpot Palette) */}
       <motion.div
         animate={{
-          x: [-40, 50, -40],
-          y: [-30, 40, -30],
-          scale: [1, 1.28, 1]
-        }}
-        transition={{
-          duration: 14,
-          repeat: Infinity,
-          ease: 'easeInOut'
-        }}
-        style={{
-          position: 'absolute',
-          top: '12%',
-          left: '12%',
-          width: '380px',
-          height: '380px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(0, 229, 255, 0.32) 0%, rgba(6, 182, 212, 0.18) 45%, transparent 70%)',
-          filter: 'blur(85px)',
-          pointerEvents: 'none',
-          zIndex: 1
-        }}
-      />
-
-      <motion.div
-        animate={{
-          x: [40, -50, 40],
-          y: [30, -40, 30],
-          scale: [1.2, 0.95, 1.2]
+          x: [-30, 35, -30],
+          y: [-20, 25, -20],
+          scale: [1, 1.15, 1]
         }}
         transition={{
           duration: 16,
@@ -76,12 +51,12 @@ export default function LoginView({ onOpenLegal }) {
         }}
         style={{
           position: 'absolute',
-          bottom: '10%',
-          right: '12%',
-          width: '400px',
-          height: '400px',
+          top: '15%',
+          left: '15%',
+          width: '380px',
+          height: '380px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(118, 255, 3, 0.25) 0%, rgba(16, 185, 129, 0.15) 50%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(2, 132, 199, 0.12) 0%, rgba(2, 132, 199, 0.03) 50%, transparent 70%)',
           filter: 'blur(90px)',
           pointerEvents: 'none',
           zIndex: 1
@@ -90,24 +65,24 @@ export default function LoginView({ onOpenLegal }) {
 
       <motion.div
         animate={{
-          scale: [0.95, 1.22, 0.95],
-          opacity: [0.35, 0.6, 0.35]
+          x: [30, -35, 30],
+          y: [20, -25, 20],
+          scale: [1.12, 0.98, 1.12]
         }}
         transition={{
-          duration: 12,
+          duration: 18,
           repeat: Infinity,
           ease: 'easeInOut'
         }}
         style={{
           position: 'absolute',
-          top: '40%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: '450px',
-          height: '450px',
+          bottom: '12%',
+          right: '15%',
+          width: '380px',
+          height: '380px',
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(124, 58, 237, 0.28) 0%, rgba(79, 70, 229, 0.12) 55%, transparent 70%)',
-          filter: 'blur(95px)',
+          background: 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.02) 50%, transparent 70%)',
+          filter: 'blur(90px)',
           pointerEvents: 'none',
           zIndex: 1
         }}
@@ -124,11 +99,11 @@ export default function LoginView({ onOpenLegal }) {
           width: '100%',
           padding: '2.5rem 2rem',
           borderRadius: '24px',
-          backgroundColor: 'rgba(15, 23, 42, 0.78)',
+          backgroundColor: 'rgba(15, 23, 42, 0.82)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
-          boxShadow: '0 30px 70px rgba(0, 0, 0, 0.6), 0 0 45px rgba(0, 229, 255, 0.12)',
+          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(255, 255, 255, 0.08)',
           zIndex: 10
         }}
       >
@@ -237,8 +212,8 @@ export default function LoginView({ onOpenLegal }) {
 
           <motion.button
             id="login-submit-btn"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.96 }}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={isLoading}
             style={{
@@ -248,15 +223,15 @@ export default function LoginView({ onOpenLegal }) {
               fontWeight: 700,
               fontSize: '0.95rem',
               padding: '0.8rem 1.25rem',
-              background: 'linear-gradient(135deg, #00e5ff 0%, #0284c7 50%, #76ff03 100%)',
-              color: '#06101e',
+              background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+              color: '#ffffff',
               border: 'none',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.6rem',
-              boxShadow: '0 8px 25px rgba(0, 229, 255, 0.35)'
+              boxShadow: '0 4px 14px rgba(2, 132, 199, 0.25)'
             }}
           >
             {isLoading ? 'Signing in...' : 'Sign in to HopSpot'}

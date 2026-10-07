@@ -247,11 +247,6 @@ export default async function adminRoutes(fastify, options) {
     if (!user) return;
 
     const { id } = request.params;
-    const existingBus = db.buses.find(b => b.id === id);
-    if (!existingBus) {
-      return reply.status(404).send({ success: false, error: 'Bus not found' });
-    }
-
     await dbDeleteBus(id);
 
     if (fastify.broadcastBuses) fastify.broadcastBuses();
@@ -369,11 +364,6 @@ export default async function adminRoutes(fastify, options) {
     if (!user) return;
 
     const { id } = request.params;
-    const existingRoute = db.routes.find(r => r.id === id);
-    if (!existingRoute) {
-      return reply.status(404).send({ success: false, error: 'Route not found' });
-    }
-
     await dbDeleteRoute(id);
 
     if (fastify.broadcastBuses) fastify.broadcastBuses();
@@ -497,11 +487,6 @@ export default async function adminRoutes(fastify, options) {
     if (!user) return;
 
     const { id } = request.params;
-    const existingPass = db.studentPasses.find(p => p.id === id);
-    if (!existingPass) {
-      return reply.status(404).send({ success: false, error: 'Student pass not found' });
-    }
-
     await dbDeletePass(id);
 
     if (fastify.broadcastSync) fastify.broadcastSync();
@@ -644,11 +629,6 @@ export default async function adminRoutes(fastify, options) {
     if (!user) return;
 
     const { id } = request.params;
-    const existingDriver = db.drivers.find(d => d.id === id);
-    if (!existingDriver) {
-      return reply.status(404).send({ success: false, error: 'Driver not found' });
-    }
-
     await dbDeleteDriver(id);
 
     return { success: true, message: 'Driver deleted successfully' };
@@ -698,69 +678,5 @@ export default async function adminRoutes(fastify, options) {
       await dbDeleteDriver(id);
     }
     return { success: true, count: ids.length, message: `${ids.length} drivers deleted successfully` };
-  });
-
-  // --- SCALE SEEDING ENDPOINT (FOR 10 DRIVERS & 500 STUDENTS) ---
-  fastify.post('/api/seed/scale', async (request, reply) => {
-    const user = authenticate(request, reply, ['admin']);
-    if (!user) return;
-
-    // 1. Seed 10 Drivers
-    const driverFirstNames = ['Rahul', 'Suresh', 'Anand', 'Biju', 'Manoj', 'Vishnu', 'Joseph', 'Pradeep', 'Renjith', 'Vijayan'];
-    const driverLastNames = ['Nair', 'Kumar', 'Pillai', 'Kurian', 'Menon', 'Varghese', 'Mathew', 'Thomas', 'Chandran', 'Panicker'];
-    
-    for (let i = 0; i < 10; i++) {
-      const id = `driver-${101 + i}`;
-      const username = `driver.${driverFirstNames[i].toLowerCase()}`;
-      const name = `${driverFirstNames[i]} ${driverLastNames[i]}`;
-      const phone = `+91-9847${Math.floor(100000 + Math.random() * 900000)}`;
-      const assignedBusId = i < db.buses.length ? db.buses[i].id : `bus-${101 + i}`;
-
-      await dbUpsertDriver({
-        id,
-        username,
-        password: 'password123',
-        name,
-        phone,
-        assignedBusId,
-        status: i === 0 || i === 1 ? 'Active' : 'Off Duty'
-      });
-    }
-
-    // 2. Seed 500 Students
-    const studentFirstNames = ['Aarav', 'Aditi', 'Alok', 'Ananya', 'Arya', 'Dev', 'Diya', 'Gautam', 'Isha', 'Kavya', 'Madhav', 'Neha', 'Pranav', 'Rhea', 'Rohan', 'Sneha', 'Tanvi', 'Varun', 'Ved', 'Zoya'];
-    const studentLastNames = ['Sharma', 'Verma', 'Patel', 'Menon', 'Nair', 'Pillai', 'Iyer', 'Kurian', 'Varghese', 'Mathew', 'Thomas', 'Joseph', 'Reddy', 'Rao', 'Chopra', 'Kapoor', 'Singh', 'Babu', 'Mohan', 'Das'];
-    const routesList = db.routes.length > 0 ? db.routes.map(r => r.name) : ['Express Route A - Kottayam to CEP', 'Transit Route B - Kanjirappally', 'All Routes'];
-
-    for (let i = 1; i <= 500; i++) {
-      const studentId = `S${1000 + i}`;
-      const fName = studentFirstNames[(i - 1) % studentFirstNames.length];
-      const lName = studentLastNames[(Math.floor((i - 1) / studentFirstNames.length)) % studentLastNames.length];
-      const fullName = `${fName} ${lName}`;
-      const email = `${fName.toLowerCase()}.${lName.toLowerCase()}${i}@student.edu`;
-      const routeEntitlement = i % 5 === 0 ? 'All Routes' : routesList[i % routesList.length];
-      const passStatus = i % 15 === 0 ? 'Expired' : i % 25 === 0 ? 'Pending Approval' : 'Active';
-
-      await dbUpsertPass({
-        id: studentId,
-        username: studentId,
-        password: 'student123',
-        name: fullName,
-        studentName: fullName,
-        email,
-        routeEntitlement,
-        validUntil: '2026-12-31',
-        passStatus
-      });
-    }
-
-    if (fastify.broadcastSync) fastify.broadcastSync();
-
-    return {
-      success: true,
-      message: 'Successfully scaled dataset to 10 drivers and 500 students!',
-      driversCount: db.drivers.length,
-      passesCount: db.studentPasses.length
-    };
   });
 }

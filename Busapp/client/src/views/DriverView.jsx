@@ -238,8 +238,8 @@ export default function DriverView({ activeRole, setActiveRole }) {
               width: '2.2rem',
               height: '2.2rem',
               borderRadius: '0.65rem',
-              backgroundColor: 'rgba(124, 58, 237, 0.12)',
-              color: '#7c3aed',
+              backgroundColor: 'var(--primary-light)',
+              color: 'var(--primary)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -350,7 +350,7 @@ export default function DriverView({ activeRole, setActiveRole }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', marginBottom: '1rem' }}>
         <div className="clean-card" style={{ padding: '0.85rem', textAlign: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem', color: 'var(--text-muted)', marginBottom: '0.2rem', fontSize: '0.72rem', fontWeight: 600, textTransform: 'uppercase' }}>
-            <Gauge size={14} color="#7c3aed" />
+            <Gauge size={14} color="var(--primary)" />
             <span>Real Speed</span>
           </div>
           <div style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1 }}>

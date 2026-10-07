@@ -52,10 +52,10 @@ export default function CookieBanner({ onOpenLegal }) {
           color: '#f8fafc',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
-          border: '1px solid rgba(124, 58, 237, 0.35)',
+          border: '1px solid rgba(2, 132, 199, 0.25)',
           borderRadius: '16px',
           padding: '1.15rem',
-          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.45), 0 0 25px rgba(124, 58, 237, 0.2)',
+          boxShadow: '0 20px 40px rgba(0, 0, 0, 0.45)',
           zIndex: 99990,
           boxSizing: 'border-box'
         }}
@@ -65,8 +65,8 @@ export default function CookieBanner({ onOpenLegal }) {
             width: '38px',
             height: '38px',
             borderRadius: '10px',
-            backgroundColor: 'rgba(124, 58, 237, 0.2)',
-            color: '#a78bfa',
+            backgroundColor: 'rgba(2, 132, 199, 0.15)',
+            color: '#38bdf8',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -86,7 +86,7 @@ export default function CookieBanner({ onOpenLegal }) {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#a78bfa',
+                  color: '#38bdf8',
                   fontSize: '0.75rem',
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -107,7 +107,7 @@ export default function CookieBanner({ onOpenLegal }) {
                 type="button"
                 onClick={handleAcceptAll}
                 style={{
-                  backgroundColor: '#7c3aed',
+                  backgroundColor: '#0284c7',
                   color: '#ffffff',
                   border: 'none',
                   borderRadius: '8px',
@@ -118,7 +118,7 @@ export default function CookieBanner({ onOpenLegal }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.35rem',
-                  boxShadow: '0 2px 10px rgba(124, 58, 237, 0.35)'
+                  boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)'
                 }}
               >
                 <Check size={14} /> Accept All

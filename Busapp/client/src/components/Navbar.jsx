@@ -142,7 +142,7 @@ export default function Navbar({ activeRole, setActiveRole, onOpenLegal }) {
                   fontWeight: 500
                 }}
               >
-                <ShieldCheck size={15} color="#7c3aed" /> Privacy Policy
+                <ShieldCheck size={15} color="var(--primary)" /> Privacy Policy
               </button>
 
               <button
@@ -163,7 +163,7 @@ export default function Navbar({ activeRole, setActiveRole, onOpenLegal }) {
                   fontWeight: 500
                 }}
               >
-                <FileText size={15} color="#7c3aed" /> Terms & Conditions
+                <FileText size={15} color="var(--primary)" /> Terms & Conditions
               </button>
 
               <button
@@ -184,7 +184,7 @@ export default function Navbar({ activeRole, setActiveRole, onOpenLegal }) {
                   fontWeight: 500
                 }}
               >
-                <Cookie size={15} color="#7c3aed" /> Cookie Choices
+                <Cookie size={15} color="var(--primary)" /> Cookie Choices
               </button>
 
               {user && (

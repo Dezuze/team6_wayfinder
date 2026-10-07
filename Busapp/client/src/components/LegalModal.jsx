@@ -73,8 +73,8 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) 
                 width: '36px',
                 height: '36px',
                 borderRadius: '10px',
-                backgroundColor: 'rgba(124, 58, 237, 0.15)',
-                color: '#7c3aed',
+                backgroundColor: 'var(--primary-light)',
+                color: 'var(--primary)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -125,8 +125,8 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) 
                 padding: '0.75rem 1.25rem',
                 fontSize: '0.85rem',
                 fontWeight: 600,
-                color: activeTab === 'privacy' ? '#7c3aed' : 'var(--text-secondary, #94a3b8)',
-                borderBottom: activeTab === 'privacy' ? '2px solid #7c3aed' : '2px solid transparent',
+                color: activeTab === 'privacy' ? 'var(--primary)' : 'var(--text-secondary, #94a3b8)',
+                borderBottom: activeTab === 'privacy' ? '2px solid var(--primary)' : '2px solid transparent',
                 background: 'none',
                 borderTop: 'none',
                 borderLeft: 'none',
@@ -145,8 +145,8 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) 
                 padding: '0.75rem 1.25rem',
                 fontSize: '0.85rem',
                 fontWeight: 600,
-                color: activeTab === 'terms' ? '#7c3aed' : 'var(--text-secondary, #94a3b8)',
-                borderBottom: activeTab === 'terms' ? '2px solid #7c3aed' : '2px solid transparent',
+                color: activeTab === 'terms' ? 'var(--primary)' : 'var(--text-secondary, #94a3b8)',
+                borderBottom: activeTab === 'terms' ? '2px solid var(--primary)' : '2px solid transparent',
                 background: 'none',
                 borderTop: 'none',
                 borderLeft: 'none',
@@ -165,8 +165,8 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) 
                 padding: '0.75rem 1.25rem',
                 fontSize: '0.85rem',
                 fontWeight: 600,
-                color: activeTab === 'cookies' ? '#7c3aed' : 'var(--text-secondary, #94a3b8)',
-                borderBottom: activeTab === 'cookies' ? '2px solid #7c3aed' : '2px solid transparent',
+                color: activeTab === 'cookies' ? 'var(--primary)' : 'var(--text-secondary, #94a3b8)',
+                borderBottom: activeTab === 'cookies' ? '2px solid var(--primary)' : '2px solid transparent',
                 background: 'none',
                 borderTop: 'none',
                 borderLeft: 'none',
@@ -315,7 +315,7 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) 
                     borderRadius: '8px',
                     border: '1px solid var(--border-color, #334155)'
                   }}>
-                    <strong style={{ color: '#7c3aed', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.2rem' }}>
+                    <strong style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.2rem' }}>
                       <CheckCircle2 size={16} /> Functional & Geometry Cache
                     </strong>
                     <p style={{ fontSize: '0.78rem', margin: 0, color: 'var(--text-secondary, #94a3b8)' }}>
@@ -351,13 +351,14 @@ export default function LegalModal({ isOpen, onClose, initialTab = 'privacy' }) 
             <button
               onClick={onClose}
               style={{
-                backgroundColor: '#7c3aed',
+                backgroundColor: 'var(--primary)',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '8px',
                 padding: '0.5rem 1.25rem',
                 fontSize: '0.82rem',
                 fontWeight: 600,
+                boxShadow: '0 2px 8px rgba(2, 132, 199, 0.25)',
                 cursor: 'pointer'
               }}
             >
