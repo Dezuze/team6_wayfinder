@@ -4,7 +4,7 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('campusbus-auth-user');
+    const saved = localStorage.getItem('hopspot-auth-user') || localStorage.getItem('campusbus-auth-user');
     return saved ? JSON.parse(saved) : null;
   });
   const [error, setError] = useState(null);
@@ -12,8 +12,9 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem('campusbus-auth-user', JSON.stringify(user));
+      localStorage.setItem('hopspot-auth-user', JSON.stringify(user));
     } else {
+      localStorage.removeItem('hopspot-auth-user');
       localStorage.removeItem('campusbus-auth-user');
     }
   }, [user]);

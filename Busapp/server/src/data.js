@@ -1,6 +1,13 @@
-// Mock Database Store for Bus Tracking App
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-export const db = {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DATA_DIR = path.resolve(__dirname, '..', 'data');
+const STORE_PATH = path.join(DATA_DIR, 'store.json');
+
+export const initialDb = {
   "routes": [
     {
       "id": "route-1",
@@ -13587,31 +13594,25 @@ export const db = {
       "id": "bus-101",
       "number": "BUS #101 (KL-07-AB-1234)",
       "routeId": "route-1",
-      "driverName": "John Doe",
+      "driverName": "Unassigned",
       "status": "Off Duty",
-      "location": {
-        "lat": 9.701275,
-        "lng": 76.655871
-      },
+      "location": null,
       "bearing": 0,
       "speed": 0,
       "isLive": false,
-      "lastUpdated": "2026-08-29T08:57:31.366Z"
+      "lastUpdated": null
     },
     {
       "id": "bus-102",
       "number": "BUS #102 (KL-07-CD-5678)",
       "routeId": "route-2",
-      "driverName": "Sarah Jenkins",
+      "driverName": "Unassigned",
       "status": "Off Duty",
-      "location": {
-        "lat": 9.600081,
-        "lng": 76.779064
-      },
+      "location": null,
       "bearing": 0,
       "speed": 0,
       "isLive": false,
-      "lastUpdated": "2026-08-29T08:57:31.368Z"
+      "lastUpdated": null
     },
     {
       "id": "bus-103",
@@ -13619,29 +13620,23 @@ export const db = {
       "routeId": null,
       "driverName": "Unassigned",
       "status": "Maintenance",
-      "location": {
-        "lat": 9.93,
-        "lng": 76.26
-      },
+      "location": null,
       "bearing": 0,
       "speed": 0,
       "isLive": false,
-      "lastUpdated": "2026-08-29T08:57:31.368Z"
+      "lastUpdated": null
     },
     {
       "id": "bus-104",
       "number": "BUS #104 (KL-05-XY-7777)",
       "routeId": "route-3",
-      "driverName": "Ram Kumar",
+      "driverName": "Unassigned",
       "status": "Off Duty",
-      "location": {
-        "lat": 9.706471,
-        "lng": 76.716999
-      },
+      "location": null,
       "bearing": 0,
       "speed": 0,
       "isLive": false,
-      "lastUpdated": "2026-08-29T08:57:31.368Z"
+      "lastUpdated": null
     }
   ],
   "studentPasses": [
@@ -13651,9 +13646,7 @@ export const db = {
       "email": "alex.mercer@student.edu",
       "passStatus": "Active",
       "validUntil": "2026-12-31",
-      "routeEntitlement": "All Routes",
-      "username": "s1001",
-      "password": "student123"
+      "routeEntitlement": "All Routes"
     },
     {
       "id": "S1002",
@@ -13661,9 +13654,7 @@ export const db = {
       "email": "elena.r@student.edu",
       "passStatus": "Expired",
       "validUntil": "2026-05-30",
-      "routeEntitlement": "Route 1 Only",
-      "username": "s1002",
-      "password": "student123"
+      "routeEntitlement": "Route 1 Only"
     },
     {
       "id": "S1003",
@@ -13671,9 +13662,7 @@ export const db = {
       "email": "david.kim@student.edu",
       "passStatus": "Pending Approval",
       "validUntil": "2026-12-31",
-      "routeEntitlement": "Route 2 Only",
-      "username": "s1003",
-      "password": "student123"
+      "routeEntitlement": "Route 2 Only"
     },
     {
       "id": "S9999",
@@ -13681,9 +13670,7 @@ export const db = {
       "email": "teststudent",
       "passStatus": "Active",
       "validUntil": "2030-12-31",
-      "routeEntitlement": "All Routes",
-      "username": "s9999",
-      "password": "student123"
+      "routeEntitlement": "All Routes"
     },
     {
       "id": "S1000",
@@ -13691,67 +13678,10 @@ export const db = {
       "email": "student@edu.com",
       "passStatus": "Active",
       "validUntil": "2030-12-31",
-      "routeEntitlement": "All Routes",
-      "username": "s1000",
-      "password": "student123"
+      "routeEntitlement": "All Routes"
     }
   ],
-  "drivers": [
-    {
-      "id": "driver-default",
-      "username": "driver",
-      "password": "password123",
-      "name": "Driver One",
-      "phone": "+1-555-0100",
-      "assignedBusId": "bus-101",
-      "status": "Active"
-    },
-    {
-      "id": "driver-1",
-      "username": "john.driver",
-      "password": "password123",
-      "name": "John Doe",
-      "phone": "+1-555-0101",
-      "assignedBusId": "bus-101",
-      "status": "Active"
-    },
-    {
-      "id": "driver-2",
-      "username": "sarah.driver",
-      "password": "password123",
-      "name": "Sarah Jenkins",
-      "phone": "+1-555-0102",
-      "assignedBusId": "bus-102",
-      "status": "Active"
-    },
-    {
-      "id": "driver-3",
-      "username": "mike.driver",
-      "password": "password123",
-      "name": "Mike Unassigned",
-      "phone": "+1-555-0103",
-      "assignedBusId": "bus-103",
-      "status": "Off Duty"
-    },
-    {
-      "id": "driver-4",
-      "username": "ram.driver",
-      "password": "password123",
-      "name": "Ram Kumar",
-      "phone": "+1-555-0104",
-      "assignedBusId": "bus-104",
-      "status": "Active"
-    },
-    {
-      "id": "driver-99",
-      "username": "testdriver",
-      "password": "testpassword",
-      "name": "Test Driver",
-      "phone": "+1-555-9999",
-      "assignedBusId": "bus-101",
-      "status": "Active"
-    }
-  ],
+  "drivers": [],
   "admins": [
     {
       "id": "admin-default",
@@ -13759,20 +13689,68 @@ export const db = {
       "password": "password123",
       "name": "Administrator",
       "role": "admin"
-    },
-    {
-      "id": "admin-1",
-      "username": "admin.super",
-      "password": "adminpassword",
-      "name": "Head Campus Administrator",
-      "role": "admin"
-    },
-    {
-      "id": "admin-2",
-      "username": "testadmin",
-      "password": "testpassword",
-      "name": "Test Administrator",
-      "role": "admin"
     }
   ]
 };
+
+function loadDb() {
+  try {
+    if (fs.existsSync(STORE_PATH)) {
+      const raw = fs.readFileSync(STORE_PATH, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        const routes = Array.isArray(parsed.routes) ? parsed.routes : initialDb.routes;
+        const buses = Array.isArray(parsed.buses) ? parsed.buses : initialDb.buses;
+        const studentPasses = Array.isArray(parsed.studentPasses) ? parsed.studentPasses : initialDb.studentPasses;
+        const drivers = Array.isArray(parsed.drivers) ? parsed.drivers : initialDb.drivers;
+        const admins = Array.isArray(parsed.admins) ? parsed.admins : initialDb.admins;
+
+        // Reset transient live GPS status on boot
+        buses.forEach(b => {
+          b.isLive = false;
+          b.speed = 0;
+          if (b.status === 'Active' && !b.location) {
+            b.status = 'Off Duty';
+          }
+        });
+
+        // Ensure buses do not reference non-existent deleted routes
+        const validRouteIds = new Set(routes.map(r => r.id));
+        buses.forEach(b => {
+          if (b.routeId && !validRouteIds.has(b.routeId)) {
+            b.routeId = null;
+          }
+        });
+
+        return { routes, buses, studentPasses, drivers, admins };
+      }
+    }
+  } catch (err) {
+    console.error('Error reading store.json, falling back to seed data:', err);
+  }
+
+  // If store.json does not exist yet, initialize it with seed data
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    fs.writeFileSync(STORE_PATH, JSON.stringify(initialDb, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Failed to initialize store.json:', err);
+  }
+
+  return initialDb;
+}
+
+export const db = loadDb();
+
+export function saveDb() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    fs.writeFileSync(STORE_PATH, JSON.stringify(db, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Failed to persist database to store.json:', err);
+  }
+}

@@ -1,13 +1,22 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import websocket from '@fastify/websocket';
-import { db } from './data.js';
+import { db, initDatabase, dbUpsertBus } from './db/index.js';
 import adminRoutes from './routes/admin.js';
 
 const fastify = Fastify({ logger: true });
 
 await fastify.register(cors, { 
   origin: true 
+});
+
+// Security Response Headers (Anti-Clickjacking, MIME-Sniffing Defense, XSS Protection)
+fastify.addHook('onSend', async (request, reply) => {
+  reply.header('X-Content-Type-Options', 'nosniff');
+  reply.header('X-Frame-Options', 'SAMEORIGIN');
+  reply.header('X-XSS-Protection', '1; mode=block');
+  reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+  reply.header('Permissions-Policy', 'camera=(self), geolocation=(self), microphone=()');
 });
 
 await fastify.register(websocket);
@@ -58,6 +67,23 @@ fastify.decorate('broadcastBuses', () => {
   });
 });
 
+// Helper to broadcast full synchronized state (buses, routes, passes) to all connected websocket clients
+fastify.decorate('broadcastSync', () => {
+  if (!fastify.websocketServer || !fastify.websocketServer.clients) return;
+  const payload = JSON.stringify({
+    type: 'SYNC_DATA',
+    buses: db.buses,
+    routes: db.routes,
+    passes: db.studentPasses
+  });
+  
+  fastify.websocketServer.clients.forEach(client => {
+    if (client.readyState === 1) { // OPEN
+      client.send(payload);
+    }
+  });
+});
+
 // Real Driver Inactivity Watchdog:
 // If a real driver stops broadcasting GPS updates for more than 30 seconds without clean sign-off,
 // update the bus to stationary / Off Duty and broadcast to all connected clients.
@@ -72,6 +98,7 @@ setInterval(() => {
       bus.status = 'Off Duty';
       bus.lastUpdated = new Date().toISOString();
       hasChanged = true;
+      dbUpsertBus(bus).catch(() => {});
     }
   });
 
@@ -143,11 +170,17 @@ fastify.register(async function (fastifyInstance) {
 
           // Broadcast new coordinates to all connected students and admins
           fastify.broadcastBuses();
+
+          // Persist updated telemetry to backend database
+          if (busIndex >= 0) {
+            dbUpsertBus(db.buses[busIndex]).catch(() => {});
+          }
         } else if (data.type === 'DRIVER_SOS') {
           const { busId, reason } = data;
           let busIndex = db.buses.findIndex(b => b.id === busId);
+          let targetBus;
           if (busIndex === -1) {
-            const newBus = {
+            targetBus = {
               id: busId || `bus-${Date.now()}`,
               number: `BUS #${busId}`,
               routeId: null,
@@ -159,14 +192,16 @@ fastify.register(async function (fastifyInstance) {
               isLive: true,
               lastUpdated: new Date().toISOString()
             };
-            db.buses.push(newBus);
+            db.buses.push(targetBus);
           } else {
             db.buses[busIndex].status = "EMERGENCY / SOS";
             db.buses[busIndex].sosReason = reason || "Emergency breakdown or accident reported";
             db.buses[busIndex].isLive = true;
             db.buses[busIndex].lastUpdated = new Date().toISOString();
+            targetBus = db.buses[busIndex];
           }
           fastify.broadcastBuses();
+          dbUpsertBus(targetBus).catch(() => {});
         } else if (data.type === 'REQUEST_INIT') {
           socket.send(JSON.stringify({
             type: 'INIT_DATA',
@@ -190,6 +225,7 @@ fastify.register(async function (fastifyInstance) {
           db.buses[busIndex].status = 'Off Duty';
           db.buses[busIndex].lastUpdated = new Date().toISOString();
           fastify.broadcastBuses();
+          dbUpsertBus(db.buses[busIndex]).catch(() => {});
         }
       }
     });
@@ -198,6 +234,9 @@ fastify.register(async function (fastifyInstance) {
 
 const start = async () => {
   try {
+    // Initialize PostgreSQL Database connection and schema migrations
+    await initDatabase();
+
     const port = process.env.PORT || 3001;
     await fastify.listen({ port, host: '0.0.0.0' });
     console.log(`Fastify Server listening on http://localhost:${port}`);

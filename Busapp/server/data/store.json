@@ -1,0 +1,105 @@
+{
+  "routes": [],
+  "buses": [
+    {
+      "id": "bus-101",
+      "number": "BUS #101 (KL-07-AB-1234)",
+      "routeId": null,
+      "driverName": "Unassigned",
+      "status": "Off Duty",
+      "location": null,
+      "bearing": 0,
+      "speed": 0,
+      "isLive": false,
+      "lastUpdated": "2026-10-07T04:58:58.152Z"
+    },
+    {
+      "id": "bus-102",
+      "number": "BUS #102 (KL-07-CD-5678)",
+      "routeId": null,
+      "driverName": "Unassigned",
+      "status": "Off Duty",
+      "location": null,
+      "bearing": 0,
+      "speed": 0,
+      "isLive": false,
+      "lastUpdated": null
+    },
+    {
+      "id": "bus-103",
+      "number": "BUS #103 (KL-07-EF-9012)",
+      "routeId": null,
+      "driverName": "Unassigned",
+      "status": "Maintenance",
+      "location": null,
+      "bearing": 0,
+      "speed": 0,
+      "isLive": false,
+      "lastUpdated": null
+    },
+    {
+      "id": "bus-104",
+      "number": "BUS #104 (KL-05-XY-7777)",
+      "routeId": null,
+      "driverName": "Unassigned",
+      "status": "Off Duty",
+      "location": null,
+      "bearing": 0,
+      "speed": 0,
+      "isLive": false,
+      "lastUpdated": null
+    }
+  ],
+  "studentPasses": [
+    {
+      "id": "S1001",
+      "name": "Alex Mercer",
+      "email": "alex.mercer@student.edu",
+      "passStatus": "Active",
+      "validUntil": "2026-12-31",
+      "routeEntitlement": "All Routes"
+    },
+    {
+      "id": "S1002",
+      "name": "Elena Rostova",
+      "email": "elena.r@student.edu",
+      "passStatus": "Expired",
+      "validUntil": "2026-05-30",
+      "routeEntitlement": "Route 1 Only"
+    },
+    {
+      "id": "S1003",
+      "name": "David Kim",
+      "email": "david.kim@student.edu",
+      "passStatus": "Pending Approval",
+      "validUntil": "2026-12-31",
+      "routeEntitlement": "Route 2 Only"
+    },
+    {
+      "id": "S9999",
+      "name": "Test Student",
+      "email": "teststudent",
+      "passStatus": "Active",
+      "validUntil": "2030-12-31",
+      "routeEntitlement": "All Routes"
+    },
+    {
+      "id": "S1000",
+      "name": "Student",
+      "email": "student@edu.com",
+      "passStatus": "Active",
+      "validUntil": "2030-12-31",
+      "routeEntitlement": "All Routes"
+    }
+  ],
+  "drivers": [],
+  "admins": [
+    {
+      "id": "admin-default",
+      "username": "admin",
+      "password": "scrypt:aef4623c29f8a7afe8a95164a3e2cf4e:edde6cc198d65b87eb1c6ffeda3d1cb9fac37e46a2c1e89e9059a17cef68f7fb6ffcd805f11f1ec1642d1bae362b43cdc5c0a77f8ffcb7c79884094e02d599b0",
+      "name": "Administrator",
+      "role": "admin"
+    }
+  ]
+}

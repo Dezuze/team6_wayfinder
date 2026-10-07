@@ -4,7 +4,7 @@ const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
   const [themeMode, setThemeMode] = useState(() => {
-    return localStorage.getItem('campusbus-theme-mode') || 'auto';
+    return localStorage.getItem('hopspot-theme-mode') || localStorage.getItem('campusbus-theme-mode') || 'auto';
   });
 
   const [systemDark, setSystemDark] = useState(() => {
@@ -20,7 +20,7 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     const root = document.documentElement;
-    localStorage.setItem('campusbus-theme-mode', themeMode);
+    localStorage.setItem('hopspot-theme-mode', themeMode);
     
     if (themeMode === 'auto') {
       root.setAttribute('data-theme', 'auto');

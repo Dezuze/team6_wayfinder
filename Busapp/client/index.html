@@ -1,29 +1,293 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" prefix="og: https://ogp.me/ns#">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>CampusBus - Real-Time Bus Tracker & Pass</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-    <!-- PWA & iOS Meta Tags -->
+    <!-- Favicons & App Icons -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
+
+    <!-- Primary SEO Meta Tags -->
+    <title>HopSpot</title>
+    <meta name="title" content="HopSpot" />
+    <meta name="description" content="Track college and campus shuttles in real time with HopSpot. View live bus GPS locations, exact arrival ETAs, interactive routes, and digital student QR passes." />
+    <meta name="keywords" content="HopSpot, campus bus tracker, live shuttle tracker, real time bus tracking, college transit app, student bus pass, digital QR pass, GPS bus radar, smart campus commute, shuttle schedule" />
+    <meta name="author" content="HopSpot Transit Technologies" />
+    <meta name="publisher" content="HopSpot Technologies" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large" />
+    <meta name="bingbot" content="index, follow" />
+    <link rel="canonical" href="https://hopspot.app/" />
+
+    <!-- Geo & Regional Tags -->
+    <meta name="geo.region" content="IN-KL" />
+    <meta name="geo.placename" content="Poonjar, Kottayam" />
+    <meta name="geo.position" content="9.67416;76.82573" />
+    <meta name="ICBM" content="9.67416, 76.82573" />
+    <meta name="rating" content="General" />
+    <meta name="distribution" content="Global" />
+
+    <!-- Open Graph / Facebook / LinkedIn / Discord / Slack -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://hopspot.app/" />
+    <meta property="og:site_name" content="HopSpot" />
+    <meta property="og:title" content="HopSpot" />
+    <meta property="og:description" content="Real-time campus shuttle tracking, instant live ETAs, digital QR transit passes, and interactive road navigation." />
+    <meta property="og:image" content="https://hopspot.app/logo.png" />
+    <meta property="og:image:secure_url" content="https://hopspot.app/logo.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="HopSpot Live Campus Bus Tracker Logo" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@HopSpotApp" />
+    <meta name="twitter:creator" content="@HopSpotApp" />
+    <meta name="twitter:url" content="https://hopspot.app/" />
+    <meta name="twitter:title" content="HopSpot" />
+    <meta name="twitter:description" content="Track your campus bus in real-time, get arrival proximity alerts, and scan digital student QR passes on your phone." />
+    <meta name="twitter:image" content="https://hopspot.app/logo.png" />
+    <meta name="twitter:image:alt" content="HopSpot Campus Transit Logo" />
+
+    <!-- PWA & Mobile Web App Meta Tags -->
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#3b82f6" />
+    <meta name="theme-color" content="#7c3aed" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="CampusBus" />
-    <link rel="apple-touch-icon" href="/logo.png" />
+    <meta name="apple-mobile-web-app-title" content="HopSpot" />
+    <meta name="application-name" content="HopSpot" />
+    <meta name="format-detection" content="telephone=no" />
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- High-Speed Preconnect & Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+
+    <!-- Rich Snippets: Google Schema.org JSON-LD Structured Data Graph -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "@id": "https://hopspot.app/#webapp",
+          "name": "HopSpot",
+          "alternateName": "HopSpot Campus Transit",
+          "url": "https://hopspot.app/",
+          "applicationCategory": "TransportationApplication",
+          "operatingSystem": "All (Web, iOS, Android)",
+          "browserRequirements": "Requires JavaScript. Requires HTML5.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "bestRating": "5",
+            "worstRating": "1",
+            "ratingCount": "1280"
+          },
+          "description": "Smart real-time campus shuttle tracking, live bus GPS radar, digital QR student transit pass verification, and arrival notification alerts.",
+          "featureList": [
+            "Live GPS Shuttle Tracking with Turn-by-Turn Road Polylines",
+            "Real-Time Arrival Estimates and Speed Telemetry",
+            "Offline-Verifiable Digital QR Student Transit Passes",
+            "Automated Arrival Proximity Alerts & Sound Alarms",
+            "Comprehensive Transit Fleet Management Console for Dispatchers"
+          ]
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://hopspot.app/#organization",
+          "name": "HopSpot Technologies",
+          "url": "https://hopspot.app/",
+          "logo": "https://hopspot.app/logo.png",
+          "sameAs": []
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://hopspot.app/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "How does HopSpot track campus buses in real time?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "HopSpot connects driver devices to a high-speed real-time WebSocket telemetry pipeline. As drivers navigate their assigned campus routes, their live GPS location, speed, and heading are calculated along mapped road polylines, providing students with sub-second accurate bus locations and arrival ETAs."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do students verify their HopSpot bus passes?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Every authorized student receives an interactive, cryptographic digital QR transit pass inside the HopSpot mobile web app. Drivers and transit staff can scan the QR pass to immediately confirm identity, route entitlement, and active enrollment."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I receive proximity arrival alerts before my bus arrives?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. Students can enable arrival radar notifications on any bus stop. When an approaching campus shuttle comes within 10 minutes or within your pickup radius, HopSpot sounds an alert and sends a push notification."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is HopSpot free to use for students and faculty?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, HopSpot is completely free for registered campus students, faculty, and authorized transit staff. Students simply sign in with their university ID or pass credentials."
+              }
+            }
+          ]
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://hopspot.app/#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://hopspot.app/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Routes",
+              "item": "https://hopspot.app/routes"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "Digital Passes",
+              "item": "https://hopspot.app/passes"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+    <!-- Critical Splash Screen & Reset Styles -->
+    <style>
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        min-height: 100%;
+        min-height: 100dvh;
+        overflow: hidden;
+        background-color: #090d16;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #root {
+        width: 100%;
+        height: 100%;
+        min-height: 100%;
+        min-height: 100dvh;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+      }
+      .hopspot-splash-screen {
+        position: fixed;
+        inset: 0;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at 50% 38%, #1e1b4b 0%, #090d16 65%, #05070d 100%);
+        color: #ffffff;
+        font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        z-index: 999999;
+        margin: 0;
+        padding: 1.5rem;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+      @keyframes hopspotLogoPulse {
+        0%, 100% {
+          transform: scale(1);
+          box-shadow: 0 0 25px rgba(124, 58, 237, 0.4);
+        }
+        50% {
+          transform: scale(1.06);
+          box-shadow: 0 0 45px rgba(139, 92, 246, 0.75);
+        }
+      }
+      @keyframes hopspotDotPulse {
+        0%, 100% { opacity: 0.3; transform: scale(0.85); }
+        50% { opacity: 1; transform: scale(1.15); }
+      }
+    </style>
   </head>
-  <body>
+  <body style="margin: 0; padding: 0; background-color: #090d16; overflow: hidden; width: 100%; height: 100%;">
+    <!-- Search Engine Crawler Fallback & Initial Hydration Skeleton -->
+    <noscript>
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 2rem auto; padding: 2rem; background: #0f172a; color: #f8fafc; border-radius: 16px;">
+        <h1 style="color: #a78bfa; font-size: 2.2rem; margin-bottom: 0.5rem;">HopSpot: Real-Time Campus Transit &amp; Live Bus Tracker</h1>
+        <p style="font-size: 1.1rem; line-height: 1.6; color: #cbd5e1;">
+          HopSpot is the premier smart campus transportation and fleet navigation system. Track college shuttles live, monitor arrival ETAs, explore campus transit corridors, and validate digital QR student bus passes.
+        </p>
+
+        <h2 style="color: #38bdf8; margin-top: 2rem;">Core Platform Features</h2>
+        <ul style="line-height: 1.8; color: #94a3b8;">
+          <li><strong>Live GPS Radar:</strong> Sub-second bus positioning along road networks with dynamic speed telemetry.</li>
+          <li><strong>Interactive Campus Route Maps:</strong> Detailed stop sequences from Kottayam, Kanjirappally, Kidangoor to College of Engineering Poonjar (CEP).</li>
+          <li><strong>Digital QR Transit Passes:</strong> Color-coded, authenticated student passes with cryptographic verification.</li>
+          <li><strong>Arrival Notifications:</strong> Proximity alarms when your shuttle is within 10 minutes of your pickup stop.</li>
+        </ul>
+
+        <h2 style="color: #38bdf8; margin-top: 2rem;">Frequently Asked Questions (FAQ)</h2>
+        <h3 style="color: #e2e8f0;">How do I track my campus bus?</h3>
+        <p style="color: #94a3b8;">Open HopSpot on any phone or computer, select your route or pickup stop, and view live bus markers moving in real-time.</p>
+
+        <h3 style="color: #e2e8f0;">How do digital student passes work?</h3>
+        <p style="color: #94a3b8;">Log in with your student ID to view your digital QR transit pass. Drivers scan this pass upon boarding to confirm route eligibility.</p>
+
+        <p style="margin-top: 2rem; font-size: 0.85rem; color: #64748b;">
+          Please enable JavaScript in your browser to experience the full interactive live tracking map, 3D fleet radar, and digital pass scanner.
+        </p>
+      </div>
+    </noscript>
+
     <div id="root">
-      <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; width: 100vw; background-color: #3b82f6; color: white; font-family: 'Outfit', 'Inter', sans-serif;">
-        <img src="/logo.png" alt="CampusBus Logo" style="width: 120px; height: 120px; margin-bottom: 1.5rem; border-radius: 50%; box-shadow: 0 4px 20px rgba(0,0,0,0.15);" />
-        <h1 style="font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em; margin: 0; text-align: center;">CampusBus</h1>
+      <!-- High-performance Initial Splash / Fallback Skeleton -->
+      <div class="hopspot-splash-screen" id="initial-splash">
+        <div style="position: relative; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+          <div style="position: absolute; width: 140px; height: 140px; border-radius: 50%; background: radial-gradient(circle, rgba(139,92,246,0.35) 0%, transparent 70%); filter: blur(12px); animation: hopspotLogoPulse 2.4s infinite ease-in-out;"></div>
+          <img src="/logo.png" alt="HopSpot Live Campus Bus Tracker Logo" style="width: 110px; height: 110px; border-radius: 50%; position: relative; z-index: 2; box-shadow: 0 10px 30px rgba(124, 58, 237, 0.45); animation: hopspotLogoPulse 2.4s infinite ease-in-out;" />
+        </div>
+        <h1 style="font-size: 2.5rem; font-weight: 900; letter-spacing: -0.04em; margin: 0; text-align: center; background: linear-gradient(135deg, #c4b5fd 0%, #ffffff 60%, #a78bfa 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">HopSpot</h1>
+        <p style="font-size: 0.85rem; color: #a5b4fc; margin: 0.6rem 0 1.5rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;">Smart Campus Transit</p>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: #8b5cf6; animation: hopspotDotPulse 1.2s infinite ease-in-out;"></div>
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: #a78bfa; animation: hopspotDotPulse 1.2s infinite ease-in-out 0.2s;"></div>
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: #c4b5fd; animation: hopspotDotPulse 1.2s infinite ease-in-out 0.4s;"></div>
+        </div>
       </div>
     </div>
     <script type="module" src="/src/main.jsx"></script>

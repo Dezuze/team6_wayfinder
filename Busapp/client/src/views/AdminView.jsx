@@ -45,7 +45,7 @@ import {
 } from 'lucide-react';
 
 export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
-  const { buses, routes, passes, refreshData, createRoute } = useWebSocket();
+  const { buses, routes, passes, refreshData, createRoute, deleteRoute, updateBusRoute } = useWebSocket();
   const { user, logout } = useAuth();
   const { themeMode, cycleTheme, effectiveTheme } = useTheme();
   const [activeSection, setActiveSection] = useState('buses'); // buses, routes, passes
@@ -258,7 +258,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
   // Update Bus Status
   const _handleUpdateBusStatus = async (busId, newStatus) => {
     try {
-      await fetch(`/api/buses/${busId}`, {
+      await fetch((import.meta.env.VITE_API_URL || '') + `/api/buses/${busId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
@@ -272,12 +272,16 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
   // Update Bus Route Assignment
   const handleUpdateBusRoute = async (busId, newRouteId) => {
     try {
-      await fetch(`/api/buses/${busId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ routeId: newRouteId || null })
-      });
-      await refreshData();
+      if (updateBusRoute) {
+        await updateBusRoute(busId, newRouteId);
+      } else {
+        await fetch((import.meta.env.VITE_API_URL || '') + `/api/buses/${busId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ routeId: newRouteId || null })
+        });
+        await refreshData();
+      }
     } catch (err) {
       console.error('Error updating bus route:', err);
     }
@@ -286,7 +290,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
   // Update Student Pass Status
   const handleUpdatePassStatus = async (passId, newStatus) => {
     try {
-      await fetch(`/api/passes/${passId}`, {
+      await fetch((import.meta.env.VITE_API_URL || '') + `/api/passes/${passId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ passStatus: newStatus })
@@ -713,13 +717,19 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
 
   // Delete Route
   const handleDeleteRoute = async (routeId) => {
+    if (!confirm('Are you sure you want to delete this route? Any buses assigned to this route will be unassigned.')) return;
     try {
-      await fetch(`/api/routes/${routeId}`, {
-        method: 'DELETE'
-      });
-      await refreshData();
+      if (deleteRoute) {
+        await deleteRoute(routeId);
+      } else {
+        await fetch((import.meta.env.VITE_API_URL || '') + `/api/routes/${routeId}`, {
+          method: 'DELETE'
+        });
+        await refreshData();
+      }
     } catch (err) {
       console.error('Error deleting route:', err);
+      alert('Failed to delete route: ' + (err.message || 'Server error'));
     }
   };
 
@@ -787,7 +797,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
         <div>
           {/* Brand Logo */}
           <div style={{ marginBottom: '2rem', paddingLeft: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <img src="/logo.png" alt="CampusBus Logo" style={{ width: '36px', height: '36px', borderRadius: '50%' }} />
+            <img src="/logo.png" alt="HopSpot Logo" style={{ width: '36px', height: '36px', borderRadius: '50%' }} />
             <span
               style={{
                 color: '#7c3aed',
@@ -797,7 +807,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                 fontFamily: "'Outfit', 'Inter', sans-serif"
               }}
             >
-              CampusBus
+              HopSpot
             </span>
           </div>
 
@@ -1042,6 +1052,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
               routes={routes}
               selectedMarkerId={selectedBusId}
               onMarkerClick={setSelectedBusId}
+              borderRadius="0"
             />
 
             {/* Right Live Status Sidebar - Scrollable on Mobile */}
@@ -1446,7 +1457,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
               ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 380px', gap: '1.5rem', alignItems: 'stretch' }}>
                 {/* Left: Embedded Kottayam/Poonjar Map for Route Construction */}
-                <div style={{ height: '560px', minHeight: '560px', position: 'relative', borderRadius: '14px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                <div style={{ height: '560px', minHeight: '560px', position: 'relative', borderRadius: '0', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
                   <FleetMap
                     buses={buses}
                     routes={routes}
@@ -1463,6 +1474,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     onCandidateSelect={handleCandidateSelectFromSearch}
                     onMapClick={handleMapClick}
                     hideStatCards={true}
+                    borderRadius="0"
                   />
                 </div>
 

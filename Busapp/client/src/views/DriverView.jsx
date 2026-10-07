@@ -33,7 +33,7 @@ export default function DriverView({ activeRole, setActiveRole }) {
   const currentRoute = routes.find(r => r.id === currentBus.routeId) || routes[0] || {};
 
   useEffect(() => {
-    const savedPerm = localStorage.getItem('campusbus-gps-perm');
+    const savedPerm = localStorage.getItem('hopspot-gps-perm') || localStorage.getItem('campusbus-gps-perm');
     if (savedPerm === 'granted') {
       setGpsPermission('granted');
     }
@@ -56,11 +56,12 @@ export default function DriverView({ activeRole, setActiveRole }) {
         setGpsPermission('granted');
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         if (pos.coords.accuracy) setGpsAccuracy(Math.round(pos.coords.accuracy));
-        localStorage.setItem('campusbus-gps-perm', 'granted');
+        localStorage.setItem('hopspot-gps-perm', 'granted');
       },
       (err) => {
         console.warn('GPS Permission denied:', err);
         setGpsPermission('denied');
+        localStorage.removeItem('hopspot-gps-perm');
         localStorage.removeItem('campusbus-gps-perm');
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -207,7 +208,7 @@ export default function DriverView({ activeRole, setActiveRole }) {
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: '2rem', lineHeight: '1.6' }}>
             {gpsPermission === 'denied'
               ? 'Real hardware GPS access was denied or unavailable. Please enable device location in your browser settings to broadcast your bus route.'
-              : 'To broadcast live real-time coordinates to passengers and administrators, CampusBus requires access to your physical device GPS while on duty.'}
+              : 'To broadcast live real-time coordinates to passengers and administrators, HopSpot requires access to your physical device GPS while on duty.'}
           </p>
 
           <div className="flex-col gap-2">

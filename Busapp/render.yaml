@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: campusbus-backend
+    name: hopspot-backend
     env: node
     plan: free
     rootDir: server

@@ -1045,7 +1045,8 @@ export default function FleetMap({
   renderOverlay = null,
   showSearch = true,
   searchRegion = null, // e.g. 'kottayam'
-  studentLocation = null
+  studentLocation = null,
+  borderRadius = undefined
 }) {
   // Resolve backward-compatible prop aliases
   const activeSelectedId = selectedMarkerId !== null ? selectedMarkerId : selectedBusId;
@@ -1161,9 +1162,17 @@ export default function FleetMap({
   // Default fallback center: Kottayam, Kerala
   const defaultCenter = useMemo(() => [9.5916, 76.5222], []);
 
-  // Valid buses with lat/lng
+  // Valid buses with active live coordinates
   const validBuses = useMemo(() => {
-    return (buses || []).filter(b => b && b.location && typeof b.location.lat === 'number' && typeof b.location.lng === 'number');
+    return (buses || []).filter(b => 
+      b && 
+      b.status !== 'Off Duty' && 
+      b.status !== 'Maintenance' && 
+      b.status !== 'Inactive' && 
+      b.location && 
+      typeof b.location.lat === 'number' && 
+      typeof b.location.lng === 'number'
+    );
   }, [buses]);
 
   // Selected bus object
@@ -1282,9 +1291,9 @@ export default function FleetMap({
         width: '100%',
         height: '100%',
         minHeight: '400px',
-        borderRadius: '16px',
+        borderRadius: borderRadius !== undefined ? borderRadius : '16px',
         overflow: 'hidden',
-        border: '1px solid var(--border-color, #cbd5e1)',
+        border: borderRadius === 0 || borderRadius === '0' || borderRadius === '0px' ? 'none' : '1px solid var(--border-color, #cbd5e1)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
@@ -1571,7 +1580,7 @@ export default function FleetMap({
           position: 'absolute',
           top: '1rem',
           right: '1rem',
-          zIndex: 1000,
+          zIndex: 500,
           backgroundColor: 'var(--bg-card, #ffffff)',
           border: '1px solid var(--border-color)',
           borderRadius: '8px',
@@ -1600,7 +1609,7 @@ export default function FleetMap({
           height: '100%',
           minHeight: '400px',
           zIndex: 1,
-          borderRadius: '16px'
+          borderRadius: borderRadius !== undefined ? borderRadius : '16px'
         }}
       >
         <ZoomControl position="bottomright" />
@@ -1853,7 +1862,7 @@ export default function FleetMap({
               <div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary, #64748b)', fontWeight: 500 }}>Active Drivers</div>
                 <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary, #1e293b)', lineHeight: 1.2 }}>
-                  {validBuses.filter(b => b.driverName && b.driverName !== 'Unassigned').length || 14}
+                  {validBuses.filter(b => b.driverName && b.driverName !== 'Unassigned').length}
                 </div>
               </div>
             </div>

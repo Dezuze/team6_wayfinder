@@ -26,11 +26,11 @@ function enrichRoute(route) {
   const cachedData = cache[route.id] || cache[route.name];
 
   let path = route.path;
-  let stopCoordinates = [];
+  let stopCoordinates = Array.isArray(route.stopCoordinates) ? route.stopCoordinates : [];
 
   if (cachedData && Array.isArray(cachedData.path) && cachedData.path.length >= 2) {
     path = cachedData.path;
-    stopCoordinates = cachedData.stopCoordinates || [];
+    stopCoordinates = cachedData.stopCoordinates || stopCoordinates;
   }
 
   return {
@@ -40,8 +40,8 @@ function enrichRoute(route) {
       { lat: 9.7123, lng: 76.6834 }
     ],
     stopCoordinates,
-    distanceKm: cachedData?.distanceKm,
-    durationMin: cachedData?.durationMin
+    distanceKm: cachedData?.distanceKm ?? route.distanceKm,
+    durationMin: cachedData?.durationMin ?? route.durationMin
   };
 }
 
@@ -77,7 +77,7 @@ export function WebSocketProvider({ children }) {
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === 'INIT_DATA') {
+        if (data.type === 'INIT_DATA' || data.type === 'SYNC_DATA') {
           if (data.buses) setBuses(data.buses);
           if (data.routes) {
             const enriched = data.routes.map(enrichRoute);
@@ -163,10 +163,17 @@ export function WebSocketProvider({ children }) {
   // Explicit route creation that links backend route with rich frontend road geometry
   const createRoute = useCallback(async (payload, customPath = [], stopCoords = [], metrics = {}) => {
     try {
+      const pathToSend = Array.isArray(customPath) && customPath.length >= 2 ? customPath : undefined;
       const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/routes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          ...payload,
+          path: pathToSend,
+          stopCoordinates: stopCoords,
+          distanceKm: metrics?.distanceKm,
+          durationMin: metrics?.durationMin
+        })
       });
 
       if (!response.ok) {
@@ -179,15 +186,13 @@ export function WebSocketProvider({ children }) {
 
         // Cache custom road geometry and stop coordinates for this route
         const cache = getRouteGeometryCache();
-        const path = Array.isArray(customPath) && customPath.length >= 2
-          ? customPath
-          : newRoute.path;
+        const path = pathToSend || newRoute.path;
 
         cache[newRoute.id] = {
           path,
           stopCoordinates: stopCoords,
-          distanceKm: metrics.distanceKm,
-          durationMin: metrics.durationMin
+          distanceKm: metrics?.distanceKm,
+          durationMin: metrics?.durationMin
         };
         cache[newRoute.name] = cache[newRoute.id];
         saveRouteGeometryCache(cache);
@@ -196,8 +201,8 @@ export function WebSocketProvider({ children }) {
           ...newRoute,
           path,
           stopCoordinates: stopCoords,
-          distanceKm: metrics.distanceKm,
-          durationMin: metrics.durationMin
+          distanceKm: metrics?.distanceKm,
+          durationMin: metrics?.durationMin
         };
 
         // Immediately update routes in state so it appears everywhere synchronously
@@ -219,6 +224,60 @@ export function WebSocketProvider({ children }) {
     }
   }, [refreshData]);
 
+  // Route deletion that removes from backend and client cache cleanly
+  const deleteRoute = useCallback(async (routeId) => {
+    try {
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/routes/${routeId}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to delete route');
+      }
+
+      // Remove from localStorage geometry cache
+      const cache = getRouteGeometryCache();
+      delete cache[routeId];
+      saveRouteGeometryCache(cache);
+
+      // Immediately remove from React state
+      setRoutes(prev => prev.filter(r => r.id !== routeId));
+      // Unassign buses assigned to this route in React state
+      setBuses(prev => prev.map(b => b.routeId === routeId ? { ...b, routeId: null } : b));
+
+      await refreshData();
+      return { success: true };
+    } catch (err) {
+      console.error('Error deleting route in WebSocketContext:', err);
+      throw err;
+    }
+  }, [refreshData]);
+
+  // Bus route assignment update
+  const updateBusRoute = useCallback(async (busId, newRouteId) => {
+    try {
+      const normalizedRouteId = newRouteId || null;
+      const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/buses/${busId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ routeId: normalizedRouteId })
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to update bus route');
+      }
+
+      // Optimistically update React state
+      setBuses(prev => prev.map(b => b.id === busId ? { ...b, routeId: normalizedRouteId } : b));
+
+      await refreshData();
+      return { success: true };
+    } catch (err) {
+      console.error('Error updating bus route in WebSocketContext:', err);
+      throw err;
+    }
+  }, [refreshData]);
+
   return (
     <WebSocketContext.Provider value={{
       isConnected,
@@ -228,7 +287,9 @@ export function WebSocketProvider({ children }) {
       streamDriverLocation,
       streamDriverSOS,
       refreshData,
-      createRoute
+      createRoute,
+      deleteRoute,
+      updateBusRoute
     }}>
       {children}
     </WebSocketContext.Provider>

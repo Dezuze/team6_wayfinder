@@ -373,7 +373,7 @@ export default function StudentView() {
           try {
             new Notification('Bus Arriving Soon!', {
               body: `${bus.number || 'Bus'} is ~${bus.etaMinutes} min from ${alertData.stopName}`,
-              icon: '/favicon.svg',
+              icon: '/logo.png',
               tag: key // prevent duplicate notifications
             });
           } catch (err) {
@@ -408,7 +408,7 @@ export default function StudentView() {
   }, [alerts]);
 
   return (
-    <div className="mobile-view-wrapper" style={{
+    <div className="mobile-view-wrapper student-view-wrapper" style={{
       display: 'flex',
       flexDirection: 'column',
       height: 'calc(100vh - 65px)',
@@ -416,13 +416,15 @@ export default function StudentView() {
       overflowY: activeTab === 'pass' ? 'hidden' : 'auto',
       overflowX: 'hidden',
       boxSizing: 'border-box',
-      paddingBottom: activeTab === 'pass' ? '0' : '75px'
+      paddingBottom: activeTab === 'pass' ? '0' : '75px',
+      scrollbarWidth: 'none',
+      msOverflowStyle: 'none'
     }}>
       {/* Page Header - Only shown for Routes tab (Radar and Pass have dedicated headers) */}
       {activeTab === 'routes' && (
         <div style={{ padding: '0.75rem 1rem', flexShrink: 0, borderBottom: '1px solid var(--border-color)' }}>
           <h1 style={{ fontSize: '1.25rem', fontWeight: 700, letterSpacing: '-0.02em', marginBottom: '0.1rem', margin: 0 }}>
-            Campus Transit
+            HopSpot Transit
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', margin: 0 }}>
             Real-time routes & schedules
@@ -773,7 +775,15 @@ export default function StudentView() {
           exit={{ opacity: 0, x: 10 }}
           transition={{ duration: 0.2 }}
           className="flex-col gap-1" 
-          style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto', padding: '0.75rem 1rem' }}
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'auto',
+            padding: '0.75rem 1rem',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
+          }}
         >
           {routes.map(route => {
             const cleanStops = Array.from(new Set((route.stops || []).map(s => String(s).trim()).filter(Boolean)));
@@ -886,9 +896,9 @@ export default function StudentView() {
               }}>
                 <div>
                   <span style={{ fontSize: '0.62rem', textTransform: 'uppercase', opacity: 0.9, letterSpacing: '0.06em', fontWeight: 600, display: 'block' }}>
-                    Campus Shuttle Pass
+                    HopSpot Transit Pass
                   </span>
-                  <strong style={{ fontSize: '0.9rem', letterSpacing: '-0.02em', color: '#ffffff' }}>College Transit Pass</strong>
+                  <strong style={{ fontSize: '0.9rem', letterSpacing: '-0.02em', color: '#ffffff' }}>HopSpot Student Pass</strong>
                 </div>
                 <div style={{
                   display: 'inline-flex',

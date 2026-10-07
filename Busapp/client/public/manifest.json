@@ -1,6 +1,7 @@
 {
-  "short_name": "CampusBus",
-  "name": "Live Campus Bus Tracker & Pass App",
+  "short_name": "HopSpot",
+  "name": "HopSpot - Smart Campus Transit & Live Bus Tracker",
+  "description": "Real-time campus shuttle tracking, instant live ETAs, digital QR transit passes, and transit route navigation.",
   "icons": [
     {
       "src": "/logo.png",
@@ -10,7 +11,7 @@
   ],
   "start_url": "/",
   "background_color": "#0f172a",
-  "theme_color": "#3b82f6",
+  "theme_color": "#7c3aed",
   "display": "standalone",
   "orientation": "portrait",
   "categories": ["navigation", "transportation", "education"]
