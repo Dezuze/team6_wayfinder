@@ -5,10 +5,10 @@ export default function SplashScreen({ onFinish }) {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
-    // Show splash for 1.2s then fade out smoothly
+    // Show splash for exactly 1 second, then trigger smooth fade transition
     const timer = setTimeout(() => {
       setIsVisible(false);
-    }, 1200);
+    }, 1000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -19,8 +19,9 @@ export default function SplashScreen({ onFinish }) {
         <motion.div
           key="splash-screen"
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.03 }}
-          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0, filter: 'blur(8px)' }}
+          transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
           style={{
             position: 'fixed',
             inset: 0,
@@ -28,33 +29,48 @@ export default function SplashScreen({ onFinish }) {
             left: 0,
             right: 0,
             bottom: 0,
-            width: '100vw',
             width: '100%',
-            height: '100vh',
             height: '100dvh',
             minHeight: '100dvh',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'radial-gradient(circle at 50% 38%, #1e1b4b 0%, #090d16 65%, #05070d 100%)',
+            background: 'radial-gradient(circle at 50% 40%, #151a36 0%, #090d16 65%, #04060a 100%)',
             color: '#ffffff',
             zIndex: 9999999,
             margin: 0,
             padding: '1.5rem',
             boxSizing: 'border-box',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            pointerEvents: 'none'
           }}
         >
+          {/* Ambient Glowing Orbs according to logo palette */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 0.25, scale: 1.1 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            style={{
+              position: 'absolute',
+              width: '380px',
+              height: '380px',
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(0, 229, 255, 0.3) 0%, rgba(124, 58, 237, 0.2) 45%, transparent 70%)',
+              filter: 'blur(50px)',
+              pointerEvents: 'none'
+            }}
+          />
+
           {/* Logo with pulsing aura */}
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
             <motion.div
               animate={{
                 scale: [1, 1.25, 1],
-                opacity: [0.35, 0.65, 0.35]
+                opacity: [0.4, 0.75, 0.4]
               }}
               transition={{
-                duration: 2.2,
+                duration: 1.8,
                 repeat: Infinity,
                 ease: 'easeInOut'
               }}
@@ -63,14 +79,14 @@ export default function SplashScreen({ onFinish }) {
                 width: '150px',
                 height: '150px',
                 borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, transparent 70%)',
-                filter: 'blur(16px)'
+                background: 'radial-gradient(circle, rgba(0, 229, 255, 0.4) 0%, rgba(124, 58, 237, 0.3) 50%, transparent 70%)',
+                filter: 'blur(20px)'
               }}
             />
             <motion.img
               initial={{ scale: 0.85, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5, type: 'spring', stiffness: 260, damping: 20 }}
+              transition={{ duration: 0.4, type: 'spring', stiffness: 280, damping: 22 }}
               src="/logo.png"
               alt="HopSpot Logo"
               style={{
@@ -79,7 +95,7 @@ export default function SplashScreen({ onFinish }) {
                 borderRadius: '50%',
                 position: 'relative',
                 zIndex: 2,
-                boxShadow: '0 12px 35px rgba(124, 58, 237, 0.5)',
+                boxShadow: '0 12px 35px rgba(0, 229, 255, 0.35)',
                 objectFit: 'contain'
               }}
             />
@@ -87,16 +103,16 @@ export default function SplashScreen({ onFinish }) {
 
           {/* App Title */}
           <motion.h1
-            initial={{ y: 15, opacity: 0 }}
+            initial={{ y: 12, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.15, duration: 0.4 }}
+            transition={{ delay: 0.1, duration: 0.35 }}
             style={{
               fontSize: '2.5rem',
               fontWeight: 900,
               letterSpacing: '-0.04em',
               margin: 0,
               textAlign: 'center',
-              background: 'linear-gradient(135deg, #c4b5fd 0%, #ffffff 60%, #a78bfa 100%)',
+              background: 'linear-gradient(135deg, #00e5ff 0%, #ffffff 50%, #76ff03 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               fontFamily: "'Outfit', 'Inter', sans-serif"
@@ -107,15 +123,15 @@ export default function SplashScreen({ onFinish }) {
 
           {/* Subtitle */}
           <motion.p
-            initial={{ y: 10, opacity: 0 }}
+            initial={{ y: 8, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.25, duration: 0.4 }}
+            transition={{ delay: 0.18, duration: 0.35 }}
             style={{
-              fontSize: '0.85rem',
-              color: '#a5b4fc',
-              margin: '0.6rem 0 1.5rem',
+              fontSize: '0.82rem',
+              color: '#94a3b8',
+              margin: '0.5rem 0 1.6rem',
               fontWeight: 600,
-              letterSpacing: '0.12em',
+              letterSpacing: '0.14em',
               textTransform: 'uppercase',
               fontFamily: "'Inter', sans-serif"
             }}
@@ -123,29 +139,26 @@ export default function SplashScreen({ onFinish }) {
             Smart Campus Transit
           </motion.p>
 
-          {/* Loading Dots Indicator */}
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            {[0, 0.2, 0.4].map((delay, idx) => (
-              <motion.div
-                key={idx}
-                animate={{
-                  scale: [0.8, 1.2, 0.8],
-                  opacity: [0.35, 1, 0.35]
-                }}
-                transition={{
-                  duration: 1.2,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                  delay
-                }}
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: idx === 0 ? '#8b5cf6' : idx === 1 ? '#a78bfa' : '#c4b5fd'
-                }}
-              />
-            ))}
+          {/* Precise 1-Second Progress Indicator Bar */}
+          <div style={{
+            width: '140px',
+            height: '3px',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '999px',
+            overflow: 'hidden',
+            position: 'relative'
+          }}>
+            <motion.div
+              initial={{ width: '0%' }}
+              animate={{ width: '100%' }}
+              transition={{ duration: 1.0, ease: [0.25, 0.1, 0.25, 1] }}
+              style={{
+                height: '100%',
+                background: 'linear-gradient(90deg, #00e5ff, #76ff03, #7c3aed)',
+                borderRadius: '999px',
+                boxShadow: '0 0 8px rgba(0, 229, 255, 0.7)'
+              }}
+            />
           </div>
         </motion.div>
       )}

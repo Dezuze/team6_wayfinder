@@ -4,6 +4,7 @@ import StudentView from './views/StudentView';
 import DriverView from './views/DriverView';
 import AdminView from './views/AdminView';
 import LoginView from './views/LoginView';
+import NotFoundView from './views/NotFoundView';
 import LegalModal from './components/LegalModal';
 import CookieBanner from './components/CookieBanner';
 import SplashScreen from './components/SplashScreen';
@@ -16,18 +17,27 @@ function AppContent() {
   const [activeRole, setActiveRole] = useState('driver'); // default to driver
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
   const [legalModalTab, setLegalModalTab] = useState('privacy');
-  const [showSplash, setShowSplash] = useState(() => {
-    return !sessionStorage.getItem('hopspot_splash_viewed');
-  });
+  const [showSplash, setShowSplash] = useState(true);
+  const [currentPath, setCurrentPath] = useState(() => window.location.pathname || '/');
+
+  useEffect(() => {
+    const handlePopState = () => setCurrentPath(window.location.pathname || '/');
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const handleSplashFinish = () => {
-    sessionStorage.setItem('hopspot_splash_viewed', 'true');
     setShowSplash(false);
   };
 
   const handleOpenLegal = (tab = 'privacy') => {
     setLegalModalTab(tab);
     setIsLegalModalOpen(true);
+  };
+
+  const handleGoHome = () => {
+    window.history.pushState({}, '', '/');
+    setCurrentPath('/');
   };
 
   useEffect(() => {
@@ -45,6 +55,19 @@ function AppContent() {
     window.addEventListener('open-legal-modal', handleGlobalLegalEvent);
     return () => window.removeEventListener('open-legal-modal', handleGlobalLegalEvent);
   }, []);
+
+  // Check if current route is a 404
+  const normalizedPath = currentPath.toLowerCase().replace(/\/+$/, '') || '/';
+  const knownPaths = ['/', '/login', '/index.html', '/student', '/driver', '/admin'];
+  const is404 = !knownPaths.includes(normalizedPath);
+
+  if (is404) {
+    return (
+      <div className="app-container">
+        <NotFoundView onGoHome={handleGoHome} />
+      </div>
+    );
+  }
 
   const showNavbar = Boolean(user) && activeRole !== 'admin';
 

@@ -8,6 +8,7 @@ import BulkCsvUploader from '../components/BulkCsvUploader';
 import { STUDENT_PASS_CSV_TEMPLATE, DRIVER_CSV_TEMPLATE, BUS_CSV_TEMPLATE, ROUTE_CSV_TEMPLATE } from '../utils/csv';
 import { COLLEGE_DESTINATION } from '../constants/college';
 import { fetchRoadRoute } from '../utils/routing';
+import ConfirmModal from '../components/ConfirmModal';
 import {
   Bus,
   GitFork,
@@ -41,7 +42,12 @@ import {
   Lock,
   Eye,
   EyeOff,
-  UserPlus
+  UserPlus,
+  CheckSquare,
+  Square,
+  Sparkles,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
@@ -116,6 +122,35 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
   const [editStudentRoute, setEditStudentRoute] = useState('All Routes');
   const [editStudentStatus, setEditStudentStatus] = useState('Valid');
   const [editStudentValidUntil, setEditStudentValidUntil] = useState('2026-12-31');
+
+  // ── Bulk Selection States (Drivers, Passes, Routes) ──
+  const [selectedDriverIds, setSelectedDriverIds] = useState(new Set());
+  const [selectedPassIds, setSelectedPassIds] = useState(new Set());
+  const [selectedRouteIds, setSelectedRouteIds] = useState(new Set());
+
+  // ── Scalability (500 Students & 10 Drivers) ──
+  const [passPage, setPassPage] = useState(1);
+  const [passesPerPage, setPassPerPage] = useState(20);
+  const [scaleStatus, setScaleStatus] = useState(null);
+
+  // ── Built-in UI Confirmation / Deletion Modal ──
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Delete',
+    cancelText: 'Cancel',
+    isDanger: true,
+    onConfirm: () => {}
+  });
+
+  const getAuthHeaders = () => {
+    const headers = { 'Content-Type': 'application/json' };
+    if (user?.token) {
+      headers['Authorization'] = `Bearer ${user.token}`;
+    }
+    return headers;
+  };
 
   // ── Professional Add Pickup Stop Modal State ──
   const [isAddStopModalOpen, setIsAddStopModalOpen] = useState(false);
@@ -229,30 +264,142 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
   };
 
   // Delete Bus
-  const handleDeleteBus = async (busId) => {
-    if (!confirm('Are you sure you want to delete this bus?')) return;
-    try {
-      await fetch((import.meta.env.VITE_API_URL || '') + `/api/buses/${busId}`, {
-        method: 'DELETE'
-      });
-      setSelectedBusId(null);
-      await refreshData();
-    } catch (err) {
-      console.error('Error deleting bus:', err);
-    }
+  const handleDeleteBus = (busId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Campus Shuttle',
+      message: 'Are you sure you want to delete this bus? Any assigned routes or drivers will be unassigned.',
+      confirmText: 'Delete Bus',
+      isDanger: true,
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          await fetch((import.meta.env.VITE_API_URL || '') + `/api/buses/${busId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+          });
+          setSelectedBusId(null);
+          await refreshData();
+        } catch (err) {
+          console.error('Error deleting bus:', err);
+        }
+      }
+    });
   };
 
   // Delete Student Pass
-  const handleDeletePass = async (passId) => {
-    if (!confirm('Are you sure you want to delete this student pass?')) return;
-    try {
-      await fetch((import.meta.env.VITE_API_URL || '') + `/api/passes/${passId}`, {
-        method: 'DELETE'
-      });
-      await refreshData();
-    } catch (err) {
-      console.error('Error deleting pass:', err);
-    }
+  const handleDeletePass = (passId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Student Transit Pass',
+      message: 'Are you sure you want to permanently revoke and delete this student transit pass? This cannot be undone.',
+      confirmText: 'Delete Pass',
+      isDanger: true,
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          await fetch((import.meta.env.VITE_API_URL || '') + `/api/passes/${passId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+          });
+          setSelectedPassIds(prev => {
+            const next = new Set(prev);
+            next.delete(passId);
+            return next;
+          });
+          await refreshData();
+        } catch (err) {
+          console.error('Error deleting pass:', err);
+        }
+      }
+    });
+  };
+
+  // Toggle Single Pass Selection
+  const toggleSelectPass = (passId) => {
+    setSelectedPassIds(prev => {
+      const next = new Set(prev);
+      if (next.has(passId)) next.delete(passId);
+      else next.add(passId);
+      return next;
+    });
+  };
+
+  // Toggle All Passes on Current View
+  const toggleSelectAllPasses = (passList) => {
+    setSelectedPassIds(prev => {
+      const allSelected = passList.length > 0 && passList.every(p => prev.has(p.id));
+      const next = new Set(prev);
+      if (allSelected) {
+        passList.forEach(p => next.delete(p.id));
+      } else {
+        passList.forEach(p => next.add(p.id));
+      }
+      return next;
+    });
+  };
+
+  // Bulk Delete Student Passes
+  const handleBulkDeletePasses = () => {
+    if (selectedPassIds.size === 0) return;
+    const ids = Array.from(selectedPassIds);
+    setConfirmModal({
+      isOpen: true,
+      title: `Delete ${ids.length} Student Passes`,
+      message: `Are you sure you want to permanently delete and revoke ${ids.length} selected student pass(es)? This action cannot be undone.`,
+      confirmText: `Delete ${ids.length} Passes`,
+      isDanger: true,
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          await fetch((import.meta.env.VITE_API_URL || '') + '/api/passes/bulk-delete', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ ids })
+          });
+          setSelectedPassIds(new Set());
+          await refreshData();
+        } catch (err) {
+          console.error('Bulk delete passes failed:', err);
+        }
+      }
+    });
+  };
+
+  // Scale Seeding: 10 Drivers & 500 Students
+  const handleSeedScale = async () => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Scale Transit Dataset',
+      message: 'This will seed 10 verified campus drivers and 500 active student transit passes across all registered routes for high-capacity testing. Proceed?',
+      confirmText: 'Seed 10 Drivers & 500 Students',
+      isDanger: false,
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        setIsSubmitting(true);
+        try {
+          const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/seed/scale', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({})
+          });
+          const data = await res.json();
+          if (data.success) {
+            setScaleStatus('Dataset scaled successfully: 10 verified drivers & 500 students active!');
+            await fetchDrivers();
+            await refreshData();
+            setTimeout(() => setScaleStatus(null), 6000);
+          } else {
+            setScaleStatus(`Scaling failed: ${data.error || 'Server error'}`);
+          }
+        } catch (err) {
+          console.error('Scale dataset failed:', err);
+          setScaleStatus(`Error: ${err.message}`);
+        } finally {
+          setIsSubmitting(false);
+        }
+      }
+    });
   };
 
   // Update Bus Status
@@ -464,16 +611,77 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
   };
 
   // Delete Driver
-  const handleDeleteDriver = async (driverId) => {
-    if (!confirm('Are you sure you want to delete this driver?')) return;
-    try {
-      await fetch((import.meta.env.VITE_API_URL || '') + `/api/drivers/${driverId}`, {
-        method: 'DELETE'
-      });
-      await fetchDrivers();
-    } catch (err) {
-      console.error('Error deleting driver:', err);
-    }
+  const handleDeleteDriver = (driverId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Driver Account',
+      message: 'Are you sure you want to delete this driver? Their assigned campus bus will become unassigned.',
+      confirmText: 'Delete Driver',
+      isDanger: true,
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          await fetch((import.meta.env.VITE_API_URL || '') + `/api/drivers/${driverId}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+          });
+          setSelectedDriverIds(prev => {
+            const next = new Set(prev);
+            next.delete(driverId);
+            return next;
+          });
+          await fetchDrivers();
+        } catch (err) {
+          console.error('Error deleting driver:', err);
+        }
+      }
+    });
+  };
+
+  // Toggle Single Driver Selection
+  const toggleSelectDriver = (driverId) => {
+    setSelectedDriverIds(prev => {
+      const next = new Set(prev);
+      if (next.has(driverId)) next.delete(driverId);
+      else next.add(driverId);
+      return next;
+    });
+  };
+
+  // Toggle All Drivers
+  const toggleSelectAllDrivers = (driverList) => {
+    setSelectedDriverIds(prev => {
+      const allSelected = driverList.length > 0 && driverList.every(d => prev.has(d.id));
+      if (allSelected) return new Set();
+      return new Set(driverList.map(d => d.id));
+    });
+  };
+
+  // Bulk Delete Drivers
+  const handleBulkDeleteDrivers = () => {
+    if (selectedDriverIds.size === 0) return;
+    const ids = Array.from(selectedDriverIds);
+    setConfirmModal({
+      isOpen: true,
+      title: `Delete ${ids.length} Drivers`,
+      message: `Are you sure you want to permanently delete ${ids.length} selected driver account(s)? This action cannot be undone.`,
+      confirmText: `Delete ${ids.length} Drivers`,
+      isDanger: true,
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          await fetch((import.meta.env.VITE_API_URL || '') + '/api/drivers/bulk-delete', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ ids })
+          });
+          setSelectedDriverIds(new Set());
+          await fetchDrivers();
+        } catch (err) {
+          console.error('Bulk delete drivers failed:', err);
+        }
+      }
+    });
   };
 
   // Bulk Upload Student Passes
@@ -716,21 +924,81 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
   };
 
   // Delete Route
-  const handleDeleteRoute = async (routeId) => {
-    if (!confirm('Are you sure you want to delete this route? Any buses assigned to this route will be unassigned.')) return;
-    try {
-      if (deleteRoute) {
-        await deleteRoute(routeId);
-      } else {
-        await fetch((import.meta.env.VITE_API_URL || '') + `/api/routes/${routeId}`, {
-          method: 'DELETE'
-        });
-        await refreshData();
+  const handleDeleteRoute = (routeId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Transit Route',
+      message: 'Are you sure you want to delete this route? Any buses assigned to this route will be unassigned.',
+      confirmText: 'Delete Route',
+      isDanger: true,
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          if (deleteRoute) {
+            await deleteRoute(routeId);
+          } else {
+            await fetch((import.meta.env.VITE_API_URL || '') + `/api/routes/${routeId}`, {
+              method: 'DELETE',
+              headers: getAuthHeaders()
+            });
+            await refreshData();
+          }
+          setSelectedRouteIds(prev => {
+            const next = new Set(prev);
+            next.delete(routeId);
+            return next;
+          });
+        } catch (err) {
+          console.error('Error deleting route:', err);
+        }
       }
-    } catch (err) {
-      console.error('Error deleting route:', err);
-      alert('Failed to delete route: ' + (err.message || 'Server error'));
-    }
+    });
+  };
+
+  // Toggle Single Route Selection
+  const toggleSelectRoute = (routeId) => {
+    setSelectedRouteIds(prev => {
+      const next = new Set(prev);
+      if (next.has(routeId)) next.delete(routeId);
+      else next.add(routeId);
+      return next;
+    });
+  };
+
+  // Toggle All Routes
+  const toggleSelectAllRoutes = (routeList) => {
+    setSelectedRouteIds(prev => {
+      const allSelected = routeList.length > 0 && routeList.every(r => prev.has(r.id));
+      if (allSelected) return new Set();
+      return new Set(routeList.map(r => r.id));
+    });
+  };
+
+  // Bulk Delete Routes
+  const handleBulkDeleteRoutes = () => {
+    if (selectedRouteIds.size === 0) return;
+    const ids = Array.from(selectedRouteIds);
+    setConfirmModal({
+      isOpen: true,
+      title: `Delete ${ids.length} Transit Routes`,
+      message: `Are you sure you want to permanently delete ${ids.length} selected transit route(s)? Any buses assigned to these routes will be unassigned.`,
+      confirmText: `Delete ${ids.length} Routes`,
+      isDanger: true,
+      onConfirm: async () => {
+        setConfirmModal(prev => ({ ...prev, isOpen: false }));
+        try {
+          await fetch((import.meta.env.VITE_API_URL || '') + '/api/routes/bulk-delete', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ ids })
+          });
+          setSelectedRouteIds(new Set());
+          await refreshData();
+        } catch (err) {
+          console.error('Bulk delete routes failed:', err);
+        }
+      }
+    });
   };
 
   // Dynamic Fleet Cards mapping real live WebSocket buses
@@ -1766,7 +2034,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
 
             {/* 2. REGISTERED ACTIVE TRANSIT ROUTES */}
             <div className="clean-card" style={{ padding: '1.5rem', borderRadius: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
                 <div>
                   <h2 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
                     Registered Active Routes ({routes.length})
@@ -1775,6 +2043,46 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     All routes terminate at <strong>{COLLEGE_DESTINATION.name}</strong> and are live on the Student Radar & Driver Navigation
                   </div>
                 </div>
+                {routes.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSelectAllRoutes(routes)}
+                      className="btn btn-secondary"
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        fontSize: '0.78rem',
+                        borderRadius: '7px',
+                        border: '1px solid var(--border-color)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {routes.length > 0 && routes.every(r => selectedRouteIds.has(r.id)) ? 'Deselect All' : 'Select All Routes'}
+                    </button>
+                    {selectedRouteIds.size > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleBulkDeleteRoutes}
+                        style={{
+                          padding: '0.35rem 0.75rem',
+                          fontSize: '0.78rem',
+                          backgroundColor: '#ef4444',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '7px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <Trash2 size={13} />
+                        <span>Delete Selected ({selectedRouteIds.size})</span>
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
 
               {routes.length === 0 ? (
@@ -1799,7 +2107,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                           borderRadius: '12px',
                           border: '1px solid var(--border-color)',
                           borderLeft: `4px solid ${route.color || '#7c3aed'}`,
-                          backgroundColor: 'var(--bg-card)',
+                          backgroundColor: selectedRouteIds.has(route.id) ? 'rgba(124, 58, 237, 0.05)' : 'var(--bg-card)',
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'space-between',
@@ -1808,7 +2116,16 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                       >
                         <div>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
-                            <strong style={{ fontSize: '0.98rem', color: 'var(--text-primary)' }}>{route.name}</strong>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                              <input
+                                type="checkbox"
+                                checked={selectedRouteIds.has(route.id)}
+                                onChange={() => toggleSelectRoute(route.id)}
+                                style={{ cursor: 'pointer', accentColor: '#7c3aed', width: '16px', height: '16px' }}
+                                title="Select route for bulk action"
+                              />
+                              <strong style={{ fontSize: '0.98rem', color: 'var(--text-primary)' }}>{route.name}</strong>
+                            </div>
                             <button
                               type="button"
                               onClick={() => handleDeleteRoute(route.id)}
@@ -1938,10 +2255,83 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                 </div>
               </div>
 
+              {/* Bulk Selection Bar for Drivers */}
+              {selectedDriverIds.size > 0 && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.6rem 1rem',
+                  marginBottom: '1rem',
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.25)',
+                  color: '#ef4444'
+                }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <CheckSquare size={16} />
+                    <span>{selectedDriverIds.size} driver(s) selected</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDriverIds(new Set())}
+                      className="btn btn-secondary"
+                      style={{ padding: '0.3rem 0.65rem', fontSize: '0.78rem' }}
+                    >
+                      Clear Selection
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleBulkDeleteDrivers}
+                      style={{
+                        padding: '0.3rem 0.75rem',
+                        fontSize: '0.78rem',
+                        backgroundColor: '#ef4444',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <Trash2 size={13} />
+                      <span>Delete Selected ({selectedDriverIds.size})</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div className="data-table-container">
                 <table className="data-table">
                   <thead>
                     <tr>
+                      <th style={{ width: '40px', textAlign: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={(() => {
+                            const filtered = driversDirectory.filter(d => 
+                              (d.name || '').toLowerCase().includes(driverSearchQuery.toLowerCase()) || 
+                              (d.username || '').toLowerCase().includes(driverSearchQuery.toLowerCase()) ||
+                              (d.phone || '').toLowerCase().includes(driverSearchQuery.toLowerCase())
+                            );
+                            return filtered.length > 0 && filtered.every(d => selectedDriverIds.has(d.id));
+                          })()}
+                          onChange={() => {
+                            const filtered = driversDirectory.filter(d => 
+                              (d.name || '').toLowerCase().includes(driverSearchQuery.toLowerCase()) || 
+                              (d.username || '').toLowerCase().includes(driverSearchQuery.toLowerCase()) ||
+                              (d.phone || '').toLowerCase().includes(driverSearchQuery.toLowerCase())
+                            );
+                            toggleSelectAllDrivers(filtered);
+                          }}
+                          style={{ cursor: 'pointer', accentColor: '#7c3aed', width: '15px', height: '15px' }}
+                          title="Select all filtered drivers"
+                        />
+                      </th>
                       <th>Driver Name</th>
                       <th>Username</th>
                       <th>Password</th>
@@ -1954,7 +2344,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                   <tbody>
                     {driversDirectory.length === 0 ? (
                       <tr>
-                        <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                        <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                           No drivers registered
                         </td>
                       </tr>
@@ -1969,7 +2359,15 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                           const assignedBus = buses.find(b => b.id === driver.assignedBusId);
                           const isOffDuty = driver.status === 'Off Duty';
                           return (
-                            <tr key={driver.id}>
+                            <tr key={driver.id} style={{ backgroundColor: selectedDriverIds.has(driver.id) ? 'rgba(124, 58, 237, 0.05)' : undefined }}>
+                              <td style={{ textAlign: 'center' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={selectedDriverIds.has(driver.id)}
+                                  onChange={() => toggleSelectDriver(driver.id)}
+                                  style={{ cursor: 'pointer', accentColor: '#7c3aed', width: '15px', height: '15px' }}
+                                />
+                              </td>
                               <td style={{ fontWeight: 600 }}>{driver.name}</td>
                               <td style={{ fontFamily: 'monospace', fontSize: '0.84rem', fontWeight: 600, color: '#7c3aed' }}>{driver.username}</td>
                               <td style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
@@ -2070,14 +2468,17 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     Manage student user credentials, transit pass access, and status entitlements
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
                   <div style={{ position: 'relative' }}>
                     <Search size={14} color="var(--text-muted)" style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)' }} />
                     <input
                       type="text"
                       placeholder="Search students..."
                       value={studentSearchQuery}
-                      onChange={e => setStudentSearchQuery(e.target.value)}
+                      onChange={e => {
+                        setStudentSearchQuery(e.target.value);
+                        setPassPage(1);
+                      }}
                       className="form-input"
                       style={{ paddingLeft: '2rem', paddingRight: '0.75rem', height: '36px', fontSize: '0.8rem', width: '200px' }}
                     />
@@ -2090,6 +2491,30 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     title="Refresh student passes"
                   >
                     <RefreshCw size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSeedScale}
+                    disabled={isSubmitting}
+                    className="btn btn-secondary"
+                    style={{
+                      height: '36px',
+                      padding: '0 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(0, 229, 255, 0.4)',
+                      backgroundColor: 'rgba(0, 229, 255, 0.08)',
+                      color: '#00e5ff',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                    title="Scale dataset to 10 verified drivers and 500 enrolled students"
+                  >
+                    <Sparkles size={14} />
+                    <span>Scale (10 Drivers, 500 Students)</span>
                   </button>
                   <button
                     type="button"
@@ -2116,133 +2541,288 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                 </div>
               </div>
 
-              <div className="data-table-container">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Student Name</th>
-                      <th>Username</th>
-                      <th>Student ID</th>
-                      <th>Email</th>
-                      <th>Route Entitlement</th>
-                      <th>Valid Until</th>
-                      <th>Status</th>
-                      <th style={{ textAlign: 'right' }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {passes.length === 0 ? (
-                      <tr>
-                        <td colSpan="8" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-                          No student passes registered
-                        </td>
-                      </tr>
-                    ) : (
-                      passes
-                        .filter(p => {
-                          const q = studentSearchQuery.toLowerCase();
-                          return (
-                            (p.name || p.studentName || '').toLowerCase().includes(q) ||
-                            (p.username || '').toLowerCase().includes(q) ||
-                            (p.id || '').toLowerCase().includes(q) ||
-                            (p.email || '').toLowerCase().includes(q)
-                          );
-                        })
-                        .map(pass => {
-                          const rawStatus = pass.passStatus || pass.status || 'Valid';
-                          const s = String(rawStatus).toLowerCase();
-                          let badgeStyle, badgeText;
-                          if (s.includes('suspend')) {
-                            badgeStyle = { backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.3)' };
-                            badgeText = 'Suspended';
-                          } else if (s.includes('cancel') || s.includes('expir') || s.includes('inactive')) {
-                            badgeStyle = { backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#dc2626', border: '1px solid rgba(239, 68, 68, 0.3)' };
-                            badgeText = 'Canceled';
-                          } else {
-                            badgeStyle = { backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#16a34a', border: '1px solid rgba(34, 197, 94, 0.3)' };
-                            badgeText = 'Valid';
-                          }
+              {/* Scale Status Banner */}
+              {scaleStatus && (
+                <div style={{
+                  padding: '0.65rem 1rem',
+                  marginBottom: '1rem',
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(0, 229, 255, 0.1)',
+                  border: '1px solid rgba(0, 229, 255, 0.3)',
+                  color: '#00e5ff',
+                  fontSize: '0.82rem',
+                  fontWeight: 600
+                }}>
+                  {scaleStatus}
+                </div>
+              )}
 
-                          return (
-                            <tr key={pass.id}>
-                              <td style={{ fontWeight: 600 }}>{pass.name || pass.studentName || 'Student Pass'}</td>
-                              <td style={{ fontFamily: 'monospace', fontSize: '0.84rem', fontWeight: 600, color: '#7c3aed' }}>
-                                {pass.username || pass.id}
-                              </td>
-                              <td style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: 'var(--text-muted)' }}>{pass.id}</td>
-                              <td>{pass.email || '-'}</td>
-                              <td>{pass.routeEntitlement || 'All Routes'}</td>
-                              <td>{pass.validUntil || '2026-12-31'}</td>
-                              <td>
-                                <span
-                                  className="badge"
-                                  style={{
-                                    ...badgeStyle,
-                                    fontWeight: 700,
-                                    padding: '0.25rem 0.6rem',
-                                    borderRadius: '6px'
-                                  }}
-                                >
-                                  {badgeText}
-                                </span>
-                              </td>
-                              <td style={{ textAlign: 'right' }}>
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
-                                  <select
-                                    value={badgeText}
-                                    onChange={(e) => handleUpdatePassStatus(pass.id, e.target.value)}
-                                    className="form-select"
-                                    style={{ padding: '0.25rem 0.5rem', fontSize: '0.78rem', width: 'auto' }}
-                                  >
-                                    <option value="Valid">Valid</option>
-                                    <option value="Suspended">Suspended</option>
-                                    <option value="Canceled">Canceled</option>
-                                  </select>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenEditStudent(pass)}
-                                    className="btn btn-secondary"
-                                    style={{
-                                      padding: '0.25rem 0.55rem',
-                                      fontSize: '0.78rem',
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: '0.3rem',
-                                      borderRadius: '6px',
-                                      border: '1px solid var(--border-color)',
-                                      color: '#7c3aed',
-                                      cursor: 'pointer'
-                                    }}
-                                    title="Edit Student Credentials"
-                                  >
-                                    <Pencil size={13} />
-                                    <span>Edit</span>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeletePass(pass.id)}
-                                    style={{
-                                      background: 'none',
-                                      border: 'none',
-                                      color: 'var(--danger, #ef4444)',
-                                      cursor: 'pointer',
-                                      padding: '0.2rem',
-                                      display: 'flex',
-                                      alignItems: 'center'
-                                    }}
-                                    title="Delete Student Pass"
-                                  >
-                                    <Trash2 size={15} />
-                                  </button>
-                                </div>
+              {/* Bulk Selection Bar for Passes */}
+              {selectedPassIds.size > 0 && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.6rem 1rem',
+                  marginBottom: '1rem',
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                  border: '1px solid rgba(239, 68, 68, 0.25)',
+                  color: '#ef4444'
+                }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <CheckSquare size={16} />
+                    <span>{selectedPassIds.size} student pass(es) selected</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPassIds(new Set())}
+                      className="btn btn-secondary"
+                      style={{ padding: '0.3rem 0.65rem', fontSize: '0.78rem' }}
+                    >
+                      Clear Selection
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleBulkDeletePasses}
+                      style={{
+                        padding: '0.3rem 0.75rem',
+                        fontSize: '0.78rem',
+                        backgroundColor: '#ef4444',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <Trash2 size={13} />
+                      <span>Delete Selected ({selectedPassIds.size})</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {(() => {
+                const filtered = passes.filter(p => {
+                  const q = studentSearchQuery.toLowerCase();
+                  return (
+                    (p.name || p.studentName || '').toLowerCase().includes(q) ||
+                    (p.username || '').toLowerCase().includes(q) ||
+                    (p.id || '').toLowerCase().includes(q) ||
+                    (p.email || '').toLowerCase().includes(q)
+                  );
+                });
+                const totalPages = Math.max(1, Math.ceil(filtered.length / passesPerPage));
+                const currentPage = Math.min(passPage, totalPages);
+                const paginatedList = filtered.slice((currentPage - 1) * passesPerPage, currentPage * passesPerPage);
+                const allOnPageSelected = paginatedList.length > 0 && paginatedList.every(p => selectedPassIds.has(p.id));
+
+                return (
+                  <>
+                    <div className="data-table-container">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th style={{ width: '40px', textAlign: 'center' }}>
+                              <input
+                                type="checkbox"
+                                checked={allOnPageSelected}
+                                onChange={() => toggleSelectAllPasses(paginatedList)}
+                                style={{ cursor: 'pointer', accentColor: '#7c3aed', width: '15px', height: '15px' }}
+                                title="Select all passes on current page"
+                              />
+                            </th>
+                            <th>Student Name</th>
+                            <th>Username</th>
+                            <th>Student ID</th>
+                            <th>Email</th>
+                            <th>Route Entitlement</th>
+                            <th>Valid Until</th>
+                            <th>Status</th>
+                            <th style={{ textAlign: 'right' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paginatedList.length === 0 ? (
+                            <tr>
+                              <td colSpan="9" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                                No student passes found
                               </td>
                             </tr>
-                          );
-                        })
+                          ) : (
+                            paginatedList.map(pass => {
+                              const rawStatus = pass.passStatus || pass.status || 'Valid';
+                              const s = String(rawStatus).toLowerCase();
+                              let badgeStyle, badgeText;
+                              if (s.includes('suspend')) {
+                                badgeStyle = { backgroundColor: 'rgba(245, 158, 11, 0.15)', color: '#d97706', border: '1px solid rgba(245, 158, 11, 0.3)' };
+                                badgeText = 'Suspended';
+                              } else if (s.includes('cancel') || s.includes('expir') || s.includes('inactive')) {
+                                badgeStyle = { backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#dc2626', border: '1px solid rgba(239, 68, 68, 0.3)' };
+                                badgeText = 'Canceled';
+                              } else {
+                                badgeStyle = { backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#16a34a', border: '1px solid rgba(34, 197, 94, 0.3)' };
+                                badgeText = 'Valid';
+                              }
+
+                              return (
+                                <tr key={pass.id} style={{ backgroundColor: selectedPassIds.has(pass.id) ? 'rgba(124, 58, 237, 0.05)' : undefined }}>
+                                  <td style={{ textAlign: 'center' }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={selectedPassIds.has(pass.id)}
+                                      onChange={() => toggleSelectPass(pass.id)}
+                                      style={{ cursor: 'pointer', accentColor: '#7c3aed', width: '15px', height: '15px' }}
+                                    />
+                                  </td>
+                                  <td style={{ fontWeight: 600 }}>{pass.name || pass.studentName || 'Student Pass'}</td>
+                                  <td style={{ fontFamily: 'monospace', fontSize: '0.84rem', fontWeight: 600, color: '#7c3aed' }}>
+                                    {pass.username || pass.id}
+                                  </td>
+                                  <td style={{ fontFamily: 'monospace', fontSize: '0.82rem', color: 'var(--text-muted)' }}>{pass.id}</td>
+                                  <td>{pass.email || '-'}</td>
+                                  <td>{pass.routeEntitlement || 'All Routes'}</td>
+                                  <td>{pass.validUntil || '2026-12-31'}</td>
+                                  <td>
+                                    <span
+                                      className="badge"
+                                      style={{
+                                        ...badgeStyle,
+                                        fontWeight: 700,
+                                        padding: '0.25rem 0.6rem',
+                                        borderRadius: '6px'
+                                      }}
+                                    >
+                                      {badgeText}
+                                    </span>
+                                  </td>
+                                  <td style={{ textAlign: 'right' }}>
+                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
+                                      <select
+                                        value={badgeText}
+                                        onChange={(e) => handleUpdatePassStatus(pass.id, e.target.value)}
+                                        className="form-select"
+                                        style={{ padding: '0.25rem 0.5rem', fontSize: '0.78rem', width: 'auto' }}
+                                      >
+                                        <option value="Valid">Valid</option>
+                                        <option value="Suspended">Suspended</option>
+                                        <option value="Canceled">Canceled</option>
+                                      </select>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleOpenEditStudent(pass)}
+                                        className="btn btn-secondary"
+                                        style={{
+                                          padding: '0.25rem 0.55rem',
+                                          fontSize: '0.78rem',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '0.3rem',
+                                          borderRadius: '6px',
+                                          border: '1px solid var(--border-color)',
+                                          color: '#7c3aed',
+                                          cursor: 'pointer'
+                                        }}
+                                        title="Edit Student Credentials"
+                                      >
+                                        <Pencil size={13} />
+                                        <span>Edit</span>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeletePass(pass.id)}
+                                        style={{
+                                          background: 'none',
+                                          border: 'none',
+                                          color: 'var(--danger, #ef4444)',
+                                          cursor: 'pointer',
+                                          padding: '0.2rem',
+                                          display: 'flex',
+                                          alignItems: 'center'
+                                        }}
+                                        title="Delete Student Pass"
+                                      >
+                                        <Trash2 size={15} />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination Footer */}
+                    {filtered.length > 0 && (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '1rem 0.5rem 0.2rem',
+                        borderTop: '1px solid var(--border-color)',
+                        flexWrap: 'wrap',
+                        gap: '0.75rem',
+                        fontSize: '0.82rem',
+                        color: 'var(--text-secondary)'
+                      }}>
+                        <div>
+                          Showing <strong>{(currentPage - 1) * passesPerPage + 1}</strong> to <strong>{Math.min(currentPage * passesPerPage, filtered.length)}</strong> of <strong>{filtered.length}</strong> students (Total: {passes.length})
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <span>Per page:</span>
+                            <select
+                              value={passesPerPage}
+                              onChange={e => {
+                                setPassPerPage(Number(e.target.value));
+                                setPassPage(1);
+                              }}
+                              className="form-select"
+                              style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem', height: '30px' }}
+                            >
+                              <option value={10}>10</option>
+                              <option value={20}>20</option>
+                              <option value={50}>50</option>
+                              <option value={100}>100</option>
+                              <option value={500}>500</option>
+                            </select>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                            <button
+                              type="button"
+                              disabled={currentPage <= 1}
+                              onClick={() => setPassPage(p => Math.max(1, p - 1))}
+                              className="btn btn-secondary"
+                              style={{ padding: '0.25rem 0.5rem', height: '30px', cursor: currentPage <= 1 ? 'not-allowed' : 'pointer', opacity: currentPage <= 1 ? 0.5 : 1 }}
+                            >
+                              <ChevronLeft size={14} />
+                            </button>
+                            <span style={{ fontWeight: 600, padding: '0 0.4rem' }}>
+                              Page {currentPage} of {totalPages}
+                            </span>
+                            <button
+                              type="button"
+                              disabled={currentPage >= totalPages}
+                              onClick={() => setPassPage(p => Math.min(totalPages, p + 1))}
+                              className="btn btn-secondary"
+                              style={{ padding: '0.25rem 0.5rem', height: '30px', cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer', opacity: currentPage >= totalPages ? 0.5 : 1 }}
+                            >
+                              <ChevronRight size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     )}
-                  </tbody>
-                </table>
-              </div>
+                  </>
+                );
+              })()}
             </div>
           </motion.div>
         )}
@@ -3633,6 +4213,18 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
         </motion.div>
       )}
       </AnimatePresence>
+
+      {/* Built-in Custom Confirmation Modal for All Deletions & Destructive Actions */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
+        cancelText={confirmModal.cancelText}
+        isDanger={confirmModal.isDanger}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

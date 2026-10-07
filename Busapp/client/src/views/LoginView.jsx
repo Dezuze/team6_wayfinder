@@ -135,7 +135,6 @@ export default function LoginView({ onOpenLegal }) {
         {/* Header with Transparent Logo */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{
-            position: 'relative',
             width: '80px',
             height: '80px',
             display: 'flex',
@@ -143,35 +142,13 @@ export default function LoginView({ onOpenLegal }) {
             justifyContent: 'center',
             margin: '0 auto 1.2rem'
           }}>
-            <motion.div
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.4, 0.75, 0.4]
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: 'easeInOut'
-              }}
-              style={{
-                position: 'absolute',
-                width: '90px',
-                height: '90px',
-                borderRadius: '50%',
-                background: 'radial-gradient(circle, rgba(0, 229, 255, 0.4) 0%, rgba(118, 255, 3, 0.2) 60%, transparent 75%)',
-                filter: 'blur(12px)'
-              }}
-            />
             <img
               src="/logo.png"
               alt="HopSpot Logo"
               style={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'contain',
-                position: 'relative',
-                zIndex: 2,
-                filter: 'drop-shadow(0 6px 20px rgba(0, 229, 255, 0.35))'
+                objectFit: 'contain'
               }}
             />
           </div>
