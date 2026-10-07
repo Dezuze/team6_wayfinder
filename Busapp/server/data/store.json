@@ -314,68 +314,17 @@
   ],
   "buses": [
     {
-      "id": "bus-101",
-      "number": "BUS #101 (KL-07-AB-1234)",
-      "routeId": null,
-      "driverName": "Rahul Nair",
-      "status": "Off Duty",
-      "location": {
-        "lat": 9.67416,
-        "lng": 76.82573
-      },
-      "bearing": 69,
-      "speed": 0,
-      "isLive": false,
-      "lastUpdated": "2026-10-07T08:54:19.365Z"
-    },
-    {
-      "id": "bus-102",
-      "number": "BUS #102 (KL-07-CD-5678)",
-      "routeId": null,
-      "driverName": "Unassigned",
-      "status": "Off Duty",
-      "location": null,
-      "bearing": 0,
-      "speed": 0,
-      "isLive": false,
-      "lastUpdated": null
-    },
-    {
-      "id": "bus-103",
-      "number": "BUS #103 (KL-07-EF-9012)",
-      "routeId": null,
-      "driverName": "Unassigned",
-      "status": "Maintenance",
-      "location": null,
-      "bearing": 0,
-      "speed": 0,
-      "isLive": false,
-      "lastUpdated": null
-    },
-    {
-      "id": "bus-104",
-      "number": "BUS #104 (KL-05-XY-7777)",
-      "routeId": null,
-      "driverName": "Unassigned",
-      "status": "Off Duty",
-      "location": null,
-      "bearing": 0,
-      "speed": 0,
-      "isLive": false,
-      "lastUpdated": null
-    },
-    {
-      "id": "bus-3146772",
-      "number": "BUS #101",
+      "id": "bus-7636158",
+      "number": "Bus NO-2",
       "routeId": "route-1791362876442-502",
-      "driverName": "Rahul",
+      "driverName": "Rahul Nair",
       "status": "Active",
       "location": {
         "lat": 9.67416,
         "lng": 76.82573
       },
       "speed": 0,
-      "lastUpdated": "2026-10-07T08:49:13.146Z"
+      "lastUpdated": "2026-10-07T09:11:17.636Z"
     }
   ],
   "studentPasses": [
@@ -396,10 +345,10 @@
     {
       "id": "driver-1",
       "username": "driver.rahul",
-      "password": "scrypt:4d9fa78d00584641695314ff03207998:18893096c796f89bcc2c01d50ed6e54d3a896896f024926e9bae361c75fe88ab5f7f2b91638544758d0cc94e58eb8307dcb2a092c2cca93b676fe6a2bd2f96b7",
+      "password": "scrypt:eea0de1807f465bff6bdc85b71f6220d:9ff768ac8ca47a3efbdea77427dcc36cee50207e26047f3da767c6a44563d0090fd2f8a540348a71e337ec5f83fe483b6fef42f2108e677f8727d1a6c2b1fe4b",
       "name": "Rahul Nair",
       "phone": "+91-9847123456",
-      "assignedBusId": "bus-101",
+      "assignedBusId": "bus-7636158",
       "status": "Active"
     }
   ],

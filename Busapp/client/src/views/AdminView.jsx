@@ -255,11 +255,27 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
       setNewBusStatus('Active');
       setIsAddBusModalOpen(false);
       await refreshData();
+      await fetchDrivers();
     } catch (err) {
       console.error('Error adding bus:', err);
       alert('Failed to add bus: ' + err.message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Update Bus Driver Assignment
+  const handleUpdateBusDriver = async (busId, newDriverName) => {
+    try {
+      await fetch((import.meta.env.VITE_API_URL || '') + `/api/buses/${busId}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ driverName: newDriverName || 'Unassigned' })
+      });
+      await refreshData();
+      await fetchDrivers();
+    } catch (err) {
+      console.error('Error updating bus driver:', err);
     }
   };
 
@@ -543,6 +559,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
       if (data.success) {
         setEditingDriver(null);
         await fetchDrivers();
+        await refreshData();
       } else {
         alert(data.error || 'Failed to update driver credentials');
       }
@@ -1409,12 +1426,32 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.78rem', backgroundColor: 'var(--bg-subtle)', padding: '0.65rem 0.75rem', borderRadius: '10px' }}>
                       <div>
-                        <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem' }}>Contact Phone</span>
-                        <strong style={{ color: 'var(--text-primary)' }}>{matchedDriver?.phone || 'Not configured'}</strong>
+                        <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem' }}>Assigned Driver</span>
+                        <select
+                          value={selectedCard.driverName && selectedCard.driverName !== 'Unassigned Driver' ? selectedCard.driverName : ''}
+                          onChange={(e) => handleUpdateBusDriver(selectedCard.id, e.target.value)}
+                          className="form-select"
+                          style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem', fontWeight: 600, width: '100%', marginTop: '0.2rem' }}
+                        >
+                          <option value="">-- Unassigned --</option>
+                          {driversDirectory.map(d => (
+                            <option key={d.id} value={d.name}>{d.name}</option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem' }}>Assigned Route</span>
-                        <strong style={{ color: 'var(--text-primary)' }}>{selectedCard.routeName}</strong>
+                        <select
+                          value={selectedCard.rawBus?.routeId || ''}
+                          onChange={(e) => handleUpdateBusRoute(selectedCard.id, e.target.value)}
+                          className="form-select"
+                          style={{ padding: '0.2rem 0.35rem', fontSize: '0.75rem', fontWeight: 600, width: '100%', marginTop: '0.2rem' }}
+                        >
+                          <option value="">-- Unassigned --</option>
+                          {routes.map(r => (
+                            <option key={r.id} value={r.id}>{r.name}</option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem' }}>Live GPS Location</span>
@@ -3017,8 +3054,9 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
 
             {busAddMode === 'single' ? (
               <form onSubmit={handleCreateBus} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
                 <div className="form-group">
-                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Bus Number & Registration</label>
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Bus Number & Registration *</label>
                   <input
                     type="text"
                     autoFocus
@@ -3028,18 +3066,6 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                     className="form-input"
                     style={{ width: '100%', fontSize: '0.85rem' }}
                     required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Driver Name</label>
-                  <input
-                    type="text"
-                    value={newBusDriverName}
-                    onChange={e => setNewBusDriverName(e.target.value)}
-                    placeholder="e.g. Anand Menon"
-                    className="form-input"
-                    style={{ width: '100%', fontSize: '0.85rem' }}
                   />
                 </div>
 
@@ -3056,6 +3082,26 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                       <option key={r.id} value={r.id}>{r.name}</option>
                     ))}
                   </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Assign Driver</label>
+                  <select
+                    value={newBusDriverName}
+                    onChange={e => setNewBusDriverName(e.target.value)}
+                    className="form-select"
+                    style={{ width: '100%', fontSize: '0.85rem' }}
+                  >
+                    <option value="">-- None (Unassigned) --</option>
+                    {driversDirectory.map(d => (
+                      <option key={d.id} value={d.name}>
+                        {d.name} (@{d.username})
+                      </option>
+                    ))}
+                  </select>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                    Drivers are added with login credentials in the Drivers section.
+                  </div>
                 </div>
 
                 <div className="form-group">

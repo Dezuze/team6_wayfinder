@@ -202,6 +202,19 @@ export default async function adminRoutes(fastify, options) {
         lastUpdated: new Date().toISOString()
       };
       await dbUpsertBus(newBus);
+
+      // Reflect driver assignment to driver directory if assigned
+      if (newBus.driverName && newBus.driverName !== 'Unassigned') {
+        const matchedDriver = db.drivers.find(d => 
+          (d.name || '').toLowerCase() === newBus.driverName.toLowerCase() ||
+          (d.username || '').toLowerCase() === newBus.driverName.toLowerCase()
+        );
+        if (matchedDriver) {
+          matchedDriver.assignedBusId = newBus.id;
+          await dbUpsertDriver(matchedDriver);
+        }
+      }
+
       created.push(newBus);
     }
 
@@ -233,6 +246,30 @@ export default async function adminRoutes(fastify, options) {
       ...(location !== undefined && isValidCoordinate(location?.lat, location?.lng) ? { location } : {}),
       lastUpdated: new Date().toISOString()
     };
+
+    // If driver assignment changed on the bus, sync drivers directory
+    if (driverName !== undefined && driverName !== existingBus.driverName) {
+      if (existingBus.driverName && existingBus.driverName !== 'Unassigned') {
+        const prevDriver = db.drivers.find(d => 
+          (d.name || '').toLowerCase() === existingBus.driverName.toLowerCase() &&
+          d.assignedBusId === id
+        );
+        if (prevDriver) {
+          prevDriver.assignedBusId = null;
+          await dbUpsertDriver(prevDriver);
+        }
+      }
+      if (driverName && driverName !== 'Unassigned') {
+        const nextDriver = db.drivers.find(d => 
+          (d.name || '').toLowerCase() === driverName.toLowerCase() ||
+          (d.username || '').toLowerCase() === driverName.toLowerCase()
+        );
+        if (nextDriver) {
+          nextDriver.assignedBusId = id;
+          await dbUpsertDriver(nextDriver);
+        }
+      }
+    }
 
     await dbUpsertBus(updatedBus);
 
@@ -565,8 +602,21 @@ export default async function adminRoutes(fastify, options) {
         status: sanitizeString(status || "Active", 30)
       };
       const savedDriver = await dbUpsertDriver(newDriver);
+
+      // Link and immediately reflect to the bus in fleet section
+      if (newDriver.assignedBusId) {
+        const targetBus = db.buses.find(b => b.id === newDriver.assignedBusId);
+        if (targetBus) {
+          targetBus.driverName = newDriver.name;
+          await dbUpsertBus(targetBus);
+        }
+      }
+
       created.push(savedDriver);
     }
+
+    if (fastify.broadcastBuses) fastify.broadcastBuses();
+    if (fastify.broadcastSync) fastify.broadcastSync();
 
     return { success: true, driver: created[0], drivers: created, count: created.length };
   });
@@ -592,8 +642,21 @@ export default async function adminRoutes(fastify, options) {
         status: sanitizeString(status || "Active", 30)
       };
       const savedDriver = await dbUpsertDriver(newDriver);
+
+      // Link and immediately reflect to the bus in fleet section
+      if (newDriver.assignedBusId) {
+        const targetBus = db.buses.find(b => b.id === newDriver.assignedBusId);
+        if (targetBus) {
+          targetBus.driverName = newDriver.name;
+          await dbUpsertBus(targetBus);
+        }
+      }
+
       created.push(savedDriver);
     }
+
+    if (fastify.broadcastBuses) fastify.broadcastBuses();
+    if (fastify.broadcastSync) fastify.broadcastSync();
 
     return { success: true, drivers: created, count: created.length };
   });
@@ -609,17 +672,40 @@ export default async function adminRoutes(fastify, options) {
       return reply.status(404).send({ success: false, error: 'Driver not found' });
     }
 
+    const driverName = name !== undefined ? sanitizeString(name, 100) : existingDriver.name;
+    const prevBusId = existingDriver.assignedBusId;
+    const newBusId = assignedBusId !== undefined ? (assignedBusId ? sanitizeString(assignedBusId, 50) : null) : prevBusId;
+
     const updatedDriver = {
       ...existingDriver,
-      ...(name !== undefined ? { name: sanitizeString(name, 100) } : {}),
+      name: driverName,
       ...(username !== undefined ? { username: sanitizeString(username, 50) } : {}),
       ...(password !== undefined && password.trim() ? { password: password.trim() } : {}),
       ...(phone !== undefined ? { phone: sanitizeString(phone, 30) } : {}),
-      ...(assignedBusId !== undefined ? { assignedBusId: assignedBusId ? sanitizeString(assignedBusId, 50) : null } : {}),
+      assignedBusId: newBusId,
       ...(status !== undefined ? { status: sanitizeString(status, 30) } : {})
     };
 
     const saved = await dbUpsertDriver(updatedDriver);
+
+    // If bus assignment changed or driver name changed, sync fleet buses
+    if (prevBusId && prevBusId !== newBusId) {
+      const oldBus = db.buses.find(b => b.id === prevBusId);
+      if (oldBus && oldBus.driverName === existingDriver.name) {
+        oldBus.driverName = 'Unassigned';
+        await dbUpsertBus(oldBus);
+      }
+    }
+    if (newBusId) {
+      const newBus = db.buses.find(b => b.id === newBusId);
+      if (newBus) {
+        newBus.driverName = driverName;
+        await dbUpsertBus(newBus);
+      }
+    }
+
+    if (fastify.broadcastBuses) fastify.broadcastBuses();
+    if (fastify.broadcastSync) fastify.broadcastSync();
 
     return { success: true, driver: saved };
   });
@@ -629,7 +715,19 @@ export default async function adminRoutes(fastify, options) {
     if (!user) return;
 
     const { id } = request.params;
+    const driver = db.drivers.find(d => d.id === id);
+    if (driver && driver.assignedBusId) {
+      const bus = db.buses.find(b => b.id === driver.assignedBusId || b.driverName === driver.name);
+      if (bus) {
+        bus.driverName = 'Unassigned';
+        await dbUpsertBus(bus);
+      }
+    }
+
     await dbDeleteDriver(id);
+
+    if (fastify.broadcastBuses) fastify.broadcastBuses();
+    if (fastify.broadcastSync) fastify.broadcastSync();
 
     return { success: true, message: 'Driver deleted successfully' };
   });
@@ -675,8 +773,18 @@ export default async function adminRoutes(fastify, options) {
     if (!user) return;
     const { ids = [] } = request.body || {};
     for (const id of ids) {
+      const driver = db.drivers.find(d => d.id === id);
+      if (driver && driver.assignedBusId) {
+        const bus = db.buses.find(b => b.id === driver.assignedBusId || b.driverName === driver.name);
+        if (bus) {
+          bus.driverName = 'Unassigned';
+          await dbUpsertBus(bus);
+        }
+      }
       await dbDeleteDriver(id);
     }
+    if (fastify.broadcastBuses) fastify.broadcastBuses();
+    if (fastify.broadcastSync) fastify.broadcastSync();
     return { success: true, count: ids.length, message: `${ids.length} drivers deleted successfully` };
   });
 }
