@@ -1,10 +1,42 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import websocket from '@fastify/websocket';
+import crypto from 'node:crypto';
 import { db, initDatabase, dbUpsertBus } from './db/index.js';
 import adminRoutes from './routes/admin.js';
 
 const fastify = Fastify({ logger: true });
+
+// Pre-Shared ChaCha20 Telemetry Secret Key (RFC 8439, 256-bit key shared with STM32 IoT hardware)
+const TELEMETRY_SECRET_KEY = Buffer.from(
+  (process.env.TRACKER_SECRET_KEY || 'TEAM6_WAYFINDER_SECRET_KEY_2026!').padEnd(32, '0').slice(0, 32),
+  'utf8'
+);
+
+function decryptTelemetry(ivHexOrStr, dataHex) {
+  try {
+    if (!ivHexOrStr || !dataHex) return null;
+    let ivBuffer;
+    if (Buffer.isBuffer(ivHexOrStr)) {
+      ivBuffer = ivHexOrStr;
+    } else if (typeof ivHexOrStr === 'string') {
+      if (ivHexOrStr.length === 32 && /^[0-9a-fA-F]+$/.test(ivHexOrStr)) {
+        ivBuffer = Buffer.from(ivHexOrStr, 'hex');
+      } else {
+        ivBuffer = Buffer.from(ivHexOrStr.padEnd(16, '0').slice(0, 16), 'utf8');
+      }
+    } else {
+      return null;
+    }
+    const decipher = crypto.createDecipheriv('chacha20', TELEMETRY_SECRET_KEY, ivBuffer);
+    let dec = decipher.update(dataHex, 'hex', 'utf8');
+    dec += decipher.final('utf8');
+    return JSON.parse(dec);
+  } catch (err) {
+    fastify.log.error(`[ChaCha20 Decryption Failed]: ${err.message}`);
+    return null;
+  }
+}
 
 await fastify.register(cors, { 
   origin: true 
@@ -126,10 +158,30 @@ fastify.register(async function (fastifyInstance) {
 
     socket.on('message', message => {
       try {
-        const data = JSON.parse(message.toString());
+        let data = JSON.parse(message.toString());
+
+        // Decrypt ChaCha20 payload if packet is encrypted from STM32 hardware
+        if (data && data.type === 'ENCRYPTED_TELEMETRY') {
+          const decrypted = decryptTelemetry(data.iv, data.data);
+          if (decrypted) {
+            fastify.log.info(`[STM32 IoT Encrypted Telemetry Decrypted]: Bus=${decrypted.busId || decrypted.bus_id}, Driver=${decrypted.driverName}`);
+            data = decrypted;
+          } else {
+            fastify.log.warn('[STM32 IoT Security] Discarding unauthenticated / invalid encrypted packet');
+            return;
+          }
+        }
+
+        // Normalize legacy or alternate tracker keys
+        if (data.bus_id && !data.busId) data.busId = data.bus_id;
+        if (!data.type && data.busId && data.lat !== undefined) data.type = 'DRIVER_LOCATION';
+        if (data.alert && !data.type) {
+          data.type = 'DRIVER_SOS';
+          data.reason = data.alert;
+        }
 
         if (data.type === 'DRIVER_LOCATION') {
-          const { busId, lat, lng, speed, status, driverName, bearing } = data;
+          const { busId, lat, lng, speed, status, driverName, driverUsername, bearing } = data;
           liveDriverActivity[busId] = Date.now();
           socket.broadcastingBusId = busId;
 
