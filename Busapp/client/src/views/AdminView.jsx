@@ -122,6 +122,14 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
   const [editStudentStatus, setEditStudentStatus] = useState('Valid');
   const [editStudentValidUntil, setEditStudentValidUntil] = useState('2026-12-31');
 
+  // Admin Self-Password Management
+  const [isAdminPasswordModalOpen, setIsAdminPasswordModalOpen] = useState(false);
+  const [adminCurrentPassword, setAdminCurrentPassword] = useState('');
+  const [adminNewPassword, setAdminNewPassword] = useState('');
+  const [adminConfirmPassword, setAdminConfirmPassword] = useState('');
+  const [showAdminNewPassword, setShowAdminNewPassword] = useState(false);
+  const [adminPasswordMsg, setAdminPasswordMsg] = useState(null);
+
   // ── Bulk Selection States (Drivers, Passes, Routes) ──
   const [selectedDriverIds, setSelectedDriverIds] = useState(new Set());
   const [selectedPassIds, setSelectedPassIds] = useState(new Set());
@@ -267,7 +275,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
   // Update Bus Driver Assignment
   const handleUpdateBusDriver = async (busId, newDriverName) => {
     try {
-      await fetch((import.meta.env.VITE_API_URL || '') + `/api/buses/${busId}`, {
+      await fetch((import.meta.env.VITE_API_URL || '') + `/api/buses/${encodeURIComponent(busId)}`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify({ driverName: newDriverName || 'Unassigned' })
@@ -409,7 +417,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
       if (updateBusRoute) {
         await updateBusRoute(busId, newRouteId);
       } else {
-        await fetch((import.meta.env.VITE_API_URL || '') + `/api/buses/${busId}`, {
+        await fetch((import.meta.env.VITE_API_URL || '') + `/api/buses/${encodeURIComponent(busId)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ routeId: newRouteId || null })
@@ -424,7 +432,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
   // Update Student Pass Status
   const handleUpdatePassStatus = async (passId, newStatus) => {
     try {
-      await fetch((import.meta.env.VITE_API_URL || '') + `/api/passes/${passId}`, {
+      await fetch((import.meta.env.VITE_API_URL || '') + `/api/passes/${encodeURIComponent(passId)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ passStatus: newStatus })
@@ -455,7 +463,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     if (!editingStudent || !editStudentName.trim() || !editStudentEmail.trim()) return;
     setIsSubmitting(true);
     try {
-      const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/passes/${editingStudent.id}`, {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/passes/${encodeURIComponent(editingStudent.id)}`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify({
@@ -543,7 +551,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     if (!editingDriver || !editDriverName.trim() || !editDriverUsername.trim()) return;
     setIsSubmitting(true);
     try {
-      const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/drivers/${editingDriver.id}`, {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + `/api/drivers/${encodeURIComponent(editingDriver.id)}`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify({
@@ -606,6 +614,48 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     } catch (err) {
       console.error('Error creating driver:', err);
       alert('Error creating driver: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Submit Admin Own Password Update
+  const handleUpdateAdminPassword = async (e) => {
+    e.preventDefault();
+    setAdminPasswordMsg(null);
+    if (!adminNewPassword || adminNewPassword.trim().length < 4) {
+      setAdminPasswordMsg({ type: 'error', text: 'New password must be at least 4 characters long.' });
+      return;
+    }
+    if (adminNewPassword !== adminConfirmPassword) {
+      setAdminPasswordMsg({ type: 'error', text: 'New passwords do not match.' });
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/admin/password', {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          currentPassword: adminCurrentPassword,
+          newPassword: adminNewPassword.trim()
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAdminPasswordMsg({ type: 'success', text: 'Password successfully updated!' });
+        setTimeout(() => {
+          setIsAdminPasswordModalOpen(false);
+          setAdminCurrentPassword('');
+          setAdminNewPassword('');
+          setAdminConfirmPassword('');
+          setAdminPasswordMsg(null);
+        }, 1200);
+      } else {
+        setAdminPasswordMsg({ type: 'error', text: data.error || 'Failed to update admin password' });
+      }
+    } catch (err) {
+      setAdminPasswordMsg({ type: 'error', text: 'Error updating password: ' + err.message });
     } finally {
       setIsSubmitting(false);
     }
@@ -1274,32 +1324,63 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
               </button>
             </div>
 
-            {/* Bottom row: Sign Out Button */}
-            <button
-              type="button"
-              onClick={logout}
-              style={{
-                width: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.45rem',
-                padding: '0.45rem 0.65rem',
-                borderRadius: '8px',
-                border: '1px solid rgba(239, 68, 68, 0.25)',
-                backgroundColor: 'rgba(239, 68, 68, 0.06)',
-                color: '#dc2626',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s ease'
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.14)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.06)'; }}
-            >
-              <LogOut size={13} />
-              <span>Sign Out</span>
-            </button>
+            {/* Bottom row: Admin Password & Sign Out Buttons */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.45rem' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setAdminPasswordMsg(null);
+                  setAdminCurrentPassword('');
+                  setAdminNewPassword('');
+                  setAdminConfirmPassword('');
+                  setIsAdminPasswordModalOpen(true);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.35rem',
+                  padding: '0.45rem 0.5rem',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color, #cbd5e1)',
+                  backgroundColor: 'var(--bg-subtle, rgba(0, 0, 0, 0.03))',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+                title="Change Administrator Password"
+              >
+                <Key size={13} />
+                <span>Password</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={logout}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.35rem',
+                  padding: '0.45rem 0.5rem',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(239, 68, 68, 0.25)',
+                  backgroundColor: 'rgba(239, 68, 68, 0.06)',
+                  color: '#dc2626',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.14)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.06)'; }}
+              >
+                <LogOut size={13} />
+                <span>Sign Out</span>
+              </button>
+            </div>
           </div>
         </div>
       </aside>
@@ -4229,6 +4310,188 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
         </motion.div>
       )}
       </AnimatePresence>
+
+      {/* MODAL: CHANGE ADMIN PASSWORD */}
+      {isAdminPasswordModalOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.5rem',
+            zIndex: 99999
+          }}
+          onClick={() => setIsAdminPasswordModalOpen(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.94, opacity: 0, y: 16 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.94, opacity: 0, y: 16 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            style={{
+              backgroundColor: 'var(--bg-card, #ffffff)',
+              borderRadius: '16px',
+              padding: '1.75rem',
+              maxWidth: '440px',
+              width: '100%',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.25)',
+              border: '1px solid var(--border-color, #cbd5e1)'
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(2, 132, 199, 0.12)',
+                    color: 'var(--primary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Key size={22} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, color: 'var(--text-primary)' }}>
+                    Admin Password
+                  </h3>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                    Update your master administrator credentials
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAdminPasswordModalOpen(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {adminPasswordMsg && (
+              <div
+                style={{
+                  padding: '0.65rem 0.85rem',
+                  borderRadius: '8px',
+                  marginBottom: '1rem',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  backgroundColor: adminPasswordMsg.type === 'success' ? 'rgba(34, 197, 94, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                  color: adminPasswordMsg.type === 'success' ? '#16a34a' : '#dc2626',
+                  border: `1px solid ${adminPasswordMsg.type === 'success' ? 'rgba(34, 197, 94, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`
+                }}
+              >
+                {adminPasswordMsg.text}
+              </div>
+            )}
+
+            <form onSubmit={handleUpdateAdminPassword} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Current Password</label>
+                <input
+                  type="password"
+                  value={adminCurrentPassword}
+                  onChange={e => setAdminCurrentPassword(e.target.value)}
+                  placeholder="Enter current admin password"
+                  className="form-input"
+                  style={{ width: '100%', fontSize: '0.85rem' }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>New Password *</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showAdminNewPassword ? 'text' : 'password'}
+                    value={adminNewPassword}
+                    onChange={e => setAdminNewPassword(e.target.value)}
+                    placeholder="Enter new strong password"
+                    className="form-input"
+                    style={{ width: '100%', fontSize: '0.85rem', paddingRight: '2.2rem' }}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminNewPassword(!showAdminNewPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '0.5rem',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--text-muted)'
+                    }}
+                  >
+                    {showAdminNewPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: 600, fontSize: '0.8rem' }}>Confirm New Password *</label>
+                <input
+                  type={showAdminNewPassword ? 'text' : 'password'}
+                  value={adminConfirmPassword}
+                  onChange={e => setAdminConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  className="form-input"
+                  style={{ width: '100%', fontSize: '0.85rem' }}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsAdminPasswordModalOpen(false)}
+                  style={{
+                    padding: '0.55rem 1rem',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: 'transparent',
+                    color: 'var(--text-secondary)',
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  style={{
+                    padding: '0.55rem 1.25rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    backgroundColor: 'var(--primary)',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isSubmitting ? 'Updating...' : 'Update Password'}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </motion.div>
+      )}
 
       {/* Built-in Custom Confirmation Modal for All Deletions & Destructive Actions */}
       <ConfirmModal

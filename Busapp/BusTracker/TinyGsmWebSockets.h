@@ -59,7 +59,7 @@ public:
     unsigned long start = millis();
     char lineBuf[32];
     uint8_t lineIdx = 0;
-    while (_client->connected() && (millis() - start < 5000)) {
+    while (_client->connected() && (millis() - start < 8000)) {
       if (_client->available()) {
         char c = (char)_client->read();
         if (c == '\n' || c == '\r') {

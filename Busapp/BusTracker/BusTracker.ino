@@ -63,13 +63,15 @@ const char* driverName     = "Rahul Nair";       // Driver display name
 #if ENABLE_WIFI
   const char wifi_ssid[] = "huh?";
   const char wifi_pass[] = "12345678";
+  // Local Development Server (Fastify Node.js on PC)
   const char* websockets_server_host = "10.168.251.161";
-  const uint16_t websockets_server_port = 3001;  // Fastify server port
+  const uint16_t websockets_server_port = 3001;  // Local Fastify server port
   const char* websockets_server_path = "/ws";    // Real-time WebSocket endpoint
 #elif ENABLE_GSM
   const char apn[]  = "bsnlnet";
   const char user[] = "";
   const char pass[] = "";
+  // Local Development Server
   const char* websockets_server_host = "10.168.251.161";
   const uint16_t websockets_server_port = 3001;
   const char* websockets_server_path = "/ws";

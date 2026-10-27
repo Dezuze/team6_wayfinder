@@ -902,3 +902,23 @@ export async function dbAuthenticateUser(username, password, role) {
 
   return null;
 }
+
+export async function dbUpdateAdminPassword(adminId, newPlainPassword) {
+  if (!newPlainPassword) throw new Error('Password cannot be empty');
+  const hashedPassword = hashPassword(newPlainPassword.trim());
+  const admin = db.admins.find(a => a.id === adminId || a.username === adminId);
+  if (admin) {
+    admin.password = hashedPassword;
+  }
+  if (isPgConnected) {
+    try {
+      const p = getPool();
+      await p.query('UPDATE admins SET password = $1 WHERE id = $2 OR username = $2', [hashedPassword, adminId]);
+    } catch (err) {
+      console.error('dbUpdateAdminPassword PostgreSQL error:', err.message);
+    }
+  } else {
+    saveFallbackDb();
+  }
+  return true;
+}

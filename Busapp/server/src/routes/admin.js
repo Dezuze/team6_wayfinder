@@ -13,13 +13,15 @@ import {
   dbUpsertDriver,
   dbDeleteDriver,
   dbAuthenticateUser,
+  dbUpdateAdminPassword,
   isConnected
 } from '../db/index.js';
 import {
   verifyAuthToken,
   sanitizeString,
   isValidCoordinate,
-  verifyPassQr
+  verifyPassQr,
+  verifyPassword
 } from '../utils/security.js';
 import {
   checkLoginRateLimit,
@@ -486,13 +488,20 @@ export default async function adminRoutes(fastify, options) {
     return { success: true, passes: created, count: created.length };
   });
 
-  fastify.put('/api/passes/:id', async (request, reply) => {
+  const handleUpdatePass = async (request, reply) => {
     const user = authenticate(request, reply, ['admin']);
     if (!user) return;
 
-    const { id } = request.params;
+    const rawId = request.params['*'] || request.params.id;
+    const id = rawId ? decodeURIComponent(rawId) : '';
     const { passStatus, validUntil, routeEntitlement, name, email, username, password, newId } = request.body || {};
-    const existingPass = db.studentPasses.find(p => p.id === id);
+
+    let existingPass = db.studentPasses.find(p => p.id === id || p.id === rawId);
+    if (!existingPass && isConnected && isConnected()) {
+      await dbGetPasses(true);
+      existingPass = db.studentPasses.find(p => p.id === id || p.id === rawId);
+    }
+
     if (!existingPass) {
       return reply.status(404).send({ success: false, error: 'Student pass not found' });
     }
@@ -506,30 +515,37 @@ export default async function adminRoutes(fastify, options) {
       ...(email !== undefined ? { email: sanitizeString(email, 100) } : {}),
       ...(username !== undefined ? { username: sanitizeString(username, 50) } : {}),
       ...(password !== undefined && password.trim() ? { password: password.trim() } : {}),
-      ...(newId !== undefined && newId.trim() && newId !== id ? { id: sanitizeString(newId.trim(), 50) } : {})
+      ...(newId !== undefined && newId.trim() && newId !== existingPass.id ? { id: sanitizeString(newId.trim(), 50) } : {})
     };
 
-    if (newId && newId.trim() && newId !== id) {
-      await dbDeletePass(id);
+    if (newId && newId.trim() && newId !== existingPass.id) {
+      await dbDeletePass(existingPass.id);
     }
     const saved = await dbUpsertPass(updatedPass);
 
     if (fastify.broadcastSync) fastify.broadcastSync();
 
     return { success: true, pass: saved };
-  });
+  };
 
-  fastify.delete('/api/passes/:id', async (request, reply) => {
+  fastify.put('/api/passes/:id', handleUpdatePass);
+  fastify.put('/api/passes/*', handleUpdatePass);
+
+  const handleDeletePass = async (request, reply) => {
     const user = authenticate(request, reply, ['admin']);
     if (!user) return;
 
-    const { id } = request.params;
+    const rawId = request.params['*'] || request.params.id;
+    const id = rawId ? decodeURIComponent(rawId) : '';
     await dbDeletePass(id);
 
     if (fastify.broadcastSync) fastify.broadcastSync();
 
     return { success: true, message: 'Student pass deleted successfully' };
-  });
+  };
+
+  fastify.delete('/api/passes/:id', handleDeletePass);
+  fastify.delete('/api/passes/*', handleDeletePass);
 
   // --- AUTH / LOGIN (RATE-LIMITED & HARDENED) ---
   fastify.post('/api/login', async (request, reply) => {
@@ -661,13 +677,20 @@ export default async function adminRoutes(fastify, options) {
     return { success: true, drivers: created, count: created.length };
   });
 
-  fastify.put('/api/drivers/:id', async (request, reply) => {
+  const handleUpdateDriver = async (request, reply) => {
     const user = authenticate(request, reply, ['admin']);
     if (!user) return;
 
-    const { id } = request.params;
+    const rawId = request.params['*'] || request.params.id;
+    const id = rawId ? decodeURIComponent(rawId) : '';
     const { name, username, password, phone, assignedBusId, status } = request.body || {};
-    const existingDriver = db.drivers.find(d => d.id === id);
+
+    let existingDriver = db.drivers.find(d => d.id === id || d.id === rawId);
+    if (!existingDriver && isConnected && isConnected()) {
+      await dbGetDrivers();
+      existingDriver = db.drivers.find(d => d.id === id || d.id === rawId);
+    }
+
     if (!existingDriver) {
       return reply.status(404).send({ success: false, error: 'Driver not found' });
     }
@@ -708,14 +731,18 @@ export default async function adminRoutes(fastify, options) {
     if (fastify.broadcastSync) fastify.broadcastSync();
 
     return { success: true, driver: saved };
-  });
+  };
 
-  fastify.delete('/api/drivers/:id', async (request, reply) => {
+  fastify.put('/api/drivers/:id', handleUpdateDriver);
+  fastify.put('/api/drivers/*', handleUpdateDriver);
+
+  const handleDeleteDriver = async (request, reply) => {
     const user = authenticate(request, reply, ['admin']);
     if (!user) return;
 
-    const { id } = request.params;
-    const driver = db.drivers.find(d => d.id === id);
+    const rawId = request.params['*'] || request.params.id;
+    const id = rawId ? decodeURIComponent(rawId) : '';
+    const driver = db.drivers.find(d => d.id === id || d.id === rawId);
     if (driver && driver.assignedBusId) {
       const bus = db.buses.find(b => b.id === driver.assignedBusId || b.driverName === driver.name);
       if (bus) {
@@ -730,6 +757,31 @@ export default async function adminRoutes(fastify, options) {
     if (fastify.broadcastSync) fastify.broadcastSync();
 
     return { success: true, message: 'Driver deleted successfully' };
+  };
+
+  fastify.delete('/api/drivers/:id', handleDeleteDriver);
+  fastify.delete('/api/drivers/*', handleDeleteDriver);
+
+  // --- ADMIN UPDATE OWN PASSWORD ---
+  fastify.put('/api/admin/password', async (request, reply) => {
+    const user = authenticate(request, reply, ['admin']);
+    if (!user) return;
+
+    const { currentPassword, newPassword } = request.body || {};
+    if (!newPassword || newPassword.trim().length < 4) {
+      return reply.status(400).send({ success: false, error: 'New password must be at least 4 characters long.' });
+    }
+
+    const adminRecord = db.admins.find(a => a.id === user.id || a.username === user.username);
+    if (adminRecord && currentPassword) {
+      const { valid } = verifyPassword(currentPassword, adminRecord.password);
+      if (!valid) {
+        return reply.status(400).send({ success: false, error: 'Current password is incorrect.' });
+      }
+    }
+
+    await dbUpdateAdminPassword(adminRecord ? adminRecord.id : user.id, newPassword);
+    return { success: true, message: 'Admin password updated successfully.' };
   });
 
   // --- BULK DELETE ENDPOINTS ---

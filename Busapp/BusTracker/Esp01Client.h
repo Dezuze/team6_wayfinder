@@ -232,6 +232,8 @@ public:
     while (_serial->available()) _serial->read();
 
     if (port == 443) {
+      sendCmd("AT+CIPSSLSIZE=4096", "OK", 500);
+      sendCmd("AT+CIPSSLCCONF=0", "OK", 500);
       _serial->print("AT+CIPSTART=\"SSL\",\"");
     } else {
       _serial->print("AT+CIPSTART=\"TCP\",\"");
@@ -243,7 +245,8 @@ public:
     unsigned long start = millis();
     char resp[64];
     uint8_t idx = 0;
-    while (millis() - start < 8000) {
+    uint32_t waitTimeout = (port == 443) ? 15000 : 8000;
+    while (millis() - start < waitTimeout) {
       if (_serial->available()) {
         char c = (char)_serial->read();
         if (c == '\n' || c == '\r') {
