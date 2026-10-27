@@ -50,7 +50,7 @@ import {
 } from 'lucide-react';
 
 export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
-  const { buses, routes, passes, refreshData, createRoute, deleteRoute, updateBusRoute } = useWebSocket();
+  const { buses, routes, passes, refreshData, createRoute, deleteRoute, updateBusRoute, resolveSOS, activeSosAlerts } = useWebSocket();
   const { user, logout } = useAuth();
   const { themeMode, cycleTheme, effectiveTheme } = useTheme();
   const [activeSection, setActiveSection] = useState('buses'); // buses, routes, passes
@@ -1410,18 +1410,42 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
                           ID: {matchedDriver?.id || matchedDriver?.username || 'N/A'} · Bus: {selectedCard.displayTitle}
                         </div>
                       </div>
-                      <span
-                        style={{
-                          fontSize: '0.68rem',
-                          fontWeight: 700,
-                          padding: '0.2rem 0.5rem',
-                          borderRadius: '6px',
-                          backgroundColor: selectedCard.isSos ? '#fee2e2' : selectedCard.isDelayed ? '#fef3c7' : '#dcfce7',
-                          color: selectedCard.isSos ? '#b91c1c' : selectedCard.isDelayed ? '#b45309' : '#15803d'
-                        }}
-                      >
-                        {selectedCard.status}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <span
+                          style={{
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            padding: '0.2rem 0.5rem',
+                            borderRadius: '6px',
+                            backgroundColor: selectedCard.isSos ? '#fee2e2' : selectedCard.isDelayed ? '#fef3c7' : '#dcfce7',
+                            color: selectedCard.isSos ? '#b91c1c' : selectedCard.isDelayed ? '#b45309' : '#15803d'
+                          }}
+                        >
+                          {selectedCard.status}
+                        </span>
+                        {selectedCard.isSos && (
+                          <button
+                            type="button"
+                            onClick={() => resolveSOS(selectedCard.id)}
+                            style={{
+                              backgroundColor: '#16a34a',
+                              color: '#ffffff',
+                              border: 'none',
+                              borderRadius: '6px',
+                              padding: '0.2rem 0.45rem',
+                              fontSize: '0.68rem',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.2rem'
+                            }}
+                            title="Resolve and clear this SOS alert"
+                          >
+                            <Check size={12} /> Clear SOS
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.78rem', backgroundColor: 'var(--bg-subtle)', padding: '0.65rem 0.75rem', borderRadius: '10px' }}>

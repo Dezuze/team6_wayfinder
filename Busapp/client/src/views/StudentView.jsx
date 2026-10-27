@@ -1016,6 +1016,7 @@ export default function StudentView() {
         );
       })()}
       </AnimatePresence>
+
       {/* Bottom Navigation Bar */}
       <div className="bottom-nav-bar">
         <motion.button

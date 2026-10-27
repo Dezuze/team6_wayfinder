@@ -31,16 +31,28 @@ public:
     }
 
     // Send HTTP WebSocket Upgrade Request as a single packet
-    char req[220];
-    snprintf(req, sizeof(req),
-      "GET %s HTTP/1.1\r\n"
-      "Host: %s:%u\r\n"
-      "Upgrade: websocket\r\n"
-      "Connection: Upgrade\r\n"
-      "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
-      "Sec-WebSocket-Version: 13\r\n\r\n",
-      path, host, port
-    );
+    char req[240];
+    if (port == 443 || port == 80) {
+      snprintf(req, sizeof(req),
+        "GET %s HTTP/1.1\r\n"
+        "Host: %s\r\n"
+        "Upgrade: websocket\r\n"
+        "Connection: Upgrade\r\n"
+        "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
+        "Sec-WebSocket-Version: 13\r\n\r\n",
+        path, host
+      );
+    } else {
+      snprintf(req, sizeof(req),
+        "GET %s HTTP/1.1\r\n"
+        "Host: %s:%u\r\n"
+        "Upgrade: websocket\r\n"
+        "Connection: Upgrade\r\n"
+        "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
+        "Sec-WebSocket-Version: 13\r\n\r\n",
+        path, host, port
+      );
+    }
     _client->write((const uint8_t*)req, strlen(req));
 
     // Await Handshake Response (101 Switching Protocols)

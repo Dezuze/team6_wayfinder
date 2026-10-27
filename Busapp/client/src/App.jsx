@@ -8,6 +8,7 @@ import NotFoundView from './views/NotFoundView';
 import LegalModal from './components/LegalModal';
 import CookieBanner from './components/CookieBanner';
 import SplashScreen from './components/SplashScreen';
+import SosAlertBanner from './components/SosAlertBanner';
 import { ThemeProvider } from './context/ThemeContext';
 import { WebSocketProvider } from './context/WebSocketContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -73,6 +74,9 @@ function AppContent() {
 
   return (
     <div className="app-container">
+      {/* Global Real-Time Emergency SOS Broadcast Banner */}
+      <SosAlertBanner />
+
       {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
       {showNavbar && (
         <Navbar 

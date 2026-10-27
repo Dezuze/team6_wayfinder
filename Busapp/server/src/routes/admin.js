@@ -787,4 +787,96 @@ export default async function adminRoutes(fastify, options) {
     if (fastify.broadcastSync) fastify.broadcastSync();
     return { success: true, count: ids.length, message: `${ids.length} drivers deleted successfully` };
   });
+
+  // --- EMERGENCY SOS REST ENDPOINTS ---
+  fastify.get('/api/sos', async (request, reply) => {
+    return {
+      success: true,
+      alerts: db.activeSosAlerts || []
+    };
+  });
+
+  fastify.post('/api/sos', async (request, reply) => {
+    const { busId, reason, senderName, senderRole, location } = request.body || {};
+    let targetBus = null;
+    let busIndex = busId ? db.buses.findIndex(b => b.id === busId) : -1;
+
+    if (busIndex === -1 && busId) {
+      targetBus = {
+        id: busId || `bus-${Date.now()}`,
+        number: `BUS #${busId}`,
+        routeId: null,
+        driverName: senderName || 'Live Driver',
+        status: "EMERGENCY / SOS",
+        sosReason: reason || "Emergency SOS assistance reported",
+        location: location || { lat: 9.67416, lng: 76.82573 },
+        speed: 0,
+        isLive: true,
+        lastUpdated: new Date().toISOString()
+      };
+      db.buses.push(targetBus);
+      await dbUpsertBus(targetBus).catch(() => {});
+    } else if (busIndex !== -1) {
+      db.buses[busIndex].status = "EMERGENCY / SOS";
+      db.buses[busIndex].sosReason = reason || "Emergency SOS assistance reported";
+      db.buses[busIndex].isLive = true;
+      if (location && location.lat && location.lng) {
+        db.buses[busIndex].location = location;
+      }
+      db.buses[busIndex].lastUpdated = new Date().toISOString();
+      targetBus = db.buses[busIndex];
+      await dbUpsertBus(targetBus).catch(() => {});
+    }
+
+    const alertObj = {
+      id: `sos-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      busId: busId || targetBus?.id || null,
+      busNumber: targetBus?.number || (busId ? `BUS #${busId}` : 'Campus Emergency Alert'),
+      senderName: senderName || targetBus?.driverName || 'User',
+      senderRole: senderRole || 'student',
+      reason: reason || "Emergency distress signal pushed",
+      location: location || targetBus?.location || { lat: 9.67416, lng: 76.82573 },
+      timestamp: new Date().toISOString(),
+      active: true
+    };
+
+    db.activeSosAlerts = db.activeSosAlerts || [];
+    db.activeSosAlerts.push(alertObj);
+
+    if (fastify.broadcastBuses) fastify.broadcastBuses();
+    if (fastify.broadcastSosAlert) fastify.broadcastSosAlert(alertObj);
+
+    return {
+      success: true,
+      alert: alertObj
+    };
+  });
+
+  fastify.post('/api/sos/resolve', async (request, reply) => {
+    const { busId, alertId } = request.body || {};
+    if (busId) {
+      const busIndex = db.buses.findIndex(b => b.id === busId);
+      if (busIndex !== -1) {
+        db.buses[busIndex].status = 'In Transit';
+        delete db.buses[busIndex].sosReason;
+        db.buses[busIndex].lastUpdated = new Date().toISOString();
+        await dbUpsertBus(db.buses[busIndex]).catch(() => {});
+      }
+    }
+    if (db.activeSosAlerts) {
+      db.activeSosAlerts = db.activeSosAlerts.filter(a => {
+        if (busId && a.busId === busId) return false;
+        if (alertId && a.id === alertId) return false;
+        return true;
+      });
+    }
+
+    if (fastify.broadcastBuses) fastify.broadcastBuses();
+    if (fastify.broadcastSosResolved) fastify.broadcastSosResolved(busId, alertId);
+
+    return {
+      success: true,
+      message: 'Emergency SOS alert resolved successfully'
+    };
+  });
 }

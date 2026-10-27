@@ -63,14 +63,14 @@ const char* driverName     = "Rahul Nair";       // Driver display name
 #if ENABLE_WIFI
   const char wifi_ssid[] = "huh?";
   const char wifi_pass[] = "12345678";
-  const char* websockets_server_host = "172.24.204.161";
+  const char* websockets_server_host = "10.168.251.161";
   const uint16_t websockets_server_port = 3001;  // Fastify server port
   const char* websockets_server_path = "/ws";    // Real-time WebSocket endpoint
 #elif ENABLE_GSM
   const char apn[]  = "bsnlnet";
   const char user[] = "";
   const char pass[] = "";
-  const char* websockets_server_host = "172.24.204.161";
+  const char* websockets_server_host = "10.168.251.161";
   const uint16_t websockets_server_port = 3001;
   const char* websockets_server_path = "/ws";
 #endif
@@ -266,7 +266,13 @@ void sendTelemetryPacket(const char* alertReason = nullptr) {
     appendStr(plainJson, busId);
     appendStr(plainJson, "\",\"driverName\":\"");
     appendStr(plainJson, driverName);
-    appendStr(plainJson, "\",\"reason\":\"");
+    appendStr(plainJson, "\",\"driverUsername\":\"");
+    appendStr(plainJson, driverUsername);
+    appendStr(plainJson, "\",\"lat\":");
+    appendStr(plainJson, gpsLat);
+    appendStr(plainJson, ",\"lng\":");
+    appendStr(plainJson, gpsLng);
+    appendStr(plainJson, ",\"reason\":\"");
     appendStr(plainJson, alertReason);
     appendStr(plainJson, "\"}");
   } else {

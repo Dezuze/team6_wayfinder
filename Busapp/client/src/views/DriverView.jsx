@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 export default function DriverView({ activeRole, setActiveRole }) {
-  const { buses, routes, streamDriverLocation, streamDriverSOS } = useWebSocket();
+  const { buses, routes, streamDriverLocation, streamDriverSOS, triggerSOS, resolveSOS } = useWebSocket();
   const { user, logout } = useAuth();
 
   const defaultBusId = user?.assignedBusId || (buses[0] ? buses[0].id : 'bus-101');
@@ -176,11 +176,29 @@ export default function DriverView({ activeRole, setActiveRole }) {
     if (sosTriggered) setSosTriggered(false);
   };
 
-  const handleConfirmSOS = () => {
-    streamDriverSOS(selectedBusId, sosReason);
+  const handleConfirmSOS = async () => {
+    if (triggerSOS) {
+      await triggerSOS({
+        busId: selectedBusId,
+        reason: sosReason,
+        senderName: user?.name || user?.username || 'Driver',
+        senderRole: 'driver',
+        location: coords
+      });
+    } else {
+      streamDriverSOS(selectedBusId, sosReason);
+    }
     setSosTriggered(true);
     setShowSosModal(false);
     setDriverStatus('EMERGENCY SOS');
+  };
+
+  const handleResolveSOS = async () => {
+    if (resolveSOS) {
+      await resolveSOS(selectedBusId);
+    }
+    setSosTriggered(false);
+    setDriverStatus(isBroadcasting ? 'In Transit' : 'Active');
   };
 
   // Permission Request Screen (Only Real GPS)
@@ -417,29 +435,33 @@ export default function DriverView({ activeRole, setActiveRole }) {
         )}
       </motion.button>
 
-      {/* 4. SOS Emergency Button */}
+      {/* 4. Driver Emergency SOS Push Button */}
       <motion.button
+        whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
-        onClick={() => setShowSosModal(true)}
+        onClick={() => sosTriggered ? handleResolveSOS() : setShowSosModal(true)}
+        className={sosTriggered ? "pulse-sos-btn" : ""}
         style={{
           width: '100%',
-          padding: '0.75rem 1rem',
-          borderRadius: '10px',
-          border: '1px solid rgba(239, 68, 68, 0.3)',
-          backgroundColor: 'rgba(239, 68, 68, 0.08)',
-          color: '#ef4444',
+          padding: '0.85rem 1rem',
+          borderRadius: '12px',
+          border: sosTriggered ? '2px solid #ef4444' : '1px solid rgba(239, 68, 68, 0.4)',
+          backgroundColor: sosTriggered ? '#dc2626' : 'rgba(239, 68, 68, 0.1)',
+          color: sosTriggered ? '#ffffff' : '#ef4444',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '0.5rem',
-          fontSize: '0.85rem',
-          fontWeight: 700,
+          gap: '0.6rem',
+          fontSize: '0.9rem',
+          fontWeight: 800,
           cursor: 'pointer',
+          boxShadow: sosTriggered ? '0 6px 20px rgba(220, 38, 38, 0.5)' : 'none',
           transition: 'all 0.15s ease'
         }}
+        title={sosTriggered ? "Emergency active. Click to resolve." : "Push Emergency SOS"}
       >
-        <AlertTriangle size={16} />
-        <span>Emergency SOS</span>
+        <AlertTriangle size={18} />
+        <span>{sosTriggered ? '🚨 SOS ACTIVE — TAP TO CANCEL / RESOLVE' : '🚨 PUSH EMERGENCY SOS'}</span>
       </motion.button>
 
       {/* 5. Minimal footer */}
@@ -510,14 +532,15 @@ export default function DriverView({ activeRole, setActiveRole }) {
               <button
                 onClick={handleConfirmSOS}
                 className="btn btn-danger"
-                style={{ width: '100%', padding: '0.75rem', fontWeight: 600 }}
+                style={{ width: '100%', padding: '0.85rem', fontWeight: 800, fontSize: '0.9rem', letterSpacing: '0.02em', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
               >
-                Confirm & Broadcast SOS
+                <AlertTriangle size={18} />
+                <span>PUSH & BROADCAST SOS</span>
               </button>
               <button
                 onClick={() => setShowSosModal(false)}
                 className="btn btn-secondary"
-                style={{ width: '100%', padding: '0.75rem' }}
+                style={{ width: '100%', padding: '0.65rem' }}
               >
                 Cancel
               </button>

@@ -231,7 +231,11 @@ public:
 
     while (_serial->available()) _serial->read();
 
-    _serial->print("AT+CIPSTART=\"TCP\",\"");
+    if (port == 443) {
+      _serial->print("AT+CIPSTART=\"SSL\",\"");
+    } else {
+      _serial->print("AT+CIPSTART=\"TCP\",\"");
+    }
     _serial->print(host);
     _serial->print("\",");
     _serial->println(port);

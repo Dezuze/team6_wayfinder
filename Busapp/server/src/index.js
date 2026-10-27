@@ -84,6 +84,9 @@ function calculateDistanceMeters(lat1, lng1, lat2, lng2) {
 // Live Driver Active Tracking Map (records last real GPS timestamp per bus)
 const liveDriverActivity = {};
 
+// Active emergency alerts cache
+db.activeSosAlerts = db.activeSosAlerts || [];
+
 // Helper to broadcast bus state to all connected websocket clients
 fastify.decorate('broadcastBuses', () => {
   if (!fastify.websocketServer || !fastify.websocketServer.clients) return;
@@ -99,18 +102,52 @@ fastify.decorate('broadcastBuses', () => {
   });
 });
 
-// Helper to broadcast full synchronized state (buses, routes, passes) to all connected websocket clients
+// Helper to broadcast full synchronized state (buses, routes, passes, alerts) to all connected websocket clients
 fastify.decorate('broadcastSync', () => {
   if (!fastify.websocketServer || !fastify.websocketServer.clients) return;
   const payload = JSON.stringify({
     type: 'SYNC_DATA',
     buses: db.buses,
     routes: db.routes,
-    passes: db.studentPasses
+    passes: db.studentPasses,
+    alerts: db.activeSosAlerts || []
   });
   
   fastify.websocketServer.clients.forEach(client => {
     if (client.readyState === 1) { // OPEN
+      client.send(payload);
+    }
+  });
+});
+
+// Helper to broadcast emergency SOS push alerts to all connected websocket clients
+fastify.decorate('broadcastSosAlert', (alert) => {
+  if (!fastify.websocketServer || !fastify.websocketServer.clients) return;
+  const payload = JSON.stringify({
+    type: 'SOS_ALERT',
+    alert,
+    buses: db.buses
+  });
+
+  fastify.websocketServer.clients.forEach(client => {
+    if (client.readyState === 1) {
+      client.send(payload);
+    }
+  });
+});
+
+// Helper to broadcast SOS resolution to all connected websocket clients
+fastify.decorate('broadcastSosResolved', (busId, alertId) => {
+  if (!fastify.websocketServer || !fastify.websocketServer.clients) return;
+  const payload = JSON.stringify({
+    type: 'SOS_RESOLVED',
+    busId,
+    alertId,
+    buses: db.buses
+  });
+
+  fastify.websocketServer.clients.forEach(client => {
+    if (client.readyState === 1) {
       client.send(payload);
     }
   });
@@ -153,7 +190,8 @@ fastify.register(async function (fastifyInstance) {
       type: 'INIT_DATA',
       buses: db.buses,
       routes: db.routes,
-      passes: db.studentPasses
+      passes: db.studentPasses,
+      alerts: db.activeSosAlerts || []
     }));
 
     socket.on('message', message => {
@@ -227,39 +265,88 @@ fastify.register(async function (fastifyInstance) {
           if (busIndex >= 0) {
             dbUpsertBus(db.buses[busIndex]).catch(() => {});
           }
-        } else if (data.type === 'DRIVER_SOS') {
-          const { busId, reason } = data;
-          let busIndex = db.buses.findIndex(b => b.id === busId);
-          let targetBus;
-          if (busIndex === -1) {
+        } else if (data.type === 'DRIVER_SOS' || data.type === 'STUDENT_SOS' || data.type === 'EMERGENCY_SOS') {
+          const { busId, reason, senderName, senderRole, location } = data;
+          let targetBus = null;
+          let busIndex = busId ? db.buses.findIndex(b => b.id === busId) : -1;
+
+          if (busIndex === -1 && busId) {
             targetBus = {
               id: busId || `bus-${Date.now()}`,
               number: `BUS #${busId}`,
               routeId: null,
-              driverName: 'Live Driver',
+              driverName: senderName || 'Live Driver',
               status: "EMERGENCY / SOS",
-              sosReason: reason || "Emergency breakdown or accident reported",
-              location: { lat: 9.67416, lng: 76.82573 },
+              sosReason: reason || "Emergency breakdown or incident reported",
+              location: location || { lat: 9.67416, lng: 76.82573 },
               speed: 0,
               isLive: true,
               lastUpdated: new Date().toISOString()
             };
             db.buses.push(targetBus);
-          } else {
+          } else if (busIndex !== -1) {
             db.buses[busIndex].status = "EMERGENCY / SOS";
-            db.buses[busIndex].sosReason = reason || "Emergency breakdown or accident reported";
+            db.buses[busIndex].sosReason = reason || "Emergency breakdown or incident reported";
             db.buses[busIndex].isLive = true;
+            if (location && location.lat && location.lng) {
+              db.buses[busIndex].location = location;
+            }
             db.buses[busIndex].lastUpdated = new Date().toISOString();
             targetBus = db.buses[busIndex];
           }
+
+          const alertObj = {
+            id: `sos-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            busId: busId || targetBus?.id || null,
+            busNumber: targetBus?.number || (busId ? `BUS #${busId}` : 'Campus Emergency Alert'),
+            senderName: senderName || targetBus?.driverName || 'User',
+            senderRole: senderRole || (data.type === 'STUDENT_SOS' ? 'student' : data.type === 'DRIVER_SOS' ? 'driver' : 'admin'),
+            reason: reason || "Emergency breakdown or distress signal reported",
+            location: location || targetBus?.location || { lat: 9.67416, lng: 76.82573 },
+            timestamp: new Date().toISOString(),
+            active: true
+          };
+
+          db.activeSosAlerts = db.activeSosAlerts || [];
+          db.activeSosAlerts.push(alertObj);
+
           fastify.broadcastBuses();
-          dbUpsertBus(targetBus).catch(() => {});
+          if (fastify.broadcastSosAlert) {
+            fastify.broadcastSosAlert(alertObj);
+          }
+
+          if (targetBus) {
+            dbUpsertBus(targetBus).catch(() => {});
+          }
+        } else if (data.type === 'RESOLVE_SOS') {
+          const { busId, alertId } = data;
+          if (busId) {
+            const busIndex = db.buses.findIndex(b => b.id === busId);
+            if (busIndex !== -1) {
+              db.buses[busIndex].status = 'In Transit';
+              delete db.buses[busIndex].sosReason;
+              db.buses[busIndex].lastUpdated = new Date().toISOString();
+              dbUpsertBus(db.buses[busIndex]).catch(() => {});
+            }
+          }
+          if (db.activeSosAlerts) {
+            db.activeSosAlerts = db.activeSosAlerts.filter(a => {
+              if (busId && a.busId === busId) return false;
+              if (alertId && a.id === alertId) return false;
+              return true;
+            });
+          }
+          fastify.broadcastBuses();
+          if (fastify.broadcastSosResolved) {
+            fastify.broadcastSosResolved(busId, alertId);
+          }
         } else if (data.type === 'REQUEST_INIT') {
           socket.send(JSON.stringify({
             type: 'INIT_DATA',
             buses: db.buses,
             routes: db.routes,
-            passes: db.studentPasses
+            passes: db.studentPasses,
+            alerts: db.activeSosAlerts || []
           }));
         }
       } catch (err) {
