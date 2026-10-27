@@ -222,7 +222,7 @@ public:
 
   int connect(const char *host, uint16_t port) override {
     if (!_serial) return 0;
-    if (_sockConnected) stop();
+    stop();
 
     _rxHead = 0;
     _rxTail = 0;
@@ -350,10 +350,10 @@ public:
   }
 
   void stop() override {
-    if (_sockConnected && _serial) {
+    if (_serial) {
       _serial->println("AT+CIPCLOSE");
       unsigned long start = millis();
-      while (millis() - start < 800) {
+      while (millis() - start < 300) {
         if (_serial->available()) _serial->read();
       }
     }

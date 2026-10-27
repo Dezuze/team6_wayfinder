@@ -13591,6 +13591,21 @@ export const initialDb = {
   ],
   "buses": [
     {
+      "id": "bus-7636158",
+      "number": "Bus NO-2",
+      "routeId": "route-1",
+      "driverName": "Rahul Nair",
+      "status": "Off Duty",
+      "location": {
+        "lat": 9.67416,
+        "lng": 76.82573
+      },
+      "bearing": 0,
+      "speed": 0,
+      "isLive": false,
+      "lastUpdated": null
+    },
+    {
       "id": "bus-101",
       "number": "BUS #101 (KL-07-AB-1234)",
       "routeId": "route-1",
@@ -13688,7 +13703,7 @@ export const initialDb = {
       "password": "password123",
       "name": "Rahul Nair",
       "phone": "+91-9847123456",
-      "assignedBusId": "bus-101",
+      "assignedBusId": "bus-7636158",
       "status": "Active"
     },
     {

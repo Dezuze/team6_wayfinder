@@ -207,8 +207,11 @@ void drawUnifiedMenu() {
     snprintf(gpsVal, sizeof(gpsVal), "FIX (%ds)", (int)gpsSats);
   } else if (gpsSats > 0) {
     snprintf(gpsVal, sizeof(gpsVal), "SEEK (%ds)", (int)gpsSats);
+  } else if (gpsRawBytes == 0) {
+    strncpy(gpsVal, "No UART Rx!", sizeof(gpsVal));
+    gpsVal[12] = '\0';
   } else {
-    strncpy(gpsVal, "Searching...", sizeof(gpsVal));
+    snprintf(gpsVal, sizeof(gpsVal), "Rx:%lu", (unsigned long)(gpsRawBytes % 10000));
     gpsVal[12] = '\0';
   }
   drawMenuRow("GPS", gpsVal);
@@ -259,76 +262,51 @@ void drawUnifiedMenu() {
 void sendTelemetryPacket(const char* alertReason = nullptr) {
   if (!wsClient.available()) return;
 
-  // 1. Build Plaintext Telemetry JSON
-  char plainJson[220];
-  plainJson[0] = '\0';
-
+  // 1. Build Plaintext Telemetry JSON safely
+  char plainJson[240];
   if (alertReason) {
-    appendStr(plainJson, "{\"type\":\"DRIVER_SOS\",\"busId\":\"");
-    appendStr(plainJson, busId);
-    appendStr(plainJson, "\",\"driverName\":\"");
-    appendStr(plainJson, driverName);
-    appendStr(plainJson, "\",\"driverUsername\":\"");
-    appendStr(plainJson, driverUsername);
-    appendStr(plainJson, "\",\"lat\":");
-    appendStr(plainJson, gpsLat);
-    appendStr(plainJson, ",\"lng\":");
-    appendStr(plainJson, gpsLng);
-    appendStr(plainJson, ",\"reason\":\"");
-    appendStr(plainJson, alertReason);
-    appendStr(plainJson, "\"}");
+    snprintf(plainJson, sizeof(plainJson),
+      "{\"type\":\"DRIVER_SOS\",\"busId\":\"%s\",\"driverName\":\"%s\",\"driverUsername\":\"%s\",\"lat\":%s,\"lng\":%s,\"reason\":\"%s\"}",
+      busId, driverName, driverUsername, gpsLat, gpsLng, alertReason
+    );
   } else {
-    appendStr(plainJson, "{\"type\":\"DRIVER_LOCATION\",\"busId\":\"");
-    appendStr(plainJson, busId);
-    appendStr(plainJson, "\",\"driverName\":\"");
-    appendStr(plainJson, driverName);
-    appendStr(plainJson, "\",\"driverUsername\":\"");
-    appendStr(plainJson, driverUsername);
-    appendStr(plainJson, "\",\"lat\":");
-    appendStr(plainJson, gpsLat);
-    appendStr(plainJson, ",\"lng\":");
-    appendStr(plainJson, gpsLng);
-    appendStr(plainJson, ",\"speed\":");
-    appendStr(plainJson, gpsSpd);
-    appendStr(plainJson, ",\"status\":\"");
-    appendStr(plainJson, (trackerState == STATE_PAUSED) ? "Off Duty" : "In Transit");
-    appendStr(plainJson, "\",\"bearing\":0}");
+    snprintf(plainJson, sizeof(plainJson),
+      "{\"type\":\"DRIVER_LOCATION\",\"busId\":\"%s\",\"driverName\":\"%s\",\"driverUsername\":\"%s\",\"lat\":%s,\"lng\":%s,\"speed\":%s,\"status\":\"%s\",\"bearing\":0}",
+      busId, driverName, driverUsername, gpsLat, gpsLng, gpsSpd,
+      (trackerState == STATE_PAUSED) ? "Off Duty" : "In Transit"
+    );
   }
 
   size_t plainLen = strlen(plainJson);
+  if (plainLen > 230) plainLen = 230;
 
   // 2. Prepare 16-byte Nonce/IV with incrementing packetCounter
   packetCounter++;
   uint8_t iv[16];
-  // 4-byte counter (little endian)
   iv[0] = (uint8_t)(packetCounter & 0xFF);
   iv[1] = (uint8_t)((packetCounter >> 8) & 0xFF);
   iv[2] = (uint8_t)((packetCounter >> 16) & 0xFF);
   iv[3] = (uint8_t)((packetCounter >> 24) & 0xFF);
-  // 12-byte fixed device nonce
   const uint8_t devNonce[12] = {'T','E','A','M','6','_','N','O','N','C','E','1'};
   memcpy(&iv[4], devNonce, 12);
 
   // 3. Encrypt payload with ChaCha20
-  uint8_t cipherBuf[220];
+  uint8_t cipherBuf[240];
   ChaCha20Mini::process(tracker_secret_key, iv, (const uint8_t*)plainJson, cipherBuf, plainLen);
 
   // 4. Convert cipher & IV to Hex
-  char cipherHex[442];
+  char cipherHex[484];
   ChaCha20Mini::toHex(cipherBuf, plainLen, cipherHex);
 
   char ivHex[34];
   ChaCha20Mini::toHex(iv, 16, ivHex);
 
-  // 5. Build outer envelope: {"type":"ENCRYPTED_TELEMETRY","iv":"...","data":"..."}
-  // This packet travels over the network fully protected from third parties!
-  char envelope[512];
-  envelope[0] = '\0';
-  appendStr(envelope, "{\"type\":\"ENCRYPTED_TELEMETRY\",\"iv\":\"");
-  appendStr(envelope, ivHex);
-  appendStr(envelope, "\",\"data\":\"");
-  appendStr(envelope, cipherHex);
-  appendStr(envelope, "\"}");
+  // 5. Build outer envelope safely
+  char envelope[580];
+  snprintf(envelope, sizeof(envelope),
+    "{\"type\":\"ENCRYPTED_TELEMETRY\",\"iv\":\"%s\",\"data\":\"%s\"}",
+    ivHex, cipherHex
+  );
 
   wsClient.send(envelope);
 }
@@ -443,9 +421,12 @@ void setup() {
 
   calculateBattery();
 
-  // Initialize OLED
+  // Initialize OLED with noise-immune clock & auto bus-recovery
   Wire.begin();
-  Wire.setClock(400000L);
+  Wire.setClock(100000L); // 100kHz standard mode for high noise immunity
+  #if defined(WIRE_HAS_TIMEOUT)
+    Wire.setWireTimeout(25000, true); // Auto-recover from I2C bus lockups
+  #endif
   oled.begin(&Adafruit128x64, I2C_ADDRESS);
   oled.setFont(System5x7);
   oled.clear();

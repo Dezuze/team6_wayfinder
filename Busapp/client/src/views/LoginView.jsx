@@ -239,6 +239,100 @@ export default function LoginView({ onOpenLegal }) {
           </motion.button>
         </form>
 
+        {/* Quick Demo Access / Hardware Driver Quick Login */}
+        <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.6rem', textAlign: 'center' }}>
+            Quick Sign In
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.45rem' }}>
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setUsername('driver.rahul');
+                setPassword('password123');
+                login('driver.rahul', 'password123');
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.6rem 0.85rem',
+                borderRadius: '10px',
+                backgroundColor: 'rgba(2, 132, 199, 0.15)',
+                border: '1px solid rgba(2, 132, 199, 0.35)',
+                color: '#38bdf8',
+                cursor: 'pointer',
+                fontSize: '0.82rem',
+                fontWeight: 600
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Bus size={15} />
+                <span>Hardware Driver (Rahul Nair • Bus NO-2)</span>
+              </div>
+              <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(2, 132, 199, 0.3)', borderRadius: '6px', fontWeight: 700 }}>STM32</span>
+            </motion.button>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.45rem' }}>
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setUsername('3468/24');
+                  setPassword('student123');
+                  login('3468/24', 'student123');
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                  padding: '0.5rem 0.6rem',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  color: '#cbd5e1',
+                  cursor: 'pointer',
+                  fontSize: '0.78rem',
+                  fontWeight: 500
+                }}
+              >
+                <User size={13} /> Student Pass
+              </motion.button>
+
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setUsername('admin');
+                  setPassword('password123');
+                  login('admin', 'password123');
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                  padding: '0.5rem 0.6rem',
+                  borderRadius: '10px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  color: '#cbd5e1',
+                  cursor: 'pointer',
+                  fontSize: '0.78rem',
+                  fontWeight: 500
+                }}
+              >
+                <ShieldCheck size={13} /> Admin
+              </motion.button>
+            </div>
+          </div>
+        </div>
+
         {/* Footer Legal Links */}
         <div style={{
           marginTop: '1.75rem',

@@ -64,8 +64,7 @@ export function WebSocketProvider({ children }) {
     if (import.meta.env.VITE_WS_URL) {
       wsUrl = import.meta.env.VITE_WS_URL;
     } else {
-      const host = window.location.port === '5173' ? `${window.location.hostname}:3001` : window.location.host;
-      wsUrl = `${protocol}//${host}/ws`;
+      wsUrl = `${protocol}//${window.location.host}/ws`;
     }
 
     console.log('Connecting to WebSocket:', wsUrl);

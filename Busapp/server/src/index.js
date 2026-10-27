@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import websocket from '@fastify/websocket';
 import crypto from 'node:crypto';
-import { db, initDatabase, dbUpsertBus } from './db/index.js';
+import { db, initDatabase, dbUpsertBus, dbUpsertDriver } from './db/index.js';
 import adminRoutes from './routes/admin.js';
 
 const fastify = Fastify({ logger: true });
@@ -219,7 +219,7 @@ fastify.register(async function (fastifyInstance) {
         }
 
         if (data.type === 'DRIVER_LOCATION') {
-          const { busId, lat, lng, speed, status, driverName, driverUsername, bearing } = data;
+          const { busId, lat, lng, speed, status, driverName, driverUsername, bearing, busNumber } = data;
           liveDriverActivity[busId] = Date.now();
           socket.broadcastingBusId = busId;
 
@@ -229,7 +229,7 @@ fastify.register(async function (fastifyInstance) {
           if (busIndex === -1) {
             const newBus = {
               id: busId || `bus-${Date.now()}`,
-              number: `BUS #${busId}`,
+              number: busNumber || data.busName || `BUS #${busId}`,
               routeId: null,
               driverName: driverName || 'Live Driver',
               status: status || 'Active',
@@ -254,8 +254,42 @@ fastify.register(async function (fastifyInstance) {
             if (speed !== undefined) db.buses[busIndex].speed = speed;
             if (status !== undefined) db.buses[busIndex].status = status;
             if (driverName !== undefined) db.buses[busIndex].driverName = driverName;
+            if (busNumber !== undefined) db.buses[busIndex].number = busNumber;
             db.buses[busIndex].isLive = isLiveNow;
             db.buses[busIndex].lastUpdated = new Date().toISOString();
+          }
+
+          // Auto-register / synchronize hardware driver in db.drivers
+          if (driverUsername || driverName) {
+            const targetUsername = (driverUsername || `driver.${(driverName || 'hw').toLowerCase().replace(/\s+/g, '')}`).toLowerCase();
+            const existingDriverIndex = db.drivers.findIndex(d => d.username && d.username.toLowerCase() === targetUsername);
+            if (existingDriverIndex === -1) {
+              const newDriver = {
+                id: `driver-${Date.now()}`,
+                username: targetUsername,
+                password: 'password123',
+                name: driverName || 'Hardware Driver',
+                phone: '+91-9847123456',
+                assignedBusId: busId,
+                status: 'Active'
+              };
+              db.drivers.push(newDriver);
+              dbUpsertDriver(newDriver).catch(() => {});
+              fastify.log.info(`[Hardware Driver Registered]: ${targetUsername} (${driverName}) assigned to bus ${busId}`);
+            } else {
+              let changed = false;
+              if (busId && db.drivers[existingDriverIndex].assignedBusId !== busId) {
+                db.drivers[existingDriverIndex].assignedBusId = busId;
+                changed = true;
+              }
+              if (driverName && db.drivers[existingDriverIndex].name !== driverName) {
+                db.drivers[existingDriverIndex].name = driverName;
+                changed = true;
+              }
+              if (changed) {
+                dbUpsertDriver(db.drivers[existingDriverIndex]).catch(() => {});
+              }
+            }
           }
 
           // Broadcast new coordinates to all connected students and admins

@@ -63,7 +63,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
   const [newStudentRoute, setNewStudentRoute] = useState('All Routes');
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [fleetFilter, setFleetFilter] = useState('Active'); // All, Active, Delayed, Idle
+  const [fleetFilter, setFleetFilter] = useState('All'); // All, Active, Delayed, Idle
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [selectedBusId, setSelectedBusId] = useState(null);
