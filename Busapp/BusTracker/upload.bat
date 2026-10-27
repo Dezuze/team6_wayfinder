@@ -22,8 +22,16 @@ goto do_stlink
 
 :do_stlink
 echo.
-echo Uploading via ST-Link OpenOCD...
-"%CLI%" upload --fqbn STMicroelectronics:stm32:GenF1:pnum=BLUEPILL_F103C6,opt=oslto,upload_method=OpenOCDSTLink "%~dp0BusTracker.ino"
+echo Compiling firmware...
+"%CLI%" compile --fqbn STMicroelectronics:stm32:GenF1:pnum=BLUEPILL_F103C6,opt=oslto --output-dir "%~dp0build" "%~dp0BusTracker.ino"
+if %ERRORLEVEL% NEQ 0 goto finish
+
+echo.
+echo Uploading via ST-Link (pyOCD)...
+python -m pyocd flash -t stm32f103rc -e chip "%~dp0build\BusTracker.ino.hex"
+if %ERRORLEVEL% EQU 0 (
+    python -m pyocd reset -t stm32f103rc
+)
 goto finish
 
 :do_serial

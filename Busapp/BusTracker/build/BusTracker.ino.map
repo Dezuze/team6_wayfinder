@@ -183,19 +183,19 @@ C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-a
 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libstdc++_nano.a(class_type_info.o)
                               C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libstdc++_nano.a(si_class_type_info.o) (__cxxabiv1::__class_type_info::__do_upcast(__cxxabiv1::__class_type_info const*, void**) const)
 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-realloc.o)
-                              C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o (realloc)
+                              C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o (realloc)
 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-snprintf.o)
-                              C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o (snprintf)
+                              C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o (snprintf)
 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strchr.o)
-                              C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o (strchr)
+                              C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o (strchr)
 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strncpy.o)
-                              C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o (strncpy)
+                              C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o (strncpy)
 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strstr.o)
-                              C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o (strstr)
+                              C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o (strstr)
 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strlen.o)
-                              C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o (strlen)
+                              C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o (strlen)
 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp\libgcc.a(_aeabi_ldivmod.o)
-                              C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o (__aeabi_ldivmod)
+                              C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o (__aeabi_ldivmod)
 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp\libgcc.a(_udivmoddi4.o)
                               C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp\libgcc.a(_aeabi_ldivmod.o) (__udivmoddi4)
 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp\libgcc.a(_dvmd_tls.o)
@@ -1150,7 +1150,7 @@ Linker script and memory map
 
 START GROUP
 LOAD C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\sketch\BusTracker.ino.cpp.o
-LOAD C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+LOAD C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
 LOAD C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\sketch\requiredLibraries.cpp.o
 LOAD C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\Wire\Wire.cpp.o
 LOAD C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\Wire\utility\twi.c.o
@@ -1385,7 +1385,7 @@ LOAD C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xp
 .text           0x0800010c     0x6d28
                 0x0800010c                        . = ALIGN (0x4)
  *(.text)
- .text          0x0800010c     0x52f0 C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+ .text          0x0800010c     0x52f0 C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                 0x0800464a                I2C1_EV_IRQHandler
                 0x08004f98                I2C1_ER_IRQHandler
                 0x080050dc                TIM1_UP_IRQHandler
@@ -1427,9 +1427,9 @@ LOAD C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xp
                 0x080054b0       0x24 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp/crtbegin.o
  .text.frame_dummy
                 0x080054d4       0x1c C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp/crtbegin.o
- .text.startup  0x080054f0      0xae8 C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+ .text.startup  0x080054f0      0xae8 C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                 0x0800577c                main
- .text.exit     0x08005fd8       0x40 C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+ .text.exit     0x08005fd8       0x40 C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
  .text.Reset_Handler
                 0x08006018       0x48 C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                 0x08006018                Reset_Handler
@@ -1585,10 +1585,10 @@ LOAD C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xp
 .rodata         0x08006e34      0xd24
                 0x08006e34                        . = ALIGN (0x4)
  *(.rodata)
- .rodata        0x08006e34      0x81c C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+ .rodata        0x08006e34      0x81c C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
  *(.rodata*)
  .rodata.str1.1
-                0x08007650      0x4fc C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+                0x08007650      0x4fc C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
  .rodata._svfprintf_r.str1.1
                 0x08007650      0x507 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-nano-svfprintf.o)
                                  0x11 (size before relaxing)
@@ -1625,10 +1625,10 @@ LOAD C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xp
                 0x08007b60                        PROVIDE (__init_array_start = .)
  *(SORT_BY_NAME(.init_array.*))
  .init_array.00101
-                0x08007b60        0x4 C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+                0x08007b60        0x4 C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
  *(.init_array*)
  .init_array    0x08007b64        0x4 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp/crtbegin.o
- .init_array    0x08007b68        0x4 C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+ .init_array    0x08007b68        0x4 C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                 0x08007b6c                        PROVIDE (__init_array_end = .)
                 0x08007b6c                        . = ALIGN (0x4)
 
@@ -1638,7 +1638,7 @@ LOAD C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xp
  *(SORT_BY_NAME(.fini_array.*))
  *(.fini_array*)
  .fini_array    0x08007b6c        0x4 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp/crtbegin.o
- .fini_array    0x08007b70        0x4 C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+ .fini_array    0x08007b70        0x4 C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                 0x08007b74                        PROVIDE (__fini_array_end = .)
                 0x08007b74                        . = ALIGN (0x4)
                 0x08007b74                        _sidata = LOADADDR (.data)
@@ -1650,7 +1650,7 @@ LOAD C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xp
                 0x20000000                        . = ALIGN (0x4)
                 0x20000000                        _sdata = .
  *(.data)
- .data          0x20000000       0xd8 C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+ .data          0x20000000       0xd8 C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
  *(.data*)
  .data._impure_ptr
                 0x200000d8        0x4 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-impure.o)
@@ -1671,7 +1671,7 @@ LOAD C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xp
                 0x20000128                        _sbss = .
                 0x20000128                        __bss_start__ = _sbss
  *(.bss)
- .bss           0x20000128      0x7d4 C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+ .bss           0x20000128      0x7d4 C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
  *(.bss*)
  .bss.completed.1
                 0x200008fc        0x1 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp/crtbegin.o
@@ -1734,7 +1734,7 @@ LOAD C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xp
  .ARM.attributes
                 0x0000001d       0x2d C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp/crtbegin.o
  .ARM.attributes
-                0x0000004a       0x2b C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+                0x0000004a       0x2b C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
  .ARM.attributes
                 0x00000075       0x21 C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
  .ARM.attributes
@@ -1810,7 +1810,7 @@ LOAD C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xp
 .comment        0x00000000       0x39
  .comment       0x00000000       0x39 C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp/crtbegin.o
                                  0x3a (size before relaxing)
- .comment       0x00000039       0x3a C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+ .comment       0x00000039       0x3a C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
  .comment       0x00000039       0x3a C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-findfp.o)
  .comment       0x00000039       0x3a C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-memset.o)
  .comment       0x00000039       0x3a C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-reent.o)
@@ -1928,25 +1928,25 @@ DMA1_Channel6_IRQHandler                          C:\Users\wesly\AppData\Local\a
 DMA1_Channel7_IRQHandler                          C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
 DebugMon_Handler                                  C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
 Default_Handler                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
-EXTI0_IRQHandler                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+EXTI0_IRQHandler                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\interrupt.cpp.o (symbol from plugin)
-EXTI15_10_IRQHandler                              C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+EXTI15_10_IRQHandler                              C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\interrupt.cpp.o (symbol from plugin)
-EXTI1_IRQHandler                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+EXTI1_IRQHandler                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\interrupt.cpp.o (symbol from plugin)
-EXTI2_IRQHandler                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+EXTI2_IRQHandler                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\interrupt.cpp.o (symbol from plugin)
-EXTI3_IRQHandler                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+EXTI3_IRQHandler                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\interrupt.cpp.o (symbol from plugin)
-EXTI4_IRQHandler                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+EXTI4_IRQHandler                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\interrupt.cpp.o (symbol from plugin)
-EXTI9_5_IRQHandler                                C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+EXTI9_5_IRQHandler                                C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\interrupt.cpp.o (symbol from plugin)
 Esp01Client::Esp01Client()                        C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\sketch\BusTracker.ino.cpp.o (symbol from plugin)
@@ -2616,10 +2616,10 @@ HardwareTimer::~HardwareTimer()                   C:\Users\wesly\AppData\Local\a
 HardwareTimer::~HardwareTimer()                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\HardwareTimer.cpp.o (symbol from plugin)
 HardwareTimer_Handle                              C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\HardwareTimer.cpp.o (symbol from plugin)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\analog.cpp.o (symbol from plugin)
-I2C1_ER_IRQHandler                                C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+I2C1_ER_IRQHandler                                C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\Wire\utility\twi.c.o (symbol from plugin)
-I2C1_EV_IRQHandler                                C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+I2C1_EV_IRQHandler                                C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\Wire\utility\twi.c.o (symbol from plugin)
 LL_ADC_CommonDeInit                               C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\LL\stm32yyxx_ll_adc.c.o (symbol from plugin)
@@ -2779,7 +2779,7 @@ SimpleWebSocketClient::available()                C:\Users\wesly\AppData\Local\a
 SimpleWebSocketClient::connect(char const*, unsigned short, char const*) C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\sketch\BusTracker.ino.cpp.o (symbol from plugin)
 SimpleWebSocketClient::poll()                     C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\sketch\BusTracker.ino.cpp.o (symbol from plugin)
 SimpleWebSocketClient::send(char const*, unsigned int) C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\sketch\BusTracker.ino.cpp.o (symbol from plugin)
-SysTick_Handler                                   C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+SysTick_Handler                                   C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\clock.c.o (symbol from plugin)
 SystemClock_Config                                C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\core\variant_BLUEPILL_F103C6.cpp.o (symbol from plugin)
@@ -2794,22 +2794,22 @@ SystemCoreClock                                   C:\Users\wesly\AppData\Local\a
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\HAL\stm32yyxx_hal_adc.c.o (symbol from plugin)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\HAL\stm32yyxx_hal.c.o (symbol from plugin)
 SystemCoreClockUpdate                             C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\system_stm32yyxx.c.o (symbol from plugin)
-SystemInit                                        C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+SystemInit                                        C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\system_stm32yyxx.c.o (symbol from plugin)
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
 TAMPER_IRQHandler                                 C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
 TIM1_BRK_IRQHandler                               C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
-TIM1_CC_IRQHandler                                C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+TIM1_CC_IRQHandler                                C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\HardwareTimer.cpp.o (symbol from plugin)
 TIM1_TRG_COM_IRQHandler                           C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
-TIM1_UP_IRQHandler                                C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+TIM1_UP_IRQHandler                                C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\HardwareTimer.cpp.o (symbol from plugin)
-TIM2_IRQHandler                                   C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+TIM2_IRQHandler                                   C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\HardwareTimer.cpp.o (symbol from plugin)
-TIM3_IRQHandler                                   C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+TIM3_IRQHandler                                   C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\HardwareTimer.cpp.o (symbol from plugin)
 TIMEx_DMACommutationCplt                          C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\HAL\stm32yyxx_hal_tim_ex.c.o (symbol from plugin)
@@ -2875,10 +2875,10 @@ TwoWire::~TwoWire()                               C:\Users\wesly\AppData\Local\a
 TwoWire::~TwoWire()                               C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\Wire\Wire.cpp.o (symbol from plugin)
 UART_Start_Receive_DMA                            C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\HAL\stm32yyxx_hal_uart.c.o (symbol from plugin)
 UART_Start_Receive_IT                             C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\HAL\stm32yyxx_hal_uart.c.o (symbol from plugin)
-USART1_IRQHandler                                 C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+USART1_IRQHandler                                 C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\uart.c.o (symbol from plugin)
-USART2_IRQHandler                                 C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+USART2_IRQHandler                                 C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\uart.c.o (symbol from plugin)
 USBWakeUp_IRQHandler                              C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
@@ -2940,7 +2940,7 @@ _Balloc                                           C:/Users/wesly/AppData/Local/A
 _Bfree                                            C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-mprec.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-gdtoa-gethex.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strtod.o)
-_Min_Stack_Size                                   C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+_Min_Stack_Size                                   C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\syscalls.c.o (symbol from plugin)
 _PathLocale                                       C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-locale.o)
 __adddf3                                          C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp\libgcc.a(_arm_addsubdf3.o)
@@ -3001,7 +3001,7 @@ __aeabi_l2d                                       C:/Users/wesly/AppData/Local/A
 __aeabi_ldiv0                                     C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp\libgcc.a(_dvmd_tls.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp\libgcc.a(_aeabi_ldivmod.o)
 __aeabi_ldivmod                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp\libgcc.a(_aeabi_ldivmod.o)
-                                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+                                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
 __aeabi_ui2d                                      C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp\libgcc.a(_arm_addsubdf3.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/thumb/v7-m/nofp\libgcc.a(_fixunsdfdi.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strtod.o)
@@ -3242,7 +3242,7 @@ __unordsf2                                        C:/Users/wesly/AppData/Local/A
 _atol_r                                           C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-atol.o)
 _calloc_r                                         C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-callocr.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-mprec.o)
-_close                                            C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+_close                                            C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\syscalls.c.o (symbol from plugin)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-closer.o)
 _close_r                                          C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-closer.o)
@@ -3252,12 +3252,12 @@ _ctype_                                           C:/Users/wesly/AppData/Local/A
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strtol.o)
 _ebss                                             C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
 _edata                                            C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
-_end                                              C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+_end                                              C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\syscalls.c.o (symbol from plugin)
-_estack                                           C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+_estack                                           C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\syscalls.c.o (symbol from plugin)
-_exit                                             C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+_exit                                             C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\syscalls.c.o (symbol from plugin)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-abort.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-exit.o)
@@ -3278,7 +3278,7 @@ _free_r                                           C:/Users/wesly/AppData/Local/A
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-nano-svfprintf.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-reent.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-vdprintf.o)
-_fstat                                            C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+_fstat                                            C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\syscalls.c.o (symbol from plugin)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-fstatr.o)
 _fstat_r                                          C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-fstatr.o)
@@ -3286,7 +3286,7 @@ _fstat_r                                          C:/Users/wesly/AppData/Local/A
 _fwalk_sglue                                      C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-fwalk.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-fflush.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-findfp.o)
-_getpid                                           C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+_getpid                                           C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\syscalls.c.o (symbol from plugin)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-signalr.o)
 _getpid_r                                         C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-signalr.o)
@@ -3317,17 +3317,17 @@ _init                                             C:/Users/wesly/AppData/Local/A
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-init.o)
 _init_signal                                      C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-signal.o)
 _init_signal_r                                    C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-signal.o)
-_isatty                                           C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+_isatty                                           C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\syscalls.c.o (symbol from plugin)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-isattyr.o)
 _isatty_r                                         C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-isattyr.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-makebuf.o)
-_kill                                             C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+_kill                                             C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\syscalls.c.o (symbol from plugin)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-signalr.o)
 _kill_r                                           C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-signalr.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-signal.o)
-_lseek                                            C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+_lseek                                            C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\syscalls.c.o (symbol from plugin)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-lseekr.o)
 _lseek_r                                          C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-lseekr.o)
@@ -3353,7 +3353,7 @@ _printf_i                                         C:/Users/wesly/AppData/Local/A
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-nano-vfprintf.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-nano-svfprintf.o)
 _raise_r                                          C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-signal.o)
-_read                                             C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+_read                                             C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\syscalls.c.o (symbol from plugin)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-readr.o)
 _read_r                                           C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-readr.o)
@@ -3363,7 +3363,7 @@ _realloc_r                                        C:/Users/wesly/AppData/Local/A
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-fvwrite.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-nano-svfprintf.o)
 _reclaim_reent                                    C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-reent.o)
-_sbrk                                             C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+_sbrk                                             C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\syscalls.c.o (symbol from plugin)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-sbrkr.o)
 _sbrk_r                                           C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-sbrkr.o)
@@ -3394,7 +3394,7 @@ _vfiprintf_r                                      C:/Users/wesly/AppData/Local/A
 _vfprintf_r                                       C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-nano-vfprintf.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-fprintf.o)
 _wctomb_r                                         C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-wctomb_r.o)
-_write                                            C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+_write                                            C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   Print.cpp.o (symbol from plugin)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-writer.o)
 _write_r                                          C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-writer.o)
@@ -3605,7 +3605,7 @@ arduino::operator+(arduino::StringSumHelper const&, long) String.cpp.o (symbol f
 arduino::operator+(arduino::StringSumHelper const&, unsigned char) String.cpp.o (symbol from plugin)
 arduino::operator+(arduino::StringSumHelper const&, unsigned int) String.cpp.o (symbol from plugin)
 arduino::operator+(arduino::StringSumHelper const&, unsigned long) String.cpp.o (symbol from plugin)
-arduino::serialEventRun()                         C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+arduino::serialEventRun()                         C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   main.cpp.o (symbol from plugin)
 atexit                                            C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-atexit.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp/crt0.o
@@ -3659,7 +3659,7 @@ enableClock                                       C:\Users\wesly\AppData\Local\a
 enableTimerClock                                  C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\timer.c.o (symbol from plugin)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\HardwareTimer.cpp.o (symbol from plugin)
 errno                                             C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-reent.o)
-                                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+                                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-isattyr.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-fstatr.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-signalr.o)
@@ -3677,7 +3677,7 @@ fiprintf                                          C:/Users/wesly/AppData/Local/A
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-assert.o)
 fprintf                                           C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-fprintf.o)
 free                                              C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-malloc.o)
-                                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+                                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
 g_anOutputPinConfigured                           wiring_analog.c.o (symbol from plugin)
                                                   wiring_digital.c.o (symbol from plugin)
 g_pfnVectors                                      C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
@@ -3730,7 +3730,7 @@ i2c_slave_write_IT                                C:\Users\wesly\AppData\Local\a
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\Wire\Wire.cpp.o (symbol from plugin)
 init                                              board.c.o (symbol from plugin)
                                                   main.cpp.o (symbol from plugin)
-initVariant                                       C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+initVariant                                       C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   main.cpp.o (symbol from plugin)
 isGpsFixed                                        C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\sketch\BusTracker.ino.cpp.o (symbol from plugin)
 itoa                                              itoa.c.o (symbol from plugin)
@@ -3745,12 +3745,12 @@ loop                                              C:\Users\wesly\AppData\Local\a
                                                   main.cpp.o (symbol from plugin)
 ltoa                                              itoa.c.o (symbol from plugin)
                                                   String.cpp.o (symbol from plugin)
-main                                              C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+main                                              C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   main.cpp.o (symbol from plugin)
                                                   C:\Users\wesly\AppData\Local\arduino\cores\STMicroelectronics_stm32_GenF1_pnum_BLUEPILL_F103C6,opt_oslto_d70ca4cb638280a994878ebfb36b9dac\core.a(startup_stm32yyxx.S.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp/crt0.o
 malloc                                            C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-malloc.o)
-                                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+                                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-mprec.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-__atexit.o)
 memchr                                            C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-memchr-stub.o)
@@ -3759,7 +3759,7 @@ memchr                                            C:/Users/wesly/AppData/Local/A
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-nano-vfprintf_i.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-nano-svfprintf.o)
 memcpy                                            C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-memcpy-stub.o)
-                                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+                                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-fvwrite.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-reallocr.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-nano-svfprintf.o)
@@ -3770,7 +3770,7 @@ memmove                                           C:/Users/wesly/AppData/Local/A
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-fvwrite.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-nano-svfprintf.o)
 memset                                            C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-memset.o)
-                                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+                                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-callocr.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-findfp.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp/crt0.o
@@ -3783,10 +3783,10 @@ nanf                                              C:/Users/wesly/AppData/Local/A
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strtod.o)
 noOsSystickHandler                                C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\clock.c.o (symbol from plugin)
 oled                                              C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\sketch\BusTracker.ino.cpp.o (symbol from plugin)
-operator delete(void*)                            C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+operator delete(void*)                            C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\new.cpp.o (symbol from plugin)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libstdc++_nano.a(functional.o)
-operator delete(void*, unsigned int)              C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+operator delete(void*, unsigned int)              C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\new.cpp.o (symbol from plugin)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libstdc++_nano.a(class_type_info.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libstdc++_nano.a(tinfo.o)
@@ -3853,7 +3853,7 @@ pwm_stop                                          C:\Users\wesly\AppData\Local\a
 raise                                             C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-signal.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-abort.o)
 realloc                                           C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-realloc.o)
-                                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+                                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
 sendTelemetryPacket(char const*)                  C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\sketch\BusTracker.ino.cpp.o (symbol from plugin)
 serial_rx_active                                  C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\uart.c.o (symbol from plugin)
 serial_tx_active                                  C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\uart.c.o (symbol from plugin)
@@ -3867,7 +3867,7 @@ setup                                             C:\Users\wesly\AppData\Local\a
 signal                                            C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-signal.o)
 sniprintf                                         C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-snprintf.o)
 snprintf                                          C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-snprintf.o)
-                                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+                                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
 software_init_hook                                C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp/crt0.o
 sosActive                                         C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\sketch\BusTracker.ino.cpp.o (symbol from plugin)
 sosTimer                                          C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\sketch\BusTracker.ino.cpp.o (symbol from plugin)
@@ -3890,7 +3890,7 @@ std::_Function_handler<void (), void (*)()>::_M_manager(std::_Any_data&, std::_A
 std::_Function_handler<void (int), void (*)(int)>::_M_invoke(std::_Any_data const&, int&&) C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\Wire\Wire.cpp.o (symbol from plugin)
 std::_Function_handler<void (int), void (*)(int)>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation) C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\Wire\Wire.cpp.o (symbol from plugin)
 std::__throw_bad_function_call()                  C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libstdc++_nano.a(functional.o)
-                                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+                                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\interrupt.cpp.o (symbol from plugin)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\HardwareTimer.cpp.o (symbol from plugin)
                                                   C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\Wire\Wire.cpp.o (symbol from plugin)
@@ -3968,19 +3968,19 @@ std::type_info::~type_info()                      C:/Users/wesly/AppData/Local/A
 stm32_interrupt_disable(GPIO_TypeDef*, unsigned short) C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\interrupt.cpp.o (symbol from plugin)
 stm32_interrupt_enable(PinName, std::function<void ()>, unsigned long) C:\Users\wesly\AppData\Local\arduino\sketches\57754FBE1EE433CFAE6A87AF5A8AFDFD\libraries\SrcWrapper\stm32\interrupt.cpp.o (symbol from plugin)
 strchr                                            C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strchr.o)
-                                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+                                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
 strcmp                                            C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strcmp.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libstdc++_nano.a(tinfo.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-locale.o)
 strlen                                            C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strlen.o)
-                                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+                                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
 strncmp                                           C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strncmp.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-gdtoa-gethex.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strtod.o)
 strncpy                                           C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strncpy.o)
-                                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+                                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
 strstr                                            C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strstr.o)
-                                                  C:\Users\wesly\AppData\Local\Temp\ccl5bEpK.ltrans0.ltrans.o
+                                                  C:\Users\wesly\AppData\Local\Temp\ccvjEh8I.ltrans0.ltrans.o
 strtod                                            C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strtod.o)
                                                   C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-atof.o)
 strtod_l                                          C:/Users/wesly/AppData/Local/Arduino15/packages/STMicroelectronics/tools/xpack-arm-none-eabi-gcc/14.2.1-1.1/bin/../lib/gcc/arm-none-eabi/14.2.1/../../../../arm-none-eabi/lib/thumb/v7-m/nofp\libc_nano.a(libc_a-strtod.o)
