@@ -318,13 +318,13 @@
       "number": "Bus NO-2",
       "routeId": "route-1791362876442-502",
       "driverName": "Rahul Nair",
-      "status": "Off Duty",
+      "status": "Active",
       "location": {
         "lat": 9.67416,
         "lng": 76.82573
       },
       "speed": 0,
-      "lastUpdated": "2026-10-27T05:20:37.395Z",
+      "lastUpdated": "2026-10-27T05:21:31.528Z",
       "isLive": false,
       "bearing": 0
     }
