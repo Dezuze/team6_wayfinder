@@ -320,13 +320,13 @@
       "driverName": "Rahul Nair",
       "status": "Active",
       "location": {
-        "lat": 9.67416,
-        "lng": 76.82573
+        "lat": 9.673396927834894,
+        "lng": 76.81342232517473
       },
       "speed": 0,
-      "lastUpdated": "2026-10-27T05:21:31.528Z",
-      "isLive": false,
-      "bearing": 0
+      "lastUpdated": "2026-11-02T13:00:10.194Z",
+      "isLive": true,
+      "bearing": 132
     }
   ],
   "studentPasses": [
@@ -348,6 +348,15 @@
       "id": "driver-1",
       "username": "driver.rahul",
       "password": "scrypt:eea0de1807f465bff6bdc85b71f6220d:9ff768ac8ca47a3efbdea77427dcc36cee50207e26047f3da767c6a44563d0090fd2f8a540348a71e337ec5f83fe483b6fef42f2108e677f8727d1a6c2b1fe4b",
+      "name": "Rahul Nair",
+      "phone": "+91-9847123456",
+      "assignedBusId": "bus-7636158",
+      "status": "Active"
+    },
+    {
+      "id": "driver-1793621152051",
+      "username": "driver.rahulnair",
+      "password": "scrypt:cbbea5a931d33a39007520936510c549:74b954a025e38c22c34a104d2576f27368c11811b2d6bc8dc8e661fbf799ce07bd0d082381bf9f9555047fc2b4285816845399db9dc0402948ccb55ac36ffc57",
       "name": "Rahul Nair",
       "phone": "+91-9847123456",
       "assignedBusId": "bus-7636158",
