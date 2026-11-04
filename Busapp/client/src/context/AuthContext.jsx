@@ -2,10 +2,36 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 
+function isTokenValid(token) {
+  if (!token || typeof token !== 'string') return false;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('hopspot-auth-user') || localStorage.getItem('campusbus-auth-user');
-    return saved ? JSON.parse(saved) : null;
+    try {
+      const saved = localStorage.getItem('hopspot-auth-user') || localStorage.getItem('campusbus-auth-user');
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      if (!parsed?.token || !isTokenValid(parsed.token)) {
+        localStorage.removeItem('hopspot-auth-user');
+        localStorage.removeItem('campusbus-auth-user');
+        return null;
+      }
+      return parsed;
+    } catch {
+      return null;
+    }
   });
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -33,9 +59,13 @@ export function AuthProvider({ children }) {
       });
       const data = await res.json();
       if (data.success) {
-        setUser(data.user);
+        const authedUser = {
+          ...data.user,
+          token: data.token || data.user?.token
+        };
+        setUser(authedUser);
         setIsLoading(false);
-        return { success: true, user: data.user };
+        return { success: true, user: authedUser };
       } else {
         setError(data.error || 'Login failed');
         setIsLoading(false);

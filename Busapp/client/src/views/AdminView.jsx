@@ -152,8 +152,17 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
 
   const getAuthHeaders = () => {
     const headers = { 'Content-Type': 'application/json' };
-    if (user?.token) {
-      headers['Authorization'] = `Bearer ${user.token}`;
+    let token = user?.token;
+    if (!token) {
+      try {
+        const raw = localStorage.getItem('hopspot-auth-user') || localStorage.getItem('campusbus-auth-user');
+        if (raw) token = JSON.parse(raw)?.token;
+      } catch {
+        // ignore
+      }
+    }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
     return headers;
   };
@@ -247,9 +256,9 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     }
     setIsSubmitting(true);
     try {
-      await fetch((import.meta.env.VITE_API_URL || '') + '/api/buses', {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/buses', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           number: newBusNumber.trim(),
           routeId: newBusRouteId || null,
@@ -257,6 +266,10 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
           status: newBusStatus
         })
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || `Server returned ${res.status}`);
+      }
       setNewBusNumber('');
       setNewBusRouteId('');
       setNewBusDriverName('');
@@ -402,7 +415,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     try {
       await fetch((import.meta.env.VITE_API_URL || '') + `/api/buses/${busId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ status: newStatus })
       });
       await refreshData();
@@ -419,7 +432,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
       } else {
         await fetch((import.meta.env.VITE_API_URL || '') + `/api/buses/${encodeURIComponent(busId)}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getAuthHeaders(),
           body: JSON.stringify({ routeId: newRouteId || null })
         });
         await refreshData();
@@ -434,7 +447,7 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
     try {
       await fetch((import.meta.env.VITE_API_URL || '') + `/api/passes/${encodeURIComponent(passId)}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ passStatus: newStatus })
       });
       await refreshData();
@@ -750,11 +763,15 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
         validUntil: r.validuntil || r.expiry || '2026-12-31',
         passStatus: r.status || r.passstatus || 'Valid'
       }));
-      await fetch((import.meta.env.VITE_API_URL || '') + '/api/passes/bulk', {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/passes/bulk', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ passes: passesToCreate })
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || `Server returned ${res.status}`);
+      }
       setIsAddStudentModalOpen(false);
       await refreshData();
     } catch (err) {
@@ -777,13 +794,18 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
         assignedBusId: r.assignedbusid || r.bus || r.busid || '',
         status: r.status || 'Active'
       }));
-      await fetch((import.meta.env.VITE_API_URL || '') + '/api/drivers/bulk', {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/drivers/bulk', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ drivers: driversToCreate })
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || `Server returned ${res.status}`);
+      }
       setIsAddDriverModalOpen(false);
       await fetchDrivers();
+      await refreshData();
     } catch (err) {
       console.error('Error in bulk driver import:', err);
       alert('Bulk driver import failed: ' + err.message);
@@ -802,11 +824,15 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
         routeId: r.routeid || r.route || null,
         status: r.status || 'Active'
       }));
-      await fetch((import.meta.env.VITE_API_URL || '') + '/api/buses/bulk', {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/buses/bulk', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ buses: busesToCreate })
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || `Server returned ${res.status}`);
+      }
       await refreshData();
       setIsAddBusModalOpen(false);
     } catch (err) {
@@ -826,11 +852,15 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
         color: r.color || '#0284c7',
         stops: r.stops ? (typeof r.stops === 'string' ? r.stops.split(',').map(s => s.trim()) : r.stops) : ['Kottayam', COLLEGE_DESTINATION.shortName]
       }));
-      await fetch((import.meta.env.VITE_API_URL || '') + '/api/routes/bulk', {
+      const res = await fetch((import.meta.env.VITE_API_URL || '') + '/api/routes/bulk', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ routes: routesToCreate })
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || `Server returned ${res.status}`);
+      }
       await refreshData();
     } catch (err) {
       console.error('Error in bulk route import:', err);

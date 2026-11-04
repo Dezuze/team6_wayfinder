@@ -46,6 +46,22 @@ function enrichRoute(route) {
   };
 }
 
+function getStoredAuthHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  try {
+    const raw = localStorage.getItem('hopspot-auth-user') || localStorage.getItem('campusbus-auth-user');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed?.token) {
+        headers['Authorization'] = `Bearer ${parsed.token}`;
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return headers;
+}
+
 export function WebSocketProvider({ children }) {
   const [isConnected, setIsConnected] = useState(false);
   const [buses, setBuses] = useState([]);
@@ -276,7 +292,7 @@ export function WebSocketProvider({ children }) {
       const pathToSend = Array.isArray(customPath) && customPath.length >= 2 ? customPath : undefined;
       const response = await fetch((import.meta.env.VITE_API_URL || '') + '/api/routes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getStoredAuthHeaders(),
         body: JSON.stringify({
           ...payload,
           path: pathToSend,
@@ -287,7 +303,8 @@ export function WebSocketProvider({ children }) {
       });
 
       if (!response.ok) {
-        throw new Error(`Server returned status ${response.status}`);
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Server returned status ${response.status}`);
       }
 
       const data = await response.json();
@@ -337,8 +354,11 @@ export function WebSocketProvider({ children }) {
   // Route deletion that removes from backend and client cache cleanly
   const deleteRoute = useCallback(async (routeId) => {
     try {
+      const headers = getStoredAuthHeaders();
+      delete headers['Content-Type'];
       const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/routes/${routeId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
@@ -369,7 +389,7 @@ export function WebSocketProvider({ children }) {
       const normalizedRouteId = newRouteId || null;
       const response = await fetch((import.meta.env.VITE_API_URL || '') + `/api/buses/${busId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getStoredAuthHeaders(),
         body: JSON.stringify({ routeId: normalizedRouteId })
       });
       if (!response.ok) {
