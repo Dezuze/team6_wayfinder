@@ -100,32 +100,60 @@ export default async function adminRoutes(fastify, options) {
     };
   });
 
-  // --- PASS CRYPTOGRAPHIC VERIFICATION (FOR DRIVERS & SCANNERS) ---
+  // --- PASS CRYPTOGRAPHIC & BARCODE/ID VERIFICATION (FOR STAFF, DRIVERS & SCANNERS) ---
   fastify.post('/api/passes/verify', async (request, reply) => {
-    const { qrString, passId } = request.body || {};
-    if (!qrString) {
-      return reply.status(400).send({ success: false, error: 'QR string is required for verification' });
+    const { qrString, passId, admissionNo, query, method } = request.body || {};
+    const rawLookup = String(qrString || passId || admissionNo || query || '').trim();
+    if (!rawLookup) {
+      return reply.status(400).send({ success: false, error: 'QR code, admission number, or student name is required for verification' });
     }
 
     // Lookup pass in DB
     const passes = await dbGetPasses(true);
-    const targetPass = passes.find(p => p.qrCodeString === qrString || (passId && p.id === passId));
+    const norm = (str) => String(str || '').trim().toLowerCase();
+    const normAlnum = (str) => String(str || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+
+    let extractedId = rawLookup;
+    if (rawLookup.startsWith('HOPSPOT:')) {
+      const parts = rawLookup.split(':');
+      if (parts.length >= 2) extractedId = parts[1];
+    } else if (rawLookup.startsWith('PASS-')) {
+      extractedId = rawLookup.replace('PASS-', '');
+    }
+
+    const targetPass = passes.find(p =>
+      p.qrCodeString === rawLookup ||
+      (passId && norm(p.id) === norm(passId)) ||
+      norm(p.id) === norm(extractedId) ||
+      norm(p.username) === norm(extractedId) ||
+      (normAlnum(extractedId).length >= 3 && (normAlnum(p.id) === normAlnum(extractedId) || normAlnum(p.username) === normAlnum(extractedId))) ||
+      norm(p.name || p.studentName) === norm(rawLookup)
+    );
 
     if (!targetPass) {
       return reply.status(404).send({
         success: false,
         valid: false,
-        error: 'Pass not found in system directory'
+        scannedValue: rawLookup,
+        error: `No student pass found matching "${rawLookup}"`
       });
     }
 
-    const verification = verifyPassQr(qrString, targetPass.validUntil, targetPass.routeEntitlement);
-    if (!verification.valid) {
-      return reply.status(400).send({
-        success: false,
-        valid: false,
-        error: verification.reason || 'Cryptographic verification failed: Counterfeit QR code.'
-      });
+    // If scanned string is a signed HOPSPOT:<id>:<sig> token, verify HMAC cryptographic signature
+    let signatureVerified = false;
+    let legacy = true;
+    if (rawLookup.startsWith('HOPSPOT:')) {
+      const verification = verifyPassQr(rawLookup, targetPass.validUntil, targetPass.routeEntitlement);
+      if (!verification.valid) {
+        return reply.status(400).send({
+          success: false,
+          valid: false,
+          scannedValue: rawLookup,
+          error: verification.reason || 'Cryptographic verification failed: Counterfeit QR code.'
+        });
+      }
+      signatureVerified = true;
+      legacy = Boolean(verification.legacy);
     }
 
     const isExpired = new Date(targetPass.validUntil) < new Date();
@@ -135,11 +163,15 @@ export default async function adminRoutes(fastify, options) {
       success: true,
       valid: isActive && !isExpired,
       status: isExpired ? 'Expired' : targetPass.passStatus,
+      studentId: targetPass.id,
+      username: targetPass.username || targetPass.id,
       studentName: targetPass.name || targetPass.studentName,
+      email: targetPass.email,
       routeEntitlement: targetPass.routeEntitlement,
       validUntil: targetPass.validUntil,
-      signatureVerified: true,
-      legacy: Boolean(verification.legacy)
+      verificationMethod: method || (rawLookup.startsWith('HOPSPOT:') ? 'QR Code (Signed)' : 'Pass QR / ID Barcode'),
+      signatureVerified,
+      legacy
     };
   });
 

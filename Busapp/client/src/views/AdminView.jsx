@@ -1271,6 +1271,35 @@ export default function AdminView({ activeRole: _activeRole, setActiveRole }) {
               <Shield size={18} />
               <span>Passes</span>
             </motion.button>
+
+            {setActiveRole && (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.95 }}
+                type="button"
+                onClick={() => setActiveRole('staff')}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.85rem',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '12px',
+                  border: '1px dashed var(--border-color)',
+                  backgroundColor: 'transparent',
+                  color: 'var(--text-secondary, #64748b)',
+                  fontWeight: 600,
+                  fontSize: '0.88rem',
+                  cursor: 'pointer',
+                  marginTop: '0.25rem',
+                  transition: 'all 0.15s ease',
+                  textAlign: 'left'
+                }}
+              >
+                <CheckSquare size={18} />
+                <span>Staff Pass Scanner</span>
+              </motion.button>
+            )}
           </nav>
         </div>
 

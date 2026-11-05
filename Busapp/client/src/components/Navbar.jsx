@@ -49,7 +49,29 @@ export default function Navbar({ activeRole, setActiveRole, onOpenLegal }) {
         <span style={{ fontSize: '1.25rem', letterSpacing: '-0.03em', fontWeight: 800 }}>HopSpot</span>
       </div>
 
-      <div className="navbar-controls" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+      <div className="navbar-controls" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem' }}>
+        {user?.role === 'admin' && activeRole !== 'admin' && setActiveRole && (
+          <button
+            type="button"
+            onClick={() => setActiveRole('admin')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.4rem 0.75rem',
+              borderRadius: '8px',
+              backgroundColor: 'var(--bg-subtle)',
+              border: '1px solid var(--border-color)',
+              color: 'var(--primary)',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            <ShieldCheck size={14} />
+            <span>Admin Console</span>
+          </button>
+        )}
         <div ref={menuRef} style={{ position: 'relative' }}>
           <button
             onClick={() => setShowMenu(!showMenu)}

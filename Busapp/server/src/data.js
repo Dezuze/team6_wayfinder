@@ -13732,6 +13732,13 @@ export const initialDb = {
       "password": "password123",
       "name": "Administrator",
       "role": "admin"
+    },
+    {
+      "id": "staff-default",
+      "username": "staff",
+      "password": "password123",
+      "name": "Transit Staff Inspector",
+      "role": "staff"
     }
   ]
 };
@@ -13747,6 +13754,17 @@ function loadDb() {
         const studentPasses = Array.isArray(parsed.studentPasses) ? parsed.studentPasses : initialDb.studentPasses;
         const drivers = Array.isArray(parsed.drivers) && parsed.drivers.length > 0 ? parsed.drivers : initialDb.drivers;
         const admins = Array.isArray(parsed.admins) ? parsed.admins : initialDb.admins;
+
+        // Ensure default staff account exists in loaded store
+        if (!admins.some(a => a.username === 'staff' || a.role === 'staff')) {
+          admins.push({
+            id: 'staff-default',
+            username: 'staff',
+            password: 'password123',
+            name: 'Transit Staff Inspector',
+            role: 'staff'
+          });
+        }
 
         // Reset transient live GPS status on boot
         buses.forEach(b => {

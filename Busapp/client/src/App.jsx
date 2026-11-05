@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import StudentView from './views/StudentView';
 import DriverView from './views/DriverView';
 import AdminView from './views/AdminView';
+import StaffView from './views/StaffView';
 import LoginView from './views/LoginView';
 import NotFoundView from './views/NotFoundView';
 import LegalModal from './components/LegalModal';
@@ -59,7 +60,7 @@ function AppContent() {
 
   // Check if current route is a 404
   const normalizedPath = currentPath.toLowerCase().replace(/\/+$/, '') || '/';
-  const knownPaths = ['/', '/login', '/index.html', '/student', '/driver', '/admin'];
+  const knownPaths = ['/', '/login', '/index.html', '/student', '/driver', '/admin', '/staff'];
   const is404 = !knownPaths.includes(normalizedPath);
 
   if (is404) {
@@ -86,13 +87,14 @@ function AppContent() {
         />
       )}
       
-      <main className={!user ? "main-content login-layout-main" : activeRole === 'admin' ? "main-content admin-layout-main" : activeRole === 'student' ? "main-content student-layout-main" : "main-content"}>
+      <main className={!user ? "main-content login-layout-main" : activeRole === 'admin' ? "main-content admin-layout-main" : activeRole === 'student' ? "main-content student-layout-main" : activeRole === 'staff' ? "main-content staff-layout-main" : "main-content"}>
         {!user ? (
           <LoginView onOpenLegal={handleOpenLegal} />
         ) : (
           <>
             {activeRole === 'student' && <StudentView activeRole={activeRole} setActiveRole={setActiveRole} onOpenLegal={handleOpenLegal} />}
             {activeRole === 'driver' && <DriverView activeRole={activeRole} setActiveRole={setActiveRole} onOpenLegal={handleOpenLegal} />}
+            {activeRole === 'staff' && <StaffView activeRole={activeRole} setActiveRole={setActiveRole} onOpenLegal={handleOpenLegal} />}
             {activeRole === 'admin' && <AdminView activeRole={activeRole} setActiveRole={setActiveRole} onOpenLegal={handleOpenLegal} />}
           </>
         )}

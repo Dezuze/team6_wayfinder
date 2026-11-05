@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { Bus, Lock, User, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Bus, Lock, User, ArrowRight, ShieldCheck, QrCode } from 'lucide-react';
 
 export default function LoginView({ onOpenLegal }) {
   const { login, error, isLoading } = useAuth();
@@ -32,10 +32,11 @@ export default function LoginView({ onOpenLegal }) {
       minHeight: '100dvh',
       height: '100%',
       margin: 0,
-      padding: '2rem 1.25rem',
+      padding: '0.75rem',
       boxSizing: 'border-box',
       position: 'relative',
-      overflow: 'hidden'
+      overflowX: 'hidden',
+      overflowY: 'auto'
     }}>
       {/* Subtle Ambient Background (Uniform HopSpot Palette) */}
       <motion.div
@@ -90,32 +91,32 @@ export default function LoginView({ onOpenLegal }) {
 
       {/* Main Glassmorphic Login Card */}
       <motion.div 
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        initial={{ opacity: 0, scale: 0.96, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.45, type: 'spring', damping: 25, stiffness: 200 }}
+        transition={{ duration: 0.35, type: 'spring', damping: 25, stiffness: 220 }}
         style={{
           position: 'relative',
-          maxWidth: '430px',
+          maxWidth: '345px',
           width: '100%',
-          padding: '2.5rem 2rem',
-          borderRadius: '24px',
-          backgroundColor: 'rgba(15, 23, 42, 0.82)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
+          padding: '1.35rem 1.25rem',
+          borderRadius: '18px',
+          backgroundColor: 'rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           border: '1px solid rgba(255, 255, 255, 0.12)',
-          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(255, 255, 255, 0.08)',
+          boxShadow: '0 20px 45px -15px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(255, 255, 255, 0.08)',
           zIndex: 10
         }}
       >
-        {/* Header with Transparent Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        {/* Compact Header with Logo */}
+        <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
           <div style={{
-            width: '80px',
-            height: '80px',
+            width: '48px',
+            height: '48px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 1.2rem'
+            margin: '0 auto 0.5rem'
           }}>
             <img
               src="/logo.png"
@@ -128,35 +129,34 @@ export default function LoginView({ onOpenLegal }) {
             />
           </div>
           <h1 style={{
-            fontSize: '1.75rem',
+            fontSize: '1.25rem',
             fontWeight: 800,
-            letterSpacing: '-0.03em',
-            marginBottom: '0.4rem',
+            letterSpacing: '-0.02em',
+            marginBottom: '0.2rem',
             color: 'var(--text-primary, #ffffff)',
             fontFamily: "'Outfit', 'Inter', sans-serif"
           }}>
             Sign in to HopSpot
           </h1>
-          <p style={{ color: 'var(--text-secondary, #94a3b8)', fontSize: '0.85rem', margin: 0, lineHeight: 1.45 }}>
-            Smart campus transit navigation for students, drivers, and administration
+          <p style={{ color: 'var(--text-secondary, #94a3b8)', fontSize: '0.75rem', margin: 0, lineHeight: 1.35 }}>
+            Campus transit portal for students, drivers &amp; staff
           </p>
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="flex-col gap-1">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
           {error && (
             <motion.div
-              initial={{ opacity: 0, y: -8 }}
+              initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
               style={{
-                padding: '0.75rem 1rem',
-                borderRadius: 'var(--radius-sm, 10px)',
+                padding: '0.5rem 0.75rem',
+                borderRadius: '8px',
                 backgroundColor: 'rgba(239, 68, 68, 0.15)',
                 border: '1px solid rgba(239, 68, 68, 0.35)',
                 color: '#f87171',
-                fontSize: '0.825rem',
+                fontSize: '0.76rem',
                 fontWeight: 500,
-                marginBottom: '0.85rem',
                 textAlign: 'center'
               }}
             >
@@ -164,22 +164,31 @@ export default function LoginView({ onOpenLegal }) {
             </motion.div>
           )}
 
-          <div className="form-group">
-            <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem', color: '#cbd5e1' }}>Username or ID</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <label htmlFor="login-username" style={{ fontWeight: 600, fontSize: '0.75rem', color: '#cbd5e1' }}>
+              Username or ID
+            </label>
             <div style={{ position: 'relative' }}>
-              <User size={16} color="var(--text-muted, #94a3b8)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+              <User size={15} color="var(--text-muted, #94a3b8)" style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
               <input
                 id="login-username"
+                name="username"
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="Student ID, driver or admin"
+                placeholder="Student ID, driver, staff, or admin"
+                autoComplete="username"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                enterKeyHint="next"
                 className="form-input"
                 style={{
-                  paddingLeft: '2.5rem',
+                  padding: '0.55rem 0.75rem 0.55rem 2.2rem',
+                  fontSize: '0.82rem',
                   backgroundColor: 'rgba(30, 41, 59, 0.7)',
                   border: '1px solid rgba(255, 255, 255, 0.15)',
-                  borderRadius: '12px',
+                  borderRadius: '10px',
                   color: '#ffffff'
                 }}
                 required
@@ -187,22 +196,28 @@ export default function LoginView({ onOpenLegal }) {
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label" style={{ fontWeight: 600, fontSize: '0.82rem', color: '#cbd5e1' }}>Password</label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <label htmlFor="login-password" style={{ fontWeight: 600, fontSize: '0.75rem', color: '#cbd5e1' }}>
+              Password
+            </label>
             <div style={{ position: 'relative' }}>
-              <Lock size={16} color="var(--text-muted, #94a3b8)" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
+              <Lock size={15} color="var(--text-muted, #94a3b8)" style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
               <input
                 id="login-password"
+                name="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
+                autoComplete="current-password"
+                enterKeyHint="done"
                 className="form-input"
                 style={{
-                  paddingLeft: '2.5rem',
+                  padding: '0.55rem 0.75rem 0.55rem 2.2rem',
+                  fontSize: '0.82rem',
                   backgroundColor: 'rgba(30, 41, 59, 0.7)',
                   border: '1px solid rgba(255, 255, 255, 0.15)',
-                  borderRadius: '12px',
+                  borderRadius: '10px',
                   color: '#ffffff'
                 }}
                 required
@@ -218,11 +233,11 @@ export default function LoginView({ onOpenLegal }) {
             disabled={isLoading}
             style={{
               width: '100%',
-              marginTop: '1rem',
-              borderRadius: '12px',
+              marginTop: '0.25rem',
+              borderRadius: '10px',
               fontWeight: 700,
-              fontSize: '0.95rem',
-              padding: '0.8rem 1.25rem',
+              fontSize: '0.85rem',
+              padding: '0.62rem 1rem',
               background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
               color: '#ffffff',
               border: 'none',
@@ -230,21 +245,21 @@ export default function LoginView({ onOpenLegal }) {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.6rem',
-              boxShadow: '0 4px 14px rgba(2, 132, 199, 0.25)'
+              gap: '0.45rem',
+              boxShadow: '0 4px 12px rgba(2, 132, 199, 0.25)'
             }}
           >
-            {isLoading ? 'Signing in...' : 'Sign in to HopSpot'}
-            <ArrowRight size={17} />
+            {isLoading ? 'Signing in...' : 'Sign In'}
+            <ArrowRight size={15} />
           </motion.button>
         </form>
 
         {/* Quick Demo Access / Hardware Driver Quick Login */}
-        <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-          <div style={{ fontSize: '0.72rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.6rem', textAlign: 'center' }}>
+        <div style={{ marginTop: '0.85rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+          <div style={{ fontSize: '0.66rem', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.45rem', textAlign: 'center' }}>
             Quick Sign In
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.45rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.35rem' }}>
             <motion.button
               type="button"
               whileHover={{ scale: 1.01 }}
@@ -258,24 +273,25 @@ export default function LoginView({ onOpenLegal }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '0.6rem 0.85rem',
-                borderRadius: '10px',
+                padding: '0.45rem 0.7rem',
+                borderRadius: '8px',
                 backgroundColor: 'rgba(2, 132, 199, 0.15)',
                 border: '1px solid rgba(2, 132, 199, 0.35)',
                 color: '#38bdf8',
                 cursor: 'pointer',
-                fontSize: '0.82rem',
-                fontWeight: 600
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                whiteSpace: 'nowrap'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Bus size={15} />
-                <span>Hardware Driver (Rahul Nair • Bus NO-2)</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Bus size={14} />
+                <span>Driver (Rahul • Bus NO-2)</span>
               </div>
-              <span style={{ fontSize: '0.7rem', padding: '0.15rem 0.45rem', backgroundColor: 'rgba(2, 132, 199, 0.3)', borderRadius: '6px', fontWeight: 700 }}>STM32</span>
+              <span style={{ fontSize: '0.64rem', padding: '0.1rem 0.38rem', backgroundColor: 'rgba(2, 132, 199, 0.3)', borderRadius: '5px', fontWeight: 700 }}>STM32</span>
             </motion.button>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.45rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.35rem' }}>
               <motion.button
                 type="button"
                 whileHover={{ scale: 1.01 }}
@@ -289,18 +305,47 @@ export default function LoginView({ onOpenLegal }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.4rem',
-                  padding: '0.5rem 0.6rem',
-                  borderRadius: '10px',
+                  gap: '0.3rem',
+                  padding: '0.42rem 0.4rem',
+                  borderRadius: '8px',
                   backgroundColor: 'rgba(255, 255, 255, 0.05)',
                   border: '1px solid rgba(255, 255, 255, 0.12)',
                   color: '#cbd5e1',
                   cursor: 'pointer',
-                  fontSize: '0.78rem',
-                  fontWeight: 500
+                  fontSize: '0.72rem',
+                  fontWeight: 500,
+                  whiteSpace: 'nowrap'
                 }}
               >
-                <User size={13} /> Student Pass
+                <User size={12} /> Student
+              </motion.button>
+
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setUsername('staff');
+                  setPassword('password123');
+                  login('staff', 'password123', 'staff');
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.3rem',
+                  padding: '0.42rem 0.4rem',
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                  border: '1px solid rgba(16, 185, 129, 0.35)',
+                  color: '#34d399',
+                  cursor: 'pointer',
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <QrCode size={12} /> Staff
               </motion.button>
 
               <motion.button
@@ -316,18 +361,19 @@ export default function LoginView({ onOpenLegal }) {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.4rem',
-                  padding: '0.5rem 0.6rem',
-                  borderRadius: '10px',
+                  gap: '0.3rem',
+                  padding: '0.42rem 0.4rem',
+                  borderRadius: '8px',
                   backgroundColor: 'rgba(255, 255, 255, 0.05)',
                   border: '1px solid rgba(255, 255, 255, 0.12)',
                   color: '#cbd5e1',
                   cursor: 'pointer',
-                  fontSize: '0.78rem',
-                  fontWeight: 500
+                  fontSize: '0.72rem',
+                  fontWeight: 500,
+                  whiteSpace: 'nowrap'
                 }}
               >
-                <ShieldCheck size={13} /> Admin
+                <ShieldCheck size={12} /> Admin
               </motion.button>
             </div>
           </div>
@@ -335,36 +381,37 @@ export default function LoginView({ onOpenLegal }) {
 
         {/* Footer Legal Links */}
         <div style={{
-          marginTop: '1.75rem',
-          paddingTop: '1rem',
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          marginTop: '0.85rem',
+          paddingTop: '0.65rem',
+          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '0.85rem',
-          fontSize: '0.75rem',
-          color: 'var(--text-secondary, #94a3b8)'
+          gap: '0.6rem',
+          fontSize: '0.7rem',
+          color: 'var(--text-secondary, #94a3b8)',
+          whiteSpace: 'nowrap'
         }}>
           <button
             type="button"
             onClick={() => handleLegalClick('privacy')}
-            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.75rem', padding: 0 }}
+            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.7rem', padding: 0 }}
           >
-            Privacy Policy
+            Privacy
           </button>
           <span>•</span>
           <button
             type="button"
             onClick={() => handleLegalClick('terms')}
-            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.75rem', padding: 0 }}
+            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.7rem', padding: 0 }}
           >
-            Terms of Service
+            Terms
           </button>
           <span>•</span>
           <button
             type="button"
             onClick={() => handleLegalClick('cookies')}
-            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.75rem', padding: 0 }}
+            style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '0.7rem', padding: 0 }}
           >
             Cookies
           </button>
@@ -372,14 +419,14 @@ export default function LoginView({ onOpenLegal }) {
       </motion.div>
 
       <div style={{
-        marginTop: '1.25rem',
-        fontSize: '0.74rem',
+        marginTop: '0.65rem',
+        fontSize: '0.68rem',
         color: '#64748b',
         textAlign: 'center',
         position: 'relative',
         zIndex: 10
       }}>
-        HopSpot Transit System • Secured with End-to-End Encryption
+        HopSpot Transit System • End-to-End Encrypted
       </div>
     </div>
   );

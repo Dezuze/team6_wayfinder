@@ -877,3 +877,199 @@ body {
 }
 
 
+/* ==========================================================================
+   Staff Portal Responsive Pass Validity Table (@container + Sticky Headers)
+   ========================================================================== */
+.staff-table-wrapper {
+  overflow: auto;
+  max-inline-size: 100%;
+  max-block-size: min(560px, 72vh);
+  container-type: inline-size;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background-color: var(--bg-card);
+}
+
+.staff-pass-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+  font-size: 0.84rem;
+  --label-2: "Admission No.";
+  --label-3: "Status";
+  --label-4: "Route Access";
+  --label-5: "Valid Until";
+  --label-6: "Action";
+}
+
+.staff-pass-table caption {
+  position: absolute;
+  clip-path: inset(50%);
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  white-space: nowrap;
+}
+
+.staff-pass-table thead {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 2;
+  background-color: var(--bg-subtle);
+}
+
+.staff-pass-table thead th {
+  padding: 0.7rem 0.9rem;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  font-weight: 700;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--bg-subtle);
+}
+
+.staff-pass-table tbody th {
+  position: sticky;
+  inset-inline-start: 0;
+  z-index: 1;
+  background-color: var(--bg-card);
+  padding: 0.75rem 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.staff-pass-table tbody td {
+  padding: 0.75rem 0.9rem;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.staff-pass-table tbody tr:hover th,
+.staff-pass-table tbody tr:hover td {
+  background-color: var(--bg-subtle);
+}
+
+@container (width < 600px) {
+  .staff-pass-table,
+  .staff-pass-table thead,
+  .staff-pass-table tbody,
+  .staff-pass-table tr,
+  .staff-pass-table th,
+  .staff-pass-table td {
+    display: block;
+  }
+
+  .staff-pass-table thead {
+    display: none;
+  }
+
+  .staff-pass-table tbody tr {
+    margin: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: var(--bg-card);
+  }
+
+  .staff-pass-table tbody th {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 2;
+    background-color: var(--bg-subtle);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .staff-pass-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.55rem 0.85rem;
+  }
+
+  .staff-pass-table tbody td:nth-child(2)::before {
+    content: var(--label-2) ": ";
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  .staff-pass-table tbody td:nth-child(3)::before {
+    content: var(--label-3) ": ";
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  .staff-pass-table tbody td:nth-child(4)::before {
+    content: var(--label-4) ": ";
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  .staff-pass-table tbody td:nth-child(5)::before {
+    content: var(--label-5) ": ";
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  .staff-pass-table tbody td:nth-child(6)::before {
+    content: var(--label-6) ": ";
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+}
+
+/* ==========================================================================
+   Html5Qrcode Camera Reader Viewport Fixes
+   ========================================================================== */
+#hopspot-staff-reader {
+  width: 100% !important;
+  border: none !important;
+  position: relative;
+  overflow: hidden;
+  background-color: #0f172a;
+}
+
+#hopspot-staff-reader video {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 260px;
+  max-height: 380px;
+  object-fit: cover !important;
+  display: block !important;
+  border-radius: 12px;
+}
+
+#hopspot-staff-reader__scan_region {
+  width: 100% !important;
+  min-height: 260px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.staff-layout-main {
+  flex: 1 1 0% !important;
+  min-block-size: 0 !important;
+  min-inline-size: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0.65rem 0.65rem 2.5rem !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  display: block !important;
+}

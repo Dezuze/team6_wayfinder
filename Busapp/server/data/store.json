@@ -4288,6 +4288,13 @@
       "password": "scrypt:aef4623c29f8a7afe8a95164a3e2cf4e:edde6cc198d65b87eb1c6ffeda3d1cb9fac37e46a2c1e89e9059a17cef68f7fb6ffcd805f11f1ec1642d1bae362b43cdc5c0a77f8ffcb7c79884094e02d599b0",
       "name": "Administrator",
       "role": "admin"
+    },
+    {
+      "id": "staff-default",
+      "username": "staff",
+      "password": "scrypt:f19785d02124d2475bced396947afd2f:2e27ceb8969e283a9b1fe562e715717c0742c4f0e1502869275e0582f307d11961126676bf0367e09079ba6420588d60d925446b557c5cedaf83ad88ceb95b51",
+      "name": "Transit Staff Inspector",
+      "role": "staff"
     }
   ],
   "activeSosAlerts": []

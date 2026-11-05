@@ -270,13 +270,11 @@ async function seedTablesIfEmpty(client) {
     }
   }
 
-  // 5. Admins (password hashed with scrypt + salt)
-  const { rows: adminRows } = await client.query('SELECT COUNT(*) FROM admins');
-  if (parseInt(adminRows[0].count, 10) === 0 && initialDb.admins?.length) {
-    console.log(`Seeding ${initialDb.admins.length} admins into PostgreSQL...`);
+  // 5. Admins & Staff (password hashed with scrypt + salt)
+  if (initialDb.admins?.length) {
     for (const a of initialDb.admins) {
       const plainPass = a.password || 'password123';
-      const secureHashed = hashPassword(plainPass);
+      const secureHashed = plainPass.startsWith('scrypt:') ? plainPass : hashPassword(plainPass);
 
       await client.query(`
         INSERT INTO admins (id, username, password, name, role)
@@ -288,7 +286,7 @@ async function seedTablesIfEmpty(client) {
         secureHashed,
         a.name || 'Administrator',
         a.role || 'admin'
-      ]);
+      ]).catch(() => {});
     }
   }
 }
@@ -771,8 +769,8 @@ export async function dbAuthenticateUser(username, password, role) {
 
   if (!cleanUsername || !cleanPassword) return null;
 
-  // 1. Check Admin
-  if (!role || role === 'admin') {
+  // 1. Check Admin / Staff
+  if (!role || role === 'admin' || role === 'staff') {
     let admin = null;
     if (isPgConnected) {
       try {
@@ -801,7 +799,8 @@ export async function dbAuthenticateUser(username, password, role) {
             saveFallbackDb();
           }
         }
-        const userObj = { id: admin.id, username: admin.username, name: admin.name, role: 'admin' };
+        const resolvedRole = admin.role || (cleanUsername.startsWith('staff') ? 'staff' : 'admin');
+        const userObj = { id: admin.id, username: admin.username, name: admin.name, role: resolvedRole };
         return { ...userObj, token: createAuthToken(userObj) };
       }
     }
